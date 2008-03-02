@@ -1,0 +1,3 @@
+content	httpfox jar:chrome/httpfox.jar!/content/
+skin httpfox classic/1.0 jar:chrome/httpfox.jar!/skin/
+overlay chrome://browser/content/browser.xul chrome://httpfox/content/browserOverlay.xul

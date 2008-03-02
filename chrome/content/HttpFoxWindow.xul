@@ -1,0 +1,41 @@
+<?xml version="1.0"?> 
+
+<?xul-overlay href="chrome://httpfox/content/HttpFoxOverlay.xul"?>
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://HttpFox/skin/HttpFox.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="hf_Window"
+        title="HttpFox"
+        width="600" height="400"
+        persist="screenX,screenY,width,height"
+        onload="">
+
+	<commandset id="mainCommandSet" />
+	
+	<!-- scripts start -->
+	<script type="application/x-javascript" src="chrome://httpfox/content/HttpFox.js"/>
+	<!--<script type="application/x-javascript" src="chrome://httpfox/content/HttpFoxWindow.js"/>-->
+	<script type="application/x-javascript" src="chrome://httpfox/content/HttpFoxTree.js"/>
+	<!--<script type="application/x-javascript" src="chrome://httpfox/content/test.js"/>-->
+	<!--<script type="application/x-javascript" src="chrome://httpfox/content/HttpFoxObserver.js"/>-->
+	<!--<script type="application/x-javascript" src="chrome://httpfox/content/HttpFoxRequestEvent.js"/>-->
+	<!--<script type="application/x-javascript" src="chrome://httpfox/content/HttpFoxRequest.js"/>-->
+	<!--<script type="application/x-javascript" src="chrome://httpfox/content/HttpFoxMisc.js"/>-->
+	<!--<script type="application/x-javascript" src="chrome://httpfox/content/HttpFoxPostDataHandler.js"/>-->
+	<!--<script type="application/x-javascript" src="chrome://httpfox/content/HttpFoxRequestLogdata.js"/>-->
+	<script type="application/x-javascript" src="chrome://httpfox/content/Utils.js"/>
+	<!-- scripts end -->
+
+	<vbox id="appcontent" flex="1"> <!-- overlay firefox content window -->
+		<vbox id="hf_PanelWindow" collapsed="false" persist="height" flex="1">
+			<vbox id="hf_RequestList" persist="height" flex="1" />
+
+			<splitter id="hf_MiddleSplitter" persist="height"/>
+			
+			<vbox id="hf_RequestDetails" persist="height" flex="1" />
+		</vbox>
+	</vbox>
+</window>

@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://HttpFox/skin/HttpFox.css"
+                 type="text/css"?>
+
+<?xul-overlay href="chrome://httpfox/content/HttpFoxOverlay.xul"?>
+
+<overlay id="httpfox" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	
+	<!-- scripts start -->
+	<script type="application/x-javascript" src="chrome://httpfox/content/HttpFox.js"/>
+	<script type="application/x-javascript" src="chrome://httpfox/content/HttpFoxTree.js"/>
+	<script type="application/x-javascript" src="chrome://httpfox/content/Utils.js"/>
+	<!-- scripts end -->
+	
+	<statusbar id="status-bar"> <!-- overlay firefox statusbar -->
+		<statusbarpanel id="hf_Status" 
+			context="hf_StatusContextMenu" 
+			onmousedown="HttpFox.onClickStatusIcon(event)">
+            
+            <image id="hf_StatusLogoImage" tooltiptext="HttpFox" />
+        </statusbarpanel>
+    
+        <menupopup id="hf_StatusContextMenu" onpopupshowing="">
+            <!--<menuitem label="Start HttpFox 1" 
+            	type="checkbox" 
+            	option="disabled"
+				command="cmd_startWatching" />
+            <menuseparator/>
+            <menuitem label="INIT" 
+            	oncommand="initHttpFox();"/>-->
+           	<!--<menuitem label="PENDING SCAN" 
+            	oncommand="HttpFox.checkPendingRequests();"/>-->
+            <menuitem 
+            	label="Open in new window" 
+            	oncommand="HttpFox.OpenInWindow();"/>
+            <menuseparator/>
+            <menuitem 
+            	label="Options" 
+            	oncommand="HttpFox.OpenOptions();"/>
+        </menupopup>
+	</statusbar>
+	
+	<vbox id="appcontent" persist="width,height"> <!-- overlay firefox content window -->
+		<splitter id="hf_PanelSplitter" persist="height" collapsed="true"/>
+		
+		<vbox id="hf_PanelNormal" collapsed="true" persist="height" flex="1">
+			<vbox id="hf_RequestList" persist="height" flex="1" />
+
+			<splitter id="hf_MiddleSplitter" persist="height"/>
+			
+			<vbox id="hf_RequestDetails" persist="height" flex="1" />
+		</vbox>
+		
+	</vbox>
+
+</overlay>
