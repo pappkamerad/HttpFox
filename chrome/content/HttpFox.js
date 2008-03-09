@@ -78,6 +78,8 @@ HttpFoxController.prototype =
 		if (this.WindowMode) 
 		{
 			this.HttpFoxService.HttpFoxWindow = this;
+			document.getElementById("hf_TopBarButton_Detach").collapsed = true;
+			document.getElementById("hf_TopBarButton_Detach").disabled = true;
 		}
 	},
 	
@@ -124,9 +126,7 @@ HttpFoxController.prototype =
 		}
 		else
 		{
-			var HttpFoxPanel = document.getElementById("hf_PanelNormal");
-			var HttpFoxPanelSplitter = document.getElementById("hf_PanelSplitter");
-			HttpFoxPanelSplitter.collapsed = HttpFoxPanel.collapsed = true;
+			this.closePanel();
 		}
 	},
     
@@ -137,34 +137,20 @@ HttpFoxController.prototype =
 		var HttpFoxPanelSplitter = document.getElementById("hf_PanelSplitter");
 		
 		// if already opened detached, switch to opened window
-		if (this.HttpFoxService.HttpFoxWindow)
+		if (this.switchToDetachedWindowIfOpened())
 		{
-			if (!HttpFoxPanel.collapsed)
-			{
-				// close open panel
-				HttpFoxPanelSplitter.collapsed = HttpFoxPanel.collapsed = true;
-			}
-			
-			// window already open. switch to that
-			this.HttpFoxService.HttpFoxWindow.setFocus();
 			return;
 		}
 		
 		// if always open detached, open detached
 		if (this.HttpFoxService.Preferences.AlwaysOpenDetached)
 		{
-			if (!HttpFoxPanel.collapsed)
-			{
-				// close open panel
-				HttpFoxPanelSplitter.collapsed = HttpFoxPanel.collapsed = true;
-			}
+			this.cmd_hf_detach();
 			
-			this.OpenInWindow();
 			return;
 		}
 		
-		// switch
-		HttpFoxPanelSplitter.collapsed = HttpFoxPanel.collapsed = (HttpFoxPanel.collapsed) ? false : true
+		this.togglePanel();
 	},
 	
 	//C INPUT
@@ -278,6 +264,75 @@ HttpFoxController.prototype =
 		this.HttpFoxService.clearRequests();
 		
 		this.HttpFoxService.callControllerMethod("clear");
+	},
+	
+	cmd_hf_detach: function() 
+	{
+		// switch to window if opened
+		if (this.switchToDetachedWindowIfOpened())
+		{
+			return;
+		}
+		
+		// if not, open new one
+		this.OpenInWindow();
+		
+		// close panel
+		this.closePanel();
+		
+		// command checked
+		document.getElementById("cmd_hf_togglePanel").setAttribute("checked", true);
+	},
+	
+	switchToDetachedWindowIfOpened: function()
+	{
+		var HttpFoxPanel = document.getElementById("hf_PanelNormal");
+		var HttpFoxPanelSplitter = document.getElementById("hf_PanelSplitter");
+		
+		// if already opened detached, switch to opened window
+		if (this.HttpFoxService.HttpFoxWindow)
+		{
+			if (!HttpFoxPanel.collapsed)
+			{
+				// close open panel
+				HttpFoxPanelSplitter.collapsed = HttpFoxPanel.collapsed = true;
+			}
+			
+			// window already open. switch to that
+			this.HttpFoxService.HttpFoxWindow.setFocus();
+			
+			// command checked
+			document.getElementById("cmd_hf_togglePanel").setAttribute("checked", true);
+			
+			return true;
+		}
+		
+		return false;
+	},
+	
+	closePanel: function()
+	{
+		var HttpFoxPanel = document.getElementById("hf_PanelNormal");
+		var HttpFoxPanelSplitter = document.getElementById("hf_PanelSplitter");
+		HttpFoxPanelSplitter.collapsed = HttpFoxPanel.collapsed = true;
+	},
+	
+	windowIsClosed: function()
+	{
+		// command checked
+		document.getElementById("cmd_hf_togglePanel").setAttribute("checked", false);
+	},
+	
+	togglePanel: function()
+	{
+		var HttpFoxPanel = document.getElementById("hf_PanelNormal");
+		var HttpFoxPanelSplitter = document.getElementById("hf_PanelSplitter");
+		
+		// normal panel toggle
+		HttpFoxPanelSplitter.collapsed = HttpFoxPanel.collapsed = (HttpFoxPanel.collapsed) ? false : true;
+		
+		// command checked
+		document.getElementById("cmd_hf_togglePanel").setAttribute("checked", !HttpFoxPanelSplitter.collapsed);
 	},
 	
 	clear: function()
@@ -1164,6 +1219,7 @@ function shutdownHttpFox()
 	if (HttpFox.WindowMode)
 	{
 		HttpFox.HttpFoxService.HttpFoxWindow = null;
+		HttpFox.HttpFoxService.windowIsClosed();
 	}
 	
 	HttpFox = null;

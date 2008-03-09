@@ -130,7 +130,7 @@
 	-moz-image-region: rect(4px, 45px, 18px, 30px);
 }
 
-#hf_TopBarButton_Start [disabled="true"] {
+#hf_TopBarButton_Start[disabled="true"] {
 	list-style-image: url(chrome://httpfox/skin/go.png);
 	-moz-image-region: rect(4px, 70px, 18px, 55px);
 }
@@ -140,12 +140,28 @@
 	-moz-image-region: rect(4px, 20px, 18px, 5px);
 }
 
+#hf_TopBarButton_Detach {
+	list-style-image: url(chrome://httpfox/skin/application_double_grey.png);
+	-moz-appearance: none;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+}
+#hf_TopBarButton_Detach:hover {
+	list-style-image: url(chrome://httpfox/skin/application_double.png);
+	-moz-appearance: none;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+
 #hf_TopBarButton_Stop:hover {
 	list-style-image: url(chrome://httpfox/skin/toolbar.png);
 	-moz-image-region: rect(16px, 48px, 31px, 32px);
 }
 
-#hf_TopBarButton_Stop [disabled="true"] {
+#hf_TopBarButton_Stop[disabled="true"] {
 	list-style-image: url(chrome://httpfox/skin/toolbar.png);
 	-moz-image-region: rect(32px, 48px, 47px, 32px);
 }
@@ -210,7 +226,7 @@ treechildren::-moz-tree-cell-text(hf_OK) {
 }
 
 #hf_StatusLogoImage {
-	list-style-image: url(chrome://httpfox/skin/globe18.png);
+	list-style-image: url(chrome://httpfox/skin/globe16.png);
 }
 
 

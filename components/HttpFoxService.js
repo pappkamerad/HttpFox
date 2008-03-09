@@ -129,6 +129,11 @@ HttpFoxService.prototype =
 		this.StartTime = new Date();
 	},
 	
+	windowIsClosed: function()
+	{
+		this.callControllerMethod("windowIsClosed");
+	},
+	
 	callControllerMethod: function(methodName, parameterArray)
 	{
 		for (var c in this.Controllers)

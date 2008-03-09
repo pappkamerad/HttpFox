@@ -13,6 +13,7 @@
 		<command id="cmd_hf_quickFilterChanged" oncommand="HttpFox.cmd_hf_quickFilterChanged();"/>
 		<command id="cmd_hf_close" oncommand="HttpFox.cmd_hf_close();"/>
 		<command id="cmd_hf_showAbout" oncommand="HttpFox.cmd_hf_showAbout();"/>
+		<command id="cmd_hf_detach" oncommand="HttpFox.cmd_hf_detach();"/>
     </commandset>
     
 	<keyset id="mainKeyset">
@@ -45,7 +46,10 @@
 		
 					<toolbarspring/>
 					
-		            <toolbarbutton id="hf_TopBarButton_Close" 
+					<toolbarbutton id="hf_TopBarButton_Detach" 
+						tooltiptext="Detach" command="cmd_hf_detach" align="right"/>
+						
+					<toolbarbutton id="hf_TopBarButton_Close" 
 						tooltiptext="Close" command="cmd_hf_close" align="right"/>
 			    </toolbar>
 		    </toolbox>
