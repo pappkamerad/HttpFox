@@ -2,13 +2,7 @@ content	httpfox chrome/content/
 skin httpfox classic/1.0 chrome/skin/
 
 content httpfox chrome/content/Utils.js
-content httpfox chrome/content/HttpFoxObserver.js
 content httpfox chrome/content/HttpFox.js
 content httpfox chrome/content/HttpFoxTree.js
-content httpfox chrome/content/HttpFoxRequest.js
-content httpfox chrome/content/HttpFoxRequestEvent.js
-content httpfox chrome/content/HttpFoxRequestLogdata.js
-content httpfox chrome/content/HttpFoxMisc.js
-content httpfox chrome/content/HttpFoxPostDataHandler.js
 
 overlay chrome://browser/content/browser.xul chrome://httpfox/content/browserOverlay.xul

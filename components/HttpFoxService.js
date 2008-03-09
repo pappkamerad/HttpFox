@@ -157,6 +157,22 @@ HttpFoxService.prototype =
 		return -1;
 	},
 	
+	// thanks to tamper data:
+	forceCaching: function(request) {
+		// we only care if we were a POST, GET's cache no matter what
+		if (request.requestMethod == "POST") 
+		{
+			if (request.loadFlags & Components.interfaces.nsIRequest.INHIBIT_CACHING) 
+			{
+				//TODO: preferences setting:
+				if (true) 
+				{
+					request.loadFlags = request.loadFlags & ~Components.interfaces.nsIRequest.INHIBIT_CACHING;
+				}
+			}
+		}
+	},
+	
 	addNewRequest: function(requestEvent)
 	{
 		// a new request
@@ -221,7 +237,7 @@ HttpFoxService.prototype =
 				}
 			}
 			
-			this.callControllerMethod("redrawRequestTree")
+			//this.callControllerMethod("redrawRequestTree")
 		}
 		catch(e)
 		{}
@@ -767,6 +783,8 @@ HttpFoxRequest.prototype =
 	PostData: null,
 	PostDataParameters: null,
 	PostDataMIMEParts: null,
+	PostDataMIMEBoundary: null,
+	IsPostDataMIME: null,
 	QueryString: null,
 	QueryStringParameters: null,
 	CookiesSent: null,
@@ -1158,6 +1176,11 @@ HttpFoxRequest.prototype =
 		//PostDataHeaders: null,
 		if (requestEvent.PostDataHeaders != null)
 		{
+			/*this.PostDataHeaders = new Array();
+			for (var x in requestEvent.PostDataHeaders)
+			{
+				this.PostDataHeaders[x] = requestEvent.PostDataHeaders[x];
+			}*/
 			this.PostDataHeaders = requestEvent.PostDataHeaders;
 		}
 		//PostData: null,
@@ -1174,6 +1197,16 @@ HttpFoxRequest.prototype =
 		if (requestEvent.PostDataMIMEParts != null)
 		{
 			this.PostDataMIMEParts = requestEvent.PostDataMIMEParts;
+		}
+		//PostDataMIMEParts: null,
+		if (requestEvent.IsPostDataMIME != null)
+		{
+			this.IsPostDataMIME = requestEvent.IsPostDataMIME;
+		}
+		//PostDataMIMEParts: null,
+		if (requestEvent.PostDataMIMEBoundary != null)
+		{
+			this.PostDataMIMEBoundary = requestEvent.PostDataMIMEBoundary;
 		}
 		//QueryString: null,
 		if (requestEvent.QueryString != null)
@@ -1495,7 +1528,7 @@ HttpFoxRequestEvent.prototype =
 	PostDataHeaders: null,
 	PostData: null,
 	PostDataParameters: null,
-	IsPostDataMIME: false,
+	IsPostDataMIME: null,
 	PostDataMIMEBoundary: null,
 	PostDataMIMEParts: null,
 	QueryString: null,
@@ -1772,8 +1805,7 @@ HttpFoxRequestEvent.prototype =
 		var queryStringParts = this.QueryString.split("&");
 		for (i in queryStringParts)
 		{
-			var nameValuePair = queryStringParts[i].split("=");
-			var nvName = queryStringParts[i].slice(0, queryStringParts[i].indexOf("="));
+			var nvName = queryStringParts[i].slice(0, queryStringParts[i].indexOf("=") != -1 ? queryStringParts[i].indexOf("=") : queryStringParts[i].length);
 			var nvValue = (queryStringParts[i].indexOf("=") != -1) ? queryStringParts[i].slice(queryStringParts[i].indexOf("=") + 1, queryStringParts[i].length) : "";
 			this.QueryStringParameters[nvName] = nvValue;
 		}
@@ -1917,6 +1949,9 @@ HttpFoxObserver.prototype =
 	// event related
 	onModifyRequest: function(HttpChannel)
 	{
+		// force caching
+		this.HttpFox.forceCaching(HttpChannel);
+		
 		var eventSourceData = new Object();
 
 		// hook up more listeners
@@ -2307,6 +2342,7 @@ HttpFoxHeaderInfo.prototype =
 function HttpFoxPostDataHandler(hfRequest) 
 {
 	this.request = hfRequest;
+	this.request.IsPostDataMIME = false;
 	this.seekablestream = this.request.HttpChannel.uploadStream.QueryInterface(Components.interfaces.nsISeekableStream);
 	this.stream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
 	this.stream.init(this.seekablestream);
@@ -2375,13 +2411,16 @@ HttpFoxPostDataHandler.prototype =
 				{
 					var tmp = line.split(/:\s?/);
 					this.addPostHeader(tmp[0], tmp[1]);
-					
 					// check if MIME postdata
-					if (!this.isBinary && tmp[0].toLowerCase() == "content-type" && tmp[1].indexOf("multipart") != "-1") 
+					if (tmp[0].toLowerCase() == "content-type" && tmp[1].indexOf("multipart") != "-1") 
 					{
 						this.isBinary = true;
 						this.request.IsPostDataMIME = true;
-						this.request.PostDataMIMEBoundary = tmp[1].split("boundary=")[1];
+						this.request.PostDataMIMEBoundary = "--" + tmp[1].split("boundary=")[1];
+						if (this.request.PostDataMIMEBoundary.indexOf("\"") == 0)
+						{
+							this.request.PostDataMIMEBoundary = this.request.PostDataMIMEBoundary.substr(1, this.request.PostDataMIMEBoundary.length - 2);
+						}
 					}
 				}
 				line = this.readLine();
@@ -2448,7 +2487,93 @@ HttpFoxPostDataHandler.prototype =
 		{
 			this.request.PostData = postString;
 			this.request.PostDataMIMEParts = new Array();
-			this.request.PostDataMIMEParts = postString.split(this.request.PostDataMIMEBoundary);
+			
+			
+			var rawMimeParts = new Array();
+			rawMimeParts = postString.split(this.request.PostDataMIMEBoundary);
+			
+			var ws = "\n";
+			if (rawMimeParts[1].indexOf("\r\n") == 0)
+			{
+				ws = "\r\n";
+			}
+			else if (rawMimeParts[1].indexOf("\r") == 0)
+			{
+				ws = "\r";
+			}
+			
+			for (var i = 1; rawMimeParts[i]; i++)
+			{
+				try 
+				{
+						
+					var mimePartData = new Object();
+					var rawMimePartParts = new Array();
+					rawMimePartParts = rawMimeParts[i].split(ws + ws);	
+					
+					var varname = null;
+					RegExp.lastIndex = 0;
+					if (rawMimePartParts[0].match(/\bname="([^"]+)"/i)) 
+					{
+						varname = RegExp.$1;
+					}
+					if (!varname) 
+					{
+						RegExp.lastIndex = 0;
+						if(rawMimePartParts[0].match(/\bname=([^\s:;]+)/i)) 
+						{
+							varname = RegExp.$1;
+						}
+					}
+					
+					if (varname != null)
+					{
+						var filename = null;
+						RegExp.lastIndex = 0;
+						if (rawMimePartParts[0].match(/\b(filename="[^"]*")/i)) 
+						{
+							filename = RegExp.$1;
+						}
+						if (!filename) 
+						{
+							RegExp.lastIndex = 0;
+							if(rawMimePartParts[0].match(/\b(filename=[^\s:;]+)/i)) 
+							{
+								filename = RegExp.$1;
+							}
+						}
+		
+						var ctype = null;
+						RegExp.lastIndex = 0;
+						if (rawMimePartParts[0].match(/\b(Content-type:\s*"[^"]+)"/i)) 
+						{
+							ctype = RegExp.$1;
+						}
+						if (!ctype) 
+						{
+							RegExp.lastIndex = 0;
+							if (rawMimePartParts[0].match(/\b(Content-Type:\s*[^\s:;]+)/i)) {
+								ctype = RegExp.$1;
+							}
+						}
+						
+						// value
+						var value = rawMimePartParts[1].trim();
+						
+						mimePartData["varname"] = varname;
+						mimePartData["filename"] = filename;
+						mimePartData["ctype"] = ctype;
+						mimePartData["value"] = value;
+						
+						this.request.PostDataMIMEParts.push(mimePartData);
+					}
+				}
+				catch(e)
+				{
+					dump("\n\nEXC: " + e);
+				}
+			}
+			
 			return null;
 		}
 		
@@ -2459,15 +2584,22 @@ HttpFoxPostDataHandler.prototype =
 		}
 		this.request.PostData = postString;
 		
-		// split parameters (only non-mime bodies)
-		this.request.PostDataParameters = new Array();
-		var postDataParts = this.request.PostData.split("&");
-		for (i in postDataParts)
+		// check if url parameter style
+		if (this.request.PostData.match(/^&?([^=&<>]+=[^=&]*&?)+/i)) 
 		{
-			var nameValuePair = postDataParts[i].split("=");
-			this.request.PostDataParameters[nameValuePair[0]] = nameValuePair[1];
+			// split parameters (only non-mime bodies)
+			this.request.PostDataParameters = new Array();
+			var postDataParts = this.request.PostData.split("&");
+			for (var i in postDataParts)
+			{
+				var nameValuePair = postDataParts[i].split("=");
+				this.request.PostDataParameters[nameValuePair[0]] = nameValuePair[1];
+			}
+			return null;		
 		}
 		
+		// no parseable content. display raw.
+		this.request.PostDataParameters = null;
 		return null;
 	}
 }
@@ -2579,6 +2711,20 @@ function dummyWait(msecs)
 		cur = new Date().getTime();
 	}
 };
+// ************************************************************************************************
+
+
+String.prototype.trim = function(x) 
+{
+	if (x=='left')
+		return this.replace(/^\s*/,'');
+	if (x=='right')
+		return this.replace(/\s*$/,'');
+	if (x=='normalize')
+		return this.replace(/\s{2,}/g,' ').trim();
+		
+	return this.trim('left').trim('right');
+}
 // ************************************************************************************************
 
 // context helper functions

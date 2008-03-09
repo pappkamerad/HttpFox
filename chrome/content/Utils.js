@@ -203,6 +203,42 @@ function _dumpall(dumpdict, obj, niv, tab, path)
 }
 // ************************************************************************************************
 
+function stripNewlines(text)
+{
+	return text.replace(/(\r\n|\r|\n)/, "");
+}
+
+function isXml(text)
+{
+	if (text.match(/<\?xml[^\?>]*\?>/i))
+	{
+		// xml header found
+		return true;
+	}
+	
+	return stripNewlines(text).match(/<([^> ]+)( [^>]+)*>.*<\/\1>|<[^>]+\/>/i);
+}
+
+function isContentTypeXml(typestring)
+{
+	if (typestring.indexOf("xml") != -1) 
+	{
+		return true;
+	}
+	
+	if (typestring.indexOf("rdf") != -1) 
+	{
+		return true;
+	}
+	
+	if (typestring.indexOf("dtd") != -1) 
+	{
+		return true;
+	}
+	
+	return false;
+}
+
 // from live http headers:
 // Utility function to save data to clipboard
 function toClipboard(data)

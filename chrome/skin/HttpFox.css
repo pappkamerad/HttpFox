@@ -26,6 +26,17 @@
 	cursor: pointer;
 }
 
+.textbox_browser {
+	-moz-appearance: none;
+	margin: 0;
+	border: 1px solid;
+	-moz-border-top-colors: #96969D !important;
+	-moz-border-right-colors: #96969D !important;
+	-moz-border-bottom-colors: #96969D !important;
+	-moz-border-left-colors: #96969D !important;
+	padding: 0;
+}
+
 #hf_PanelSplitter { /*border-top: 1px solid !important;
     -moz-border-top-colors: threedShadow !important;
     border-bottom: 1px solid !important;

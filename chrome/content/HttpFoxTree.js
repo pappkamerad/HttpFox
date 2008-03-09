@@ -104,6 +104,12 @@ HttpFoxTree.prototype =
 					}
 					else
 					{
+						//TODO: do header byte calculation
+						if (request.RequestMethod == "HEAD")
+						{
+							return "0";
+						}
+						
 						rString = humanizeSize(request.BytesLoaded, 6);	
 					}
 					
@@ -158,7 +164,11 @@ HttpFoxTree.prototype =
 					
 					if (request.isRedirect())
 					{
-						return "Redirect to: " + request.ResponseHeaders["Location"];
+						if (request.ResponseHeaders && request.ResponseHeaders["Location"])
+						{
+							return "Redirect to: " + request.ResponseHeaders["Location"];	
+						}
+						return "Redirect (cached)";
 					}
 					
 					return request.ContentType;
@@ -307,7 +317,9 @@ HttpFoxTree.prototype =
 			var lvr = this.treebox.getLastVisibleRow();
 			this.treebox.rowCountChanged(index, count);
 			// If the last line of the tree is visible on screen, we will autoscroll
-			if ((lvr + 1) >= index)  {
+			//if ((lvr + 1) >= index || this.HttpFox.isAutoScroll())
+			if (this.HttpFox.isAutoScroll())
+			{
 				this.treebox.ensureRowIsVisible(this.rowCount - 1);
 			}
 		}

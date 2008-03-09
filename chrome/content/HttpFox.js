@@ -38,6 +38,12 @@ HttpFoxController.prototype =
 	
 	WindowMode: null,
 	
+	PostDataViewMode: 0,
+	
+	ContentViewMode: 0,
+	
+	XMLPrettyPrintXSLT: null,
+	
 	// constructor
 	init: function() 
 	{
@@ -45,7 +51,7 @@ HttpFoxController.prototype =
 		
 		this.HttpFoxService = Components.classes["@decoded.net/httpfox;1"].getService().wrappedJSObject;
 		
-		this.HttpFoxService.addController(this);
+		this.loadXMLPrettyPrintXSL();
 	},
 	
 	initGraphics: function(wmode) 
@@ -54,6 +60,7 @@ HttpFoxController.prototype =
 		this.clearRequestTree();
 		this.clearRequestInfoTabs();
 		
+		this.HttpFoxService.addController(this);
 		this.initFilteredRequests(this.HttpFoxService.Requests);
 		if (this.HttpFoxService.IsWatching) 
 		{
@@ -67,7 +74,23 @@ HttpFoxController.prototype =
 		}
 	},
 	
-	cmd_showAbout: function()
+	loadXMLPrettyPrintXSL: function()
+	{
+		var httpFoxRef = this;
+		var xslDoc = document.implementation.createDocument("", "test", null);
+		xslDoc.addEventListener("load", onload, false);
+		// default xsl from firefox
+		//xslDoc.load("chrome://global/content/xml/XMLPrettyPrint.xsl");
+		xslDoc.load("chrome://httpfox/content/XMLPrettyPrint.xsl");
+		function onload() 
+		{
+			var processor = new XSLTProcessor();
+			processor.importStylesheet(xslDoc);
+			httpFoxRef.XMLPrettyPrintXSLT = processor;
+		}
+	},
+	
+	cmd_hf_showAbout: function()
 	{
 		alert("HttpFox");
 	},
@@ -81,39 +104,54 @@ HttpFoxController.prototype =
 		}
         else 
         {
-			this.cmd_togglePanel();
+			this.cmd_hf_togglePanel();
 		}
     },
 	
-    cmd_close: function()
+    cmd_hf_close: function()
 	{
 		if (this.WindowMode)
 		{
+			// close button in detached window
 			window.close();
 		}
 		else
 		{
-			this.cmd_togglePanel();
+			var HttpFoxPanel = document.getElementById("hf_PanelNormal");
+			var HttpFoxPanelSplitter = document.getElementById("hf_PanelSplitter");
+			HttpFoxPanelSplitter.collapsed = HttpFoxPanel.collapsed = true;
 		}
 	},
     
 	//G
-	cmd_togglePanel: function()
+	cmd_hf_togglePanel: function()
 	{
 		var HttpFoxPanel = document.getElementById("hf_PanelNormal");
 		var HttpFoxPanelSplitter = document.getElementById("hf_PanelSplitter");
 		
-		// switch to opened window
+		// if already opened detached, switch to opened window
 		if (this.HttpFoxService.HttpFoxWindow)
 		{
+			if (!HttpFoxPanel.collapsed)
+			{
+				// close open panel
+				HttpFoxPanelSplitter.collapsed = HttpFoxPanel.collapsed = true;
+			}
+			
 			// window already open. switch to that
 			this.HttpFoxService.HttpFoxWindow.setFocus();
 			return;
 		}
 		
-		// open detached
-		if (HttpFoxPanel.collapsed && this.HttpFoxService.Preferences.AlwaysOpenDetached)
+		// if always open detached, open detached
+		if (this.HttpFoxService.Preferences.AlwaysOpenDetached)
 		{
+			if (!HttpFoxPanel.collapsed)
+			{
+				// close open panel
+				HttpFoxPanelSplitter.collapsed = HttpFoxPanel.collapsed = true;
+			}
+			
 			this.OpenInWindow();
 			return;
 		}
@@ -123,7 +161,7 @@ HttpFoxController.prototype =
 	},
 	
 	//C INPUT
-	cmd_quickFilterChanged: function() 
+	cmd_hf_quickFilterChanged: function() 
 	{
 		var sb = document.getElementById("hf_QuickFilterBox");
 		this.QuickFilterText = sb.value;
@@ -152,6 +190,11 @@ HttpFoxController.prototype =
 		this.clearRequestInfoTabs();
 	},
 	
+	isAutoScroll: function()
+	{
+		return document.getElementById("hf_AutoScrollCheckbox").checked;
+	},
+	
 	filterRequest: function(parameterArray)
 	{
 		var request = parameterArray["p1"];
@@ -176,20 +219,20 @@ HttpFoxController.prototype =
 		}
 	},
 	
-	cmd_toggleWatching: function()
+	cmd_hf_toggleWatching: function()
 	{
 		if (this.HttpFoxService.IsWatching)
 		{
-			this.cmd_stopWatching();
+			this.cmd_hf_stopWatching();
 		}
 		else 
 		{
-			this.cmd_startWatching();
+			this.cmd_hf_startWatching();
 		}
 	},
 	
     //C BUTTON (on all controllers)
-	cmd_startWatching: function() 
+	cmd_hf_startWatching: function() 
 	{
 		if (!this.HttpFoxService.IsWatching)
 		{
@@ -201,12 +244,12 @@ HttpFoxController.prototype =
 	
 	disableButton_startWatching: function()
 	{
-		document.getElementById("cmd_startWatching").setAttribute('disabled', 'true');
-		document.getElementById("cmd_stopWatching").removeAttribute('disabled');
+		document.getElementById("cmd_hf_startWatching").setAttribute('disabled', 'true');
+		document.getElementById("cmd_hf_stopWatching").removeAttribute('disabled');
 	},
 	
 	//C BUTTON (on all controllers)
-	cmd_stopWatching: function() 
+	cmd_hf_stopWatching: function() 
 	{
 		if (this.HttpFoxService.IsWatching)
 		{
@@ -218,12 +261,12 @@ HttpFoxController.prototype =
 	
 	disableButton_stopWatching: function()
 	{
-		document.getElementById("cmd_stopWatching").setAttribute('disabled', 'true');
-		document.getElementById("cmd_startWatching").removeAttribute('disabled');
+		document.getElementById("cmd_hf_stopWatching").setAttribute('disabled', 'true');
+		document.getElementById("cmd_hf_startWatching").removeAttribute('disabled');
 	},
 	
 	//C BUTTON (on all controllers)
-	cmd_clear: function()
+	cmd_hf_clear: function()
 	{
 		this.HttpFoxService.clearRequests();
 		
@@ -311,6 +354,68 @@ HttpFoxController.prototype =
 		this.selectionChange_RequestTree();
 	},
 	
+	selectionChange_PostDataDisplayTypePretty: function() 
+	{
+		this.PostDataViewMode = 0;
+		document.getElementById("hf_PostDataPrettyBox").collapsed = false;
+		document.getElementById("hf_PostDataRawBox").collapsed = true;
+	},
+	
+	selectionChange_PostDataDisplayTypeRaw: function() 
+	{
+		this.PostDataViewMode = 1;
+		document.getElementById("hf_PostDataPrettyBox").collapsed = true;
+		document.getElementById("hf_PostDataRawBox").collapsed = false;
+	},
+	
+	selectionChange_ContentDisplayTypePretty: function() 
+	{
+		if (document.getElementById("hf_ContentRadioPretty").disabled)
+		{
+			return;
+		}
+		
+		this.ContentViewMode = 0;
+		document.getElementById("hf_PrettyContentOutput").collapsed = false;
+		document.getElementById("hf_RawContentOutput").collapsed = true;
+	},
+	
+	selectionChange_ContentDisplayTypeRaw: function() 
+	{
+		if (document.getElementById("hf_ContentRadioPretty").disabled)
+		{
+			return;
+		}
+		
+		this.ContentViewMode = 1;
+		document.getElementById("hf_PrettyContentOutput").collapsed = true;
+		document.getElementById("hf_RawContentOutput").collapsed = false;
+	},
+	
+	disableContentDisplayTypePrettyRadio: function()
+	{
+		document.getElementById("hf_ContentRadioGroup").selectedIndex = 1;
+		document.getElementById("hf_ContentRadioPretty").disabled = true;
+		document.getElementById("hf_ContentRadioGroup").disabled = true;
+		document.getElementById("hf_PrettyContentOutput").collapsed = true;
+		document.getElementById("hf_RawContentOutput").collapsed = false;
+	},
+	
+	enableContentDisplayTypePrettyRadio: function()
+	{
+		document.getElementById("hf_ContentRadioGroup").selectedIndex = this.ContentViewMode;
+		document.getElementById("hf_ContentRadioPretty").disabled = false;
+		document.getElementById("hf_ContentRadioGroup").disabled = false;
+		if (this.ContentViewMode == 0)
+		{
+			this.selectionChange_ContentDisplayTypePretty();
+		}
+		else
+		{
+			this.selectionChange_ContentDisplayTypeRaw();
+		}
+	},
+	
 	//G TABCLICK
 	selectionChange_RequestDetails: function() 
 	{
@@ -349,8 +454,6 @@ HttpFoxController.prototype =
 			var debugPanel = document.getElementById("hf_DebugOutput");
 			if (currentRequest && this.isSelectedTab_Debug()) 
 			{
-				//var currentRequest = this.RequestTree.getCurrent();
-				//debugPanel.contentDocument.body.innerHTML = currentRequest.getDebugInfo();
 				debugPanel.contentDocument.body.innerHTML = this.getDebugInfoContent(currentRequest);
 			}
 			else 
@@ -373,7 +476,6 @@ HttpFoxController.prototype =
 		var debugPanel = document.getElementById("hf_DebugOutput");
 		if (this.isSelectedTab_Debug()) 
 		{
-			//debugPanel.contentDocument.body.innerHTML = currentRequest.getDebugInfo();
 			debugPanel.contentDocument.body.innerHTML = this.getDebugInfoContent(currentRequest);
 		}
 		else 
@@ -388,14 +490,10 @@ HttpFoxController.prototype =
 		//this.showCacheInfo(currentRequest);
 		
 		// update post data info
-		var postDataRawPanel = document.getElementById("hf_PostDataRawOutput");
-		postDataRawPanel.value = currentRequest.PostData;
+		this.showPostData(currentRequest);
 		
 		// update querystring info
 		this.showQueryStringParameters(currentRequest);
-		
-		// update querystring info
-		this.showPostDataParameters(currentRequest);
 		
 		// headers
 		this.showRequestHeaders(currentRequest);
@@ -440,23 +538,59 @@ HttpFoxController.prototype =
 	showRawContent: function(status) 
 	{
 		var currentRequest = this.RequestTree.getCurrent();
-		var contentPanel = document.getElementById("hf_RawContentOutput");
+		var contentPanelRaw = document.getElementById("hf_RawContentOutput");
+		var contentPanelPretty = document.getElementById("hf_PrettyContentOutput");
 		
 		if (status == -1)
 		{
 			// not finished
-			contentPanel.value = "not ready.";
+			contentPanelRaw.value = "not ready.";
 			return;
 		}
+		
+		// display content-type
+		var ctypedisplay = "Type: ";
+		for (var y in currentRequest.ResponseHeaders)
+		{
+			if (y.toLowerCase() == "content-type")
+			{
+				ctypedisplay = currentRequest.ResponseHeaders[y];
+			}
+		}
+		document.getElementById("hf_ContentTypeLabel").value = "Type: " + ctypedisplay;
 		
 		if (status > 0)
 		{
 			// error
-			contentPanel.value = "Error loading content (" + nsResultErrors[status.toString(16)] + ")";
+			contentPanelRaw.value = "Error loading content (" + nsResultErrors[status.toString(16)] + ")";
 			return;
 		}
 		
-		contentPanel.value = currentRequest.Content;	
+		// fill raw content display
+		contentPanelRaw.value = currentRequest.Content;
+		
+		// try to fill pretty print content
+		// clear first
+		contentPanelPretty.contentDocument.body.innerHTML = "";
+		//this.selectionChange_ContentDisplayTypeRaw();
+		this.disableContentDisplayTypePrettyRadio();
+		
+		if (isContentTypeXml(currentRequest.ContentType))
+		{
+			// enable pretty
+			this.enableContentDisplayTypePrettyRadio();
+			
+			// xml (by mimetype definition)
+			this.getPrettyPrintXML(currentRequest.Content, "hf_PrettyContentOutput");
+			
+			// display if selected view
+			if (this.ContentViewMode == 0)
+			{
+				this.selectionChange_ContentDisplayTypePretty();
+			}
+			
+			return;
+		}
 	},
 	
 	//G
@@ -478,7 +612,7 @@ HttpFoxController.prototype =
 	//G
 	isSelectedTab_Content: function()
 	{
-		if (this.SelectedRequestDetailsTab == 5)
+		if (this.SelectedRequestDetailsTab == 4)
 		{
 			return true;
 		}
@@ -488,7 +622,7 @@ HttpFoxController.prototype =
 	//G
 	isSelectedTab_Debug: function()
 	{
-		if (this.SelectedRequestDetailsTab == 6)
+		if (this.SelectedRequestDetailsTab == 5)
 		{
 			return true;
 		}
@@ -539,7 +673,7 @@ HttpFoxController.prototype =
 		{
 			this.addHeaderRow("hf_RequestHeadersChildren", i, request.RequestHeaders[i]);
 		}
-		// add possible post headers
+
 		for (i in request.PostDataHeaders) 
 		{
 			this.addHeaderRow("hf_RequestHeadersChildren", i, request.PostDataHeaders[i]);
@@ -625,8 +759,27 @@ HttpFoxController.prototype =
 	},
 	
 	//G
-	showPostDataParameters: function(request)
+	showPostData: function(request)
 	{
+		if (this.PostDataViewMode == 0)
+		{
+			this.selectionChange_PostDataDisplayTypePretty();
+		}
+		else 
+		{
+			this.selectionChange_PostDataDisplayTypeRaw();
+		}
+		
+		// init
+		document.getElementById("hf_PostDataPretty").collapsed = true;
+		document.getElementById("hf_PostDataTree").collapsed = false;
+		
+		// fill raw data
+		document.getElementById("hf_PostDataRawOutput").value = request.PostData;
+		
+		// fill pretty data
+		var mimeLabel = document.getElementById("hf_PostDataMimeType");
+		mimeLabel.value = "Type: ";
 		this.clearTreeEntries("hf_PostDataChildren");
 		
 		if (request.PostData == null) {
@@ -634,22 +787,86 @@ HttpFoxController.prototype =
 			return;
 		}
 		
+		var ctypedisplay = "";
+		for (var y in request.PostDataHeaders)
+		{
+			if (y.toLowerCase() == "content-type")
+			{
+				ctypedisplay = request.PostDataHeaders[y];
+			}
+		}
+		if (ctypedisplay == "")
+		{
+			for (var y in request.RequestHeaders)
+			{
+				if (y.toLowerCase() == "content-type")
+				{
+					ctypedisplay = request.RequestHeaders[y];
+				}
+			}
+		}
+		
+		mimeLabel.value = "Type: " + ctypedisplay;
+		
 		if (request.IsPostDataMIME) 
 		{
 			// mime post data
+			
 			for (i in request.PostDataMIMEParts)
 			{
-				this.addHeaderRow("hf_PostDataChildren", i, request.PostDataMIMEParts[i]);
+				if (request.PostDataMIMEParts[i]["filename"] != null)
+				{
+					this.addHeaderRow("hf_PostDataChildren", 
+						request.PostDataMIMEParts[i]["varname"], 
+						request.PostDataMIMEParts[i]["filename"] + " " + request.PostDataMIMEParts[i]["ctype"]);
+				}
+				else 
+				{
+					this.addHeaderRow("hf_PostDataChildren", request.PostDataMIMEParts[i]["varname"], request.PostDataMIMEParts[i]["value"]);	
+				}
+				
 			}	
 		}
-		else 
+		else if (request.PostDataParameters)
 		{
 			// standard url encoded post data
+			
 			for (i in request.PostDataParameters)
 			{
 				this.addHeaderRow("hf_PostDataChildren", i, urlDecode(request.PostDataParameters[i]));
 			}
 		}
+		else
+		{
+			// raw content
+			document.getElementById("hf_PostDataPretty").collapsed = false;
+			document.getElementById("hf_PostDataTree").collapsed = true;
+			
+			// check if url parameter style
+			if (isXml(request.PostData))
+			{
+				this.getPrettyPrintXML(request.PostData, "hf_PostDataPretty");	
+			}
+			else 
+			{
+				// just raw...
+				document.getElementById("hf_PostDataPretty").contentDocument.body.innerHTML = request.PostData; 
+			}
+		}
+	},
+	
+	getPrettyPrintXML: function(xmlData, browserBoxId)
+	{
+		var parser = new DOMParser();
+		var doc = parser.parseFromString(xmlData, "text/xml");
+		
+		var HTMLOutput = this.XMLPrettyPrintXSLT.transformToFragment(doc, document);
+				
+		var debugPanel = document.getElementById(browserBoxId);
+		debugPanel.contentDocument.body.innerHTML = "";
+		debugPanel.contentDocument.body.appendChild(HTMLOutput);
+		debugPanel.contentDocument.body.style.margin = 0;
+		debugPanel.contentDocument.body.style.padding = 0;
 	},
 	
 	//G

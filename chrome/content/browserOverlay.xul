@@ -21,15 +21,6 @@
         </statusbarpanel>
     
         <menupopup id="hf_StatusContextMenu" onpopupshowing="">
-            <!--<menuitem label="Start HttpFox 1" 
-            	type="checkbox" 
-            	option="disabled"
-				command="cmd_startWatching" />
-            <menuseparator/>
-            <menuitem label="INIT" 
-            	oncommand="initHttpFox();"/>-->
-           	<!--<menuitem label="PENDING SCAN" 
-            	oncommand="HttpFox.checkPendingRequests();"/>-->
             <menuitem 
             	label="Open in new window" 
             	oncommand="HttpFox.OpenInWindow();"/>
@@ -40,15 +31,15 @@
         </menupopup>
 	</statusbar>
 	
-	<vbox id="appcontent" persist="width,height"> <!-- overlay firefox content window -->
-		<splitter id="hf_PanelSplitter" persist="height" collapsed="true"/>
+	<vbox id="appcontent"> <!-- overlay firefox content window -->
+		<splitter id="hf_PanelSplitter" persist="height, collapsed" />
 		
-		<vbox id="hf_PanelNormal" collapsed="true" persist="height" flex="1">
-			<vbox id="hf_RequestList" persist="height" flex="1" />
+		<vbox id="hf_PanelNormal" persist="height, collapsed" >
+			<vbox id="hf_RequestList" />
 
 			<splitter id="hf_MiddleSplitter" persist="height"/>
 			
-			<vbox id="hf_RequestDetails" persist="height" flex="1" />
+			<vbox id="hf_RequestDetails" />
 		</vbox>
 		
 	</vbox>
