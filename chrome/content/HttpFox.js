@@ -541,6 +541,12 @@ HttpFoxController.prototype =
 		var contentPanelRaw = document.getElementById("hf_RawContentOutput");
 		var contentPanelPretty = document.getElementById("hf_PrettyContentOutput");
 		
+		// clear first
+		contentPanelPretty.contentDocument.body.innerHTML = "";
+		contentPanelRaw.value = "";
+		this.disableContentDisplayTypePrettyRadio();
+		
+		// not finished
 		if (status == -1)
 		{
 			// not finished
@@ -549,7 +555,7 @@ HttpFoxController.prototype =
 		}
 		
 		// display content-type
-		var ctypedisplay = "Type: ";
+		var ctypedisplay = "";
 		for (var y in currentRequest.ResponseHeaders)
 		{
 			if (y.toLowerCase() == "content-type")
@@ -559,6 +565,7 @@ HttpFoxController.prototype =
 		}
 		document.getElementById("hf_ContentTypeLabel").value = "Type: " + ctypedisplay;
 		
+		// error at getting content
 		if (status > 0)
 		{
 			// error
@@ -570,11 +577,6 @@ HttpFoxController.prototype =
 		contentPanelRaw.value = currentRequest.Content;
 		
 		// try to fill pretty print content
-		// clear first
-		contentPanelPretty.contentDocument.body.innerHTML = "";
-		//this.selectionChange_ContentDisplayTypeRaw();
-		this.disableContentDisplayTypePrettyRadio();
-		
 		if (isContentTypeXml(currentRequest.ContentType))
 		{
 			// enable pretty
@@ -864,7 +866,8 @@ HttpFoxController.prototype =
 				
 		var debugPanel = document.getElementById(browserBoxId);
 		debugPanel.contentDocument.body.innerHTML = "";
-		debugPanel.contentDocument.body.appendChild(HTMLOutput);
+		var importedNode = debugPanel.contentDocument.importNode(HTMLOutput, true);
+		debugPanel.contentDocument.body.appendChild(importedNode);
 		debugPanel.contentDocument.body.style.margin = 0;
 		debugPanel.contentDocument.body.style.padding = 0;
 	},

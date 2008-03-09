@@ -32,9 +32,9 @@
 	</statusbar>
 	
 	<vbox id="appcontent"> <!-- overlay firefox content window -->
-		<splitter id="hf_PanelSplitter" persist="height, collapsed" />
+		<splitter id="hf_PanelSplitter" collapsed="true" persist="height" />
 		
-		<vbox id="hf_PanelNormal" persist="height, collapsed" >
+		<vbox id="hf_PanelNormal" collapsed="true" persist="height" >
 			<vbox id="hf_RequestList" />
 
 			<splitter id="hf_MiddleSplitter" persist="height"/>
