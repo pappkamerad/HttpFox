@@ -164,8 +164,7 @@ HttpFoxService.prototype =
 		{
 			if (request.loadFlags & Components.interfaces.nsIRequest.INHIBIT_CACHING) 
 			{
-				//TODO: preferences setting:
-				if (true) 
+				if (this.Preferences.ForceCaching) 
 				{
 					request.loadFlags = request.loadFlags & ~Components.interfaces.nsIRequest.INHIBIT_CACHING;
 				}
@@ -634,6 +633,10 @@ HttpFoxPreferences.prototype =
 	_ShowHttpFoxHelperRequests: null,
 	
 	_ColorRequests: null,
+	
+	_ShowDebugTab: null,
+	
+	_ForceCaching: null,
 		
 	init: function() 
 	{
@@ -649,6 +652,8 @@ HttpFoxPreferences.prototype =
 		this._AlwaysOpenDetached = this.prefs.getBoolPref("AlwaysOpenDetached");
 		this._ShowHttpFoxHelperRequests = this.prefs.getBoolPref("ShowHttpFoxHelperRequests");
 		this._ColorRequests = this.prefs.getBoolPref("ColorRequests");
+		this._ShowDebugTab = this.prefs.getBoolPref("ShowDebugTab");
+		this._ForceCaching = this.prefs.getBoolPref("ForceCaching");
 	},
 	
 	shutdown: function()
@@ -679,6 +684,14 @@ HttpFoxPreferences.prototype =
 				
 			case "ColorRequests":
 				this._ColorRequests = this.prefs.getBoolPref("ColorRequests");
+				break;
+				
+			case "ShowDebugTab":
+				this._ShowDebugTab = this.prefs.getBoolPref("ShowDebugTab");
+				break;
+				
+			case "ForceCaching":
+				this._ForceCaching = this.prefs.getBoolPref("ForceCaching");
 				break;
 		}
 	},
@@ -721,6 +734,26 @@ HttpFoxPreferences.prototype =
 	{
 		this._ColorRequests = value;
 		this.prefs.setBoolPref("ColorRequests", value);
+	},
+	
+	get ShowDebugTab() 
+	{ 
+		return this._ShowDebugTab;
+	},
+	set ShowDebugTab(value) 
+	{
+		this._ShowDebugTab = value;
+		this.prefs.setBoolPref("ShowDebugTab", value);
+	},
+	
+	get ForceCaching() 
+	{ 
+		return this._ForceCaching;
+	},
+	set ForceCaching(value) 
+	{
+		this._ForceCaching = value;
+		this.prefs.setBoolPref("ForceCaching", value);
 	}
 };
 

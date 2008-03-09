@@ -59,6 +59,13 @@ HttpFoxController.prototype =
 		this.WindowMode = wmode;
 		this.clearRequestTree();
 		this.clearRequestInfoTabs();
+		this.selectionChange_ContentDisplayTypePretty();
+		this.selectionChange_PostDataDisplayTypePretty();
+		if (!this.HttpFoxService.Preferences.ShowDebugTab)
+		{
+			document.getElementById("hf_DebugTabHeader").collapsed = "true";
+			document.getElementById("hf_DebugTabHeader").disabled = "true";
+		}
 		
 		this.HttpFoxService.addController(this);
 		this.initFilteredRequests(this.HttpFoxService.Requests);
@@ -423,10 +430,13 @@ HttpFoxController.prototype =
 		{
 			this.SelectedRequestDetailsTab = document.getElementById("hf_RequestDetailsTabs").selectedIndex;
 			
+			if (this.isSelectedTab_Debug() && !this.HttpFoxService.Preferences.ShowDebugTab) 
+			{
+				document.getElementById("hf_RequestDetailsTabs").selectedIndex = 0;
+			}
+			
 			var contentPanel = document.getElementById("hf_RawContentOutput");
-			
 			var currentRequest = this.RequestTree.getCurrent();
-			
 			if (currentRequest && this.isSelectedTab_Content()) 
 			{
 				if (currentRequest.isContentAvailable())  {

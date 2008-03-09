@@ -146,7 +146,7 @@
 					    <tab label="Query String" />
 					    <tab label="POST Data" />
 						<tab label="Content" />
-					    <tab label="Debug Log" />
+					    <tab label="Debug Log" id="hf_DebugTabHeader" />
 					</tabs>
 					
 					<tabpanels flex="1">
@@ -363,9 +363,9 @@
 						<tabpanel id="hf_ContentTab" orient="vertical">
 							<vbox flex="1">
 								<label id="hf_ContentTypeLabel" />
-				    			<browser class="textbox_browser" collapsed="true" id="hf_PrettyContentOutput" style="background-color:#FFFFFF; font-family: -moz-fixed; font-weight: normal;" type="content" flex="1" readonly="true" wrap="false" multiline="true"/>
+				    			<browser id="hf_PrettyContentOutput" class="textbox_browser" type="content" flex="1" readonly="true" wrap="false" multiline="true"/>
 			
-				    			<textbox id="hf_RawContentOutput" style="background-color:#FFFFFF; font-family: -moz-fixed; font-weight: normal;" type="content" flex="1" readonly="true" wrap="false" multiline="true"/>
+				    			<textbox id="hf_RawContentOutput" class="textbox_browser" type="content" flex="1" readonly="true" wrap="false" multiline="true"/>
 			
 				    			<radiogroup id="hf_ContentRadioGroup" orient="horizontal">
 									<radio id="hf_ContentRadioPretty" label="Pretty" onclick="HttpFox.selectionChange_ContentDisplayTypePretty();" selected="true" />
