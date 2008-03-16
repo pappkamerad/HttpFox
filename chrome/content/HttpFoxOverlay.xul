@@ -85,10 +85,17 @@
 			    
 			    <splitter class="tree-splitter"/>
 			    
-			    <treecol id="hf_Column_Size" 
-			    	label="Size"
+			    <treecol id="hf_Column_Sent" 
+			    	label="Sent"
 			    	flex="0" 
-			    	style="width:100px; text-align:right; -moz-border-top-colors: ThreeDLightShadow ThreeDLightShadow; border-bottom-width: 1px; border-left-width: 1px; border-top-width: 1px; border-right-width: 1px;"/>
+			    	style="width:70px; text-align:right; -moz-border-top-colors: ThreeDLightShadow ThreeDLightShadow; border-bottom-width: 1px; border-left-width: 1px; border-top-width: 1px; border-right-width: 1px;"/>
+			    
+			    <splitter class="tree-splitter"/>
+			    
+			    <treecol id="hf_Column_Received" 
+			    	label="Received"
+			    	flex="0" 
+			    	style="width:80px; text-align:right; -moz-border-top-colors: ThreeDLightShadow ThreeDLightShadow; border-bottom-width: 1px; border-left-width: 1px; border-top-width: 1px; border-right-width: 1px;"/>
 			    
 			    <splitter class="tree-splitter"/>
 			    

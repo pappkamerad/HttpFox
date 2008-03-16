@@ -36,7 +36,7 @@
 	</statusbar>
 	
 	<menupopup id="menu_viewPopup">
-		<menuitem id="menu_viewToggleHttpFox" 
+		<menuitem id="hf_menu_viewToggleHttpFox" 
 			insertbefore="toggle_taskbar"
 			label="HttpFox" 
 			type="checkbox"
@@ -45,14 +45,14 @@
 	</menupopup>
 
 	<menupopup id="menu_ToolsPopup">
-		<menu id="menu_HttpFox" 
+		<menu id="hf_menu_HttpFox" 
 			class="menuitem-iconic" 
 			image="chrome://httpfox/skin/globe16.png"
 			label="HttpFox" 
 			insertbefore="javascriptConsole" >
 			
 			<menupopup >
-				<menuitem id="menu_viewToggleHttpFox" 
+				<menuitem id="hf_menu_viewToggleHttpFox" 
 					insertbefore="toggle_taskbar"
 					label="Toggle HttpFox" 
 					type="checkbox"
@@ -68,30 +68,6 @@
 					label="Options" 
 					oncommand="HttpFox.OpenOptions();" />
 					
-				<!--
-				<menuitem id="menu_detachFirebug"
-					label="&firebug.DetachFirebug;" command="cmd_toggleDetachFirebug" type="checkbox"/>
-				<menuseparator/>
-
-                <menuitem label="&firebug.DisableFirebug;" type="checkbox"
-                          oncommand="FirebugChrome.onToggleOption(this)" option="disabledAlways"/>
-                <menuitem type="checkbox"
-                          oncommand="FirebugChrome.onToggleOption(this)" option="disabledForSite"/>
-                <menuitem label="&firebug.AllowedSites;" command="cmd_openFirebugPermissions"/>
-                <menuseparator/>
-
-                <menuitem id="menu_inspectElement" label="&firebug.InspectElement;"
-                          command="cmd_toggleInspecting" key="key_toggleInspecting"/>
-                <menuitem label="&firebug.ProfileScript;" 
-                          command="cmd_toggleProfiling" key="key_toggleProfiling"/>
-                 <menuitem label="&firebug.ClearConsole;"
-                           command="cmd_clearConsole" key="key_clearConsole"/>
-                <menuseparator/>
-                
-                <menuitem id="menu_focusCommandLine" label="&firebug.CommandLine;"
-                        command="cmd_focusCommandLine" key="key_focusCommandLine"/>
-                <menuitem id="menu_focusFirebugSearch" label="&firebug.Search;"
-                        command="cmd_focusFirebugSearch" key="key_focusFirebugSearch"/>-->
             </menupopup>
         </menu>
     </menupopup>

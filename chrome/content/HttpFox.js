@@ -81,22 +81,21 @@ HttpFoxController.prototype =
 			document.getElementById("hf_TopBarButton_Detach").collapsed = true;
 			document.getElementById("hf_TopBarButton_Detach").disabled = true;
 		}
+		
 	},
 	
 	loadXMLPrettyPrintXSL: function()
 	{
-		var httpFoxRef = this;
-		var xslDoc = document.implementation.createDocument("", "test", null);
-		xslDoc.addEventListener("load", onload, false);
+		var xslDoc = document.implementation.createDocument("", "", null);
+		xslDoc.async = false;
+		
 		// default xsl from firefox
 		//xslDoc.load("chrome://global/content/xml/XMLPrettyPrint.xsl");
-		xslDoc.load("chrome://httpfox/content/XMLPrettyPrint.xsl");
-		function onload() 
-		{
-			var processor = new XSLTProcessor();
-			processor.importStylesheet(xslDoc);
-			httpFoxRef.XMLPrettyPrintXSLT = processor;
-		}
+		var test = xslDoc.load("chrome://httpfox/content/XMLPrettyPrint.xsl");
+		
+		var processor = new XSLTProcessor();
+		processor.importStylesheet(xslDoc);
+		this.XMLPrettyPrintXSLT = processor;
 	},
 	
 	cmd_hf_showAbout: function()
@@ -494,13 +493,16 @@ HttpFoxController.prototype =
 			var currentRequest = this.RequestTree.getCurrent();
 			if (currentRequest && this.isSelectedTab_Content()) 
 			{
-				if (currentRequest.isContentAvailable())  {
+				if (currentRequest.isContentAvailable())  
+				{
 					// async
 					this.showRawContentLoading();
 					currentRequest.startGetRawContent(this);
 				}
-				else {
-					contentPanel.value = "n/a";
+				else 
+				{
+					this.clearContentDisplay();
+					this.showRawContentNotAvailable();
 				}
 				//if (currentRequest.getCachedResponse()) {
 				//	contentPanel.value = currentRequest.getRawContent();
@@ -589,7 +591,8 @@ HttpFoxController.prototype =
 				}*/
 			}
 			else {
-				contentPanel.value = "n/a";
+				this.clearContentDisplay();
+				this.showRawContentNotAvailable();
 			}
 			//contentPanel.value = currentRequest.getRawContent();
 		}
@@ -597,6 +600,14 @@ HttpFoxController.prototype =
 		{
 			contentPanel.value = "";
 		}
+	},
+	
+	clearContentDisplay: function()
+	{
+		document.getElementById("hf_PrettyContentOutput").contentDocument.body.innerHTML = "";
+		document.getElementById("hf_RawContentOutput").value = "";
+		document.getElementById("hf_ContentTypeLabel").value = "Type: ";
+		this.disableContentDisplayTypePrettyRadio();
 	},
 	
 	//G
@@ -607,34 +618,24 @@ HttpFoxController.prototype =
 		var contentPanelPretty = document.getElementById("hf_PrettyContentOutput");
 		
 		// clear first
-		contentPanelPretty.contentDocument.body.innerHTML = "";
-		contentPanelRaw.value = "";
-		this.disableContentDisplayTypePrettyRadio();
+		this.clearContentDisplay();
+		
+		// display content-type
+		document.getElementById("hf_ContentTypeLabel").value = "Type: " + (currentRequest.ContentType ? currentRequest.ContentType : "");
 		
 		// not finished
 		if (status == -1)
 		{
 			// not finished
-			contentPanelRaw.value = "not ready.";
+			this.showRawContentNotFinished();
 			return;
 		}
-		
-		// display content-type
-		var ctypedisplay = "";
-		for (var y in currentRequest.ResponseHeaders)
-		{
-			if (y.toLowerCase() == "content-type")
-			{
-				ctypedisplay = currentRequest.ResponseHeaders[y];
-			}
-		}
-		document.getElementById("hf_ContentTypeLabel").value = "Type: " + ctypedisplay;
 		
 		// error at getting content
 		if (status > 0)
 		{
 			// error
-			contentPanelRaw.value = "Error loading content (" + nsResultErrors[status.toString(16)] + ")";
+			this.showRawContentError(status);
 			return;
 		}
 		
@@ -663,18 +664,31 @@ HttpFoxController.prototype =
 	//G
 	showRawContentLoading: function() 
 	{
-		var currentRequest = this.RequestTree.getCurrent();
-		var contentPanel = document.getElementById("hf_RawContentOutput");
-		contentPanel.value = "loading...";
+		this.clearContentDisplay();
+		
+		document.getElementById("hf_RawContentOutput").value = "Loading...";
 	},
 	
-	//G
-	/*showRawContentError: function(errorCode) 
+	showRawContentError: function(status) 
 	{
-		var currentRequest = this.RequestTree.getCurrent();
-		var contentPanel = document.getElementById("hf_RawContentOutput");
-		contentPanel.value = "Error loading content (" + nsResultErrors[errorCode.toString(16)] + ")";
-	},*/
+		this.clearContentDisplay();
+		
+		document.getElementById("hf_RawContentOutput").value = "Error loading content (" + nsResultErrors[status.toString(16)] + ")";
+	},
+	
+	showRawContentNotAvailable: function() 
+	{
+		this.clearContentDisplay();
+		
+		document.getElementById("hf_RawContentOutput").value = "Not available";
+	},
+	
+	showRawContentNotFinished: function() 
+	{
+		this.clearContentDisplay();
+		
+		document.getElementById("hf_RawContentOutput").value = "Not ready...";
+	},
 	
 	//G
 	isSelectedTab_Content: function()
@@ -734,7 +748,7 @@ HttpFoxController.prototype =
 		this.clearTreeEntries("hf_RequestHeadersChildren");
 		
 		// request line
-		this.addHeaderRow("hf_RequestHeadersChildren", "(Request-Line)", request.RequestMethod + " " + request.nsiURI.path + " HTTP/" + request.RequestProtocolVersion);
+		this.addHeaderRow("hf_RequestHeadersChildren", "(Request-Line)", request.RequestMethod + " " + request.URIPath + " HTTP/" + request.RequestProtocolVersion);
 		
 		for (i in request.RequestHeaders)
 		{
@@ -842,7 +856,14 @@ HttpFoxController.prototype =
 		document.getElementById("hf_PostDataTree").collapsed = false;
 		
 		// fill raw data
-		document.getElementById("hf_PostDataRawOutput").value = request.PostData;
+		if (request.IsPostDataTooBig)
+		{
+			document.getElementById("hf_PostDataRawOutput").value = "too big...";
+		}
+		else
+		{
+			document.getElementById("hf_PostDataRawOutput").value = request.PostData;
+		}
 		
 		// fill pretty data
 		var mimeLabel = document.getElementById("hf_PostDataMimeType");
@@ -952,20 +973,17 @@ HttpFoxController.prototype =
 		content += "<b>RequestMethod:</b> " + request.RequestMethod + "<br/>";
 		content += "<b>StartTimestamp:</b> " + request.StartTimestamp + "<br/>";
 		content += "<b>EndTimestamp:</b> " + request.EndTimestamp + "<br/>";
-		content += "<b>Owner:</b> " + request.Owner + "<br/>";
-		content += "<b>SecurityInfo:</b> " + request.SecurityInfo + "<br/>";
 		content += "<b>Loadflags: - request:</b> " + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.LOADFLAGS_REQUEST, request.LoadFlags) + "<br/>";
 		content += "<b>Loadflags: - channel:</b> " + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.LOADFLAGS_CHANNEL, request.LoadFlags) + "<br/>";
 		content += "<b>Loadflags: - caching:</b> " + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.LOADFLAGS_CACHING, request.LoadFlags) + "<br/>";
 		content += "<b>IsFromCache:</b> " + request.IsFromCache + "<br/>";
 		content += "<b>BytesLoaded:</b> " + request.BytesLoaded + "<br/>";
-		content += "<b>BytesTotal:</b> " + request.BytesTotal + "<br/>";
+		content += "<b>BytesLoadedTotal:</b> " + request.BytesLoadedTotal + "<br/>";
 		content += "<b>ContentLength: </b>" + request.ContentLength + "<br/>";
 		content += "<b>ContentType: </b>" + request.ContentType + "<br/>";
 		content += "<b>ContentCharset: </b>" + request.ContentCharset + "<br/>";
 		content += "<b>ResponseStatus: </b>" + request.ResponseStatus + "<br/>";
 		content += "<b>ResponseStatusText: </b>" + request.ResponseStatusText + "<br/>";
-		content += "<b>ProxyInfo:</b> " + request.ProxyInfo + "<br/>";
 		
 		if (request.IsFromCache) {
 			content += "<br/>";
@@ -1003,7 +1021,7 @@ HttpFoxController.prototype =
 			content += "<b> - IsFromCache: </b>" + request.RequestLog[i].IsFromCache + "<br/>";
 			content += "<b> - IsPending: </b>" + request.RequestLog[i].IsPending + "<br/>";
 			content += "<b> - BytesLoaded: </b>" + request.RequestLog[i].BytesLoaded + "<br/>";
-			content += "<b> - BytesTotal: </b>" + request.RequestLog[i].BytesTotal + "<br/>";
+			content += "<b> - BytesLoadedTotal: </b>" + request.RequestLog[i].BytesLoadedTotal + "<br/>";
 			content += "<b> - ContentLength: </b>" + request.RequestLog[i].ContentLength + "<br/>";
 			content += "<b> - ContentType: </b>" + request.RequestLog[i].ContentType + "<br/>";
 			content += "<b> - ContentCharset: </b>" + request.RequestLog[i].ContentCharset + "<br/>";

@@ -90,27 +90,41 @@ HttpFoxTree.prototype =
 
 					return formatTimeDifference(request.StartTimestamp, request.EndTimestamp);
 					
-				case "hf_Column_Size":
+				case "hf_Column_Sent":
 					var rString = "";
 					
-					if (request.IsAborted)
+					if (request.IsSending)
+					{
+						rString = humanizeSize(request.getBytesSent(), 6) + "/" + humanizeSize(request.getBytesSentTotal(), 6);
+					}
+					else
+					{
+						rString = humanizeSize(request.getBytesSentTotal(), 6);	
+					}
+					
+					return rString;
+					
+				case "hf_Column_Received":
+					var rString = "";
+					
+					/*if (request.IsAborted)
 					{
 						return rString;
+					}*/
+					
+					if (request.IsSending)
+					{
+						return "*";
 					}
 					
 					if (!request.IsFinished)
 					{
-						rString = humanizeSize(request.BytesLoaded, 6) + "/" + humanizeSize(request.BytesTotal, 6);
+						// show loading body progress
+						rString = humanizeSize(request.getBytesLoaded(), 6) + "/" + humanizeSize(request.getBytesLoadedTotal(), 6);
 					}
 					else
 					{
-						//TODO: do header byte calculation
-						if (request.RequestMethod == "HEAD")
-						{
-							return "0";
-						}
-						
-						rString = humanizeSize(request.BytesLoaded, 6);	
+						rString = humanizeSize(request.getBytesLoaded(), 6);	
 					}
 					
 					if (request.IsFromCache || request.ResponseStatus == 304)
@@ -124,11 +138,6 @@ HttpFoxTree.prototype =
 					return request.RequestMethod;
 					
 				case "hf_Column_Result":
-					if (!request.IsFinished)
-					{
-						return "*";
-					}	
-				
 					if (request.IsAborted)
 					{
 						return "(Aborted)";
@@ -138,20 +147,20 @@ HttpFoxTree.prototype =
 					{
 						return "(Error)";
 					}
-					
+				
 					if (request.IsFromCache && (request.ResponseStatus != 304))
 					{
 						return "(Cache)";
 					}
+					
+					if (!request.HasReceivedResponseHeaders && !request.IsFinal)
+					{
+						return "*";
+					}	
 						
 					return request.ResponseStatus;
 					
 				case "hf_Column_Type":
-					if (!request.IsFinished)
-					{
-						return "*";
-					}
-					
 					if (request.hasErrorCode())
 					{
 						if (request.ContentType)
@@ -160,6 +169,11 @@ HttpFoxTree.prototype =
 						}
 						
 						return nsResultErrors[request.Status.toString(16)];
+					}
+					
+					if (!request.HasReceivedResponseHeaders && !request.IsFromCache && !request.IsFinal)
+					{
+						return "*";
 					}
 					
 					if (request.isRedirect())

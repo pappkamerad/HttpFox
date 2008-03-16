@@ -792,17 +792,23 @@ HttpFoxRequest.prototype =
 	
 	// custom request properties
 	StartTimestamp: null,
+	ResponseStartTimestamp: null,
 	EndTimestamp: null,
 	Content: null,
 	ContentStatus: null,
 	BytesLoaded: 0,
-	BytesTotal: 0,
+	BytesLoadedTotal: 0,
+	BytesSent: 0,
+	BytesSentTotal: 0,
+	ResponseHeadersSize: 0,
+	RequestHeadersSize: 0,
 	
 	// request states
 	IsFinished: false,
 	IsFinal: false, // last scan and cleanup was done
 	IsAborted: false,
 	IsLoadingBody: false,
+	IsSending: false,
 	HasReceivedResponseHeaders: false,
 	IsRedirect: false,
 	HasErrorCode: false,
@@ -823,6 +829,8 @@ HttpFoxRequest.prototype =
 	PostDataMIMEParts: null,
 	PostDataMIMEBoundary: null,
 	IsPostDataMIME: null,
+	PostDataContentLength: null,
+	IsPostDataTooBig: false,
 	QueryString: null,
 	QueryStringParameters: null,
 	CookiesSent: null,
@@ -832,7 +840,8 @@ HttpFoxRequest.prototype =
 	// httpchannel-, request properties
 	Status: null,
 	Url: null,
-	nsiURI: null,
+	URIPath: null,
+	URIScheme: null,
 	RequestProtocolVersion: null,
 	RequestMethod: null,
 	ResponseProtocolVersion: null,
@@ -841,12 +850,8 @@ HttpFoxRequest.prototype =
 	ContentType: null,
 	ContentCharset: null,
 	ContentLength: null,
-	Referrer: null,
-	LoadGroup: null,
 	LoadFlags: null,
 	Name: null,
-	Owner: null,
-	SecurityInfo: null,
 	RequestSucceeded: null,
 	IsNoStoreResponse: null,
 	IsNoCacheResponse: null,
@@ -856,7 +861,6 @@ HttpFoxRequest.prototype =
 	CacheKey: null,
 	CacheAsFile: null,
 	CacheFile: null,
-	ProxyInfo: null,
 	Priority: null,
 	EntityId: null,
 	
@@ -904,7 +908,7 @@ HttpFoxRequest.prototype =
 			// got 304 and got content from cache
 			this.setFinished();
 			this.HasCacheInfo = true;
-			this.BytesLoaded = this.BytesTotal = this.HttpChannel.contentLength;
+			this.BytesLoaded = this.BytesLoadedTotal = this.HttpChannel.contentLength;
 			return;
 		}
 
@@ -915,13 +919,13 @@ HttpFoxRequest.prototype =
 			return;
 		}
 		
-		if (this.BytesTotal > 0 && this.BytesLoaded >= this.BytesTotal)
+		if (this.BytesLoadedTotal > 0 && this.BytesLoaded >= this.BytesLoadedTotal)
 		{
 			this.setFinished();
 			return;
 		}
 		
-		if (this.BytesTotal == -1 && this.ContentLength != null)
+		if (this.BytesLoadedTotal == -1 && this.ContentLength != null)
 		{
 			this.setFinished();
 			return;
@@ -948,11 +952,13 @@ HttpFoxRequest.prototype =
 	
 	updateFromRequestEvent: function(requestEvent)
 	{
+		try
+		{
 		// check if just a status update
 		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_STATUS
 			|| requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATUS_CHANGED)
 		{
-			if (this.IsLoadingBody 
+			if ((this.IsLoadingBody || this.IsSending) 
 				&& this.RequestLog[this.RequestLog.length - 1].EventSource == this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_STATUS
 				//&& (getStatusTextFromCode(HttpFoxStatusCodeType.SOCKETTRANSPORT, requestEvent.EventSourceData["status"]) == "STATUS_RECEIVING_FROM"
 				&& (requestEvent.EventSourceData["status"] == Components.interfaces.nsISocketTransport.STATUS_RECEIVING_FROM
@@ -979,13 +985,23 @@ HttpFoxRequest.prototype =
 				var progressMax = requestEvent.EventSourceData["maxSelfProgress"];
 			}
 		
-			if (this.IsLoadingBody)
+//			dump("\nprogress: " + progress + " - sending: " + this.IsSending + " - progressmax: " + progressMax);
+			if (this.IsLoadingBody || this.IsSending)
 			{
 				if (progress < progressMax)
 				{
-					// just update progress size and return
-					this.BytesLoaded = progress;
-					this.BytesTotal = progressMax;
+					if (this.IsSending)
+					{
+						// just update progress size and return
+						this.BytesSent = progress;
+						this.BytesSentTotal = progressMax;
+					}
+					else
+					{
+						// just update progress size and return
+						this.BytesLoaded = progress;
+						this.BytesLoadedTotal = progressMax;	
+					}
 				
 					return;
 				}
@@ -1005,6 +1021,11 @@ HttpFoxRequest.prototype =
 
 		// update request states
 		this.checkRequestState();
+		}
+		catch(e)
+		{
+			dump("\ne: " + e);
+		}
 	},
 	
 	adjustDataFromRequestEvent: function(requestEvent)
@@ -1012,9 +1033,33 @@ HttpFoxRequest.prototype =
 		this.EventSource = requestEvent.EventSource;
 		this.EventSourceData = requestEvent.EventSourceData;
 		
+		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_MODIFY_REQUEST)
+		{
+			// start sending
+			this.IsSending = true;
+			// calc header size
+			this.RequestHeadersSize = this.calcRequestHeadersSize(requestEvent);
+			this.getRequestContentLength(requestEvent);
+		}
+		
 		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE)
 		{
+			// start receiving
+			this.IsSending = false;
 			this.HasReceivedResponseHeaders = true;
+			this.ResponseStartTimestamp = new Date();
+			// calc header size
+			this.ResponseHeadersSize = this.calcResponseHeadersSize(requestEvent);
+		}
+		
+		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.SCANNED_COMPLETE)
+		{
+			// if no examine response event before
+			/*if (!this.HasReceivedResponseHeaders && !this.IsFromCache)
+			{
+				// calc header size
+				this.ResponseHeadersSize = this.calcResponseHeadersSize(requestEvent);
+			}*/
 		}
 		
 		if (this.Url == null)
@@ -1022,10 +1067,15 @@ HttpFoxRequest.prototype =
 			this.Url = requestEvent.Url;
 		}
 		
-		if (this.nsiURI == null)
+		if (this.URIPath == null)
 		{
-			this.nsiURI = requestEvent.nsiURI;
-		}		
+			this.URIPath = requestEvent.URIPath;
+		}
+		
+		if (this.URIScheme == null)
+		{
+			this.URIScheme = requestEvent.URIScheme;
+		}
 
 		if (this.RequestProtocolVersion == null)
 		{
@@ -1055,11 +1105,6 @@ HttpFoxRequest.prototype =
 			this.Context = requestEvent.Context;
 		}
 		
-		if (this.LoadGroup == null)
-		{
-			this.LoadGroup = requestEvent.LoadGroup;
-		}
-		
 		if (this.LoadFlags == null)
 		{
 			this.LoadFlags = requestEvent.LoadFlags;
@@ -1075,22 +1120,14 @@ HttpFoxRequest.prototype =
 			this.Name = requestEvent.Name;
 		}
 
-		if (this.Owner == null)
-		{
-			this.Owner = requestEvent.Owner;
-		}
-
-		if (this.SecurityInfo == null)
-		{
-			this.SecurityInfo = requestEvent.SecurityInfo;
-		}
-		
 		if (this.RequestSucceeded == null)
 		{
 			this.RequestSucceeded = requestEvent.RequestSucceeded;
 		}
 
-		if (this.ContentType == null)
+		
+		if ((this.ContentType == null || this.ContentType == "application/x-unknown-content-type")
+			&& requestEvent.ContentType != null)
 		{
 			this.ContentType = requestEvent.ContentType;
 		}
@@ -1103,11 +1140,6 @@ HttpFoxRequest.prototype =
 		if (requestEvent.ContentLength != null && this.ContentLength != requestEvent.ContentLength)
 		{
 			this.ContentLength = requestEvent.ContentLength;
-		}
-		
-		if (this.Referrer == null)
-		{
-			this.Referrer = requestEvent.Referrer;
 		}
 		
 		if (this.RequestSucceeded == null)
@@ -1128,11 +1160,6 @@ HttpFoxRequest.prototype =
 		if (this.EntityId == null)
 		{
 			this.EntityId = requestEvent.EntityId;
-		}
-		
-		if (this.ProxyInfo == null)
-		{
-			this.ProxyInfo = requestEvent.ProxyInfo;
 		}
 		
 		if (this.Priority == null)
@@ -1211,41 +1238,43 @@ HttpFoxRequest.prototype =
 		{
 			this.CookiesReceived = requestEvent.CookiesReceived;
 		}
-		//PostDataHeaders: null,
+
+		// POST data
 		if (requestEvent.PostDataHeaders != null)
 		{
-			/*this.PostDataHeaders = new Array();
-			for (var x in requestEvent.PostDataHeaders)
-			{
-				this.PostDataHeaders[x] = requestEvent.PostDataHeaders[x];
-			}*/
 			this.PostDataHeaders = requestEvent.PostDataHeaders;
 		}
-		//PostData: null,
+
 		if (requestEvent.PostData != null)
 		{
 			this.PostData = requestEvent.PostData;
 		}
-		//PostDataParameters: null,
+
 		if (requestEvent.PostDataParameters != null)
 		{
 			this.PostDataParameters = requestEvent.PostDataParameters;
 		}
-		//PostDataMIMEParts: null,
+
 		if (requestEvent.PostDataMIMEParts != null)
 		{
 			this.PostDataMIMEParts = requestEvent.PostDataMIMEParts;
 		}
-		//PostDataMIMEParts: null,
+
 		if (requestEvent.IsPostDataMIME != null)
 		{
 			this.IsPostDataMIME = requestEvent.IsPostDataMIME;
 		}
-		//PostDataMIMEParts: null,
+
 		if (requestEvent.PostDataMIMEBoundary != null)
 		{
 			this.PostDataMIMEBoundary = requestEvent.PostDataMIMEBoundary;
 		}
+		
+		if (requestEvent.IsPostDataTooBig != null)
+		{
+			this.IsPostDataTooBig = requestEvent.IsPostDataTooBig;
+		}
+		
 		//QueryString: null,
 		if (requestEvent.QueryString != null)
 		{
@@ -1264,15 +1293,29 @@ HttpFoxRequest.prototype =
 		
 		// update bytes loaded/total
 		// BytesLoaded: 0,
-		if (this.BytesLoaded < requestEvent.BytesLoaded)
+		if (this.IsSending) 
 		{
-			this.BytesLoaded = requestEvent.BytesLoaded;
+			if (this.BytesSent < requestEvent.progress)
+			{
+				this.BytesSent = requestEvent.progress;
+			}
+ 
+			// take sent total from contentlength
+			this.BytesSentTotal = this.PostDataContentLength ? this.PostDataContentLength : 0;
 		}
-		// BytesTotal: 0,
-		if (this.BytesTotal < requestEvent.BytesTotal)
+		else
 		{
-			this.BytesTotal = requestEvent.BytesTotal;
+			if (this.BytesLoaded < requestEvent.progress)
+			{
+				this.BytesLoaded = requestEvent.progress;
+			}
+			// BytesLoadedTotal: 0,
+			if (this.BytesLoadedTotal < requestEvent.progressMax)
+			{
+				this.BytesLoadedTotal = requestEvent.progressMax;
+			}
 		}
+		
 		// if no info on bytes loaded, just use the contentLength value
 		if (this.IsFinished 
 			&& (this.BytesLoaded == 0 || this.BytesLoaded == -1) 
@@ -1280,6 +1323,62 @@ HttpFoxRequest.prototype =
 		{
 			this.BytesLoaded = this.ContentLength;
 		}
+	},
+	
+	getRequestContentLength: function(requestEvent)
+	{
+		for (var i in requestEvent.PostDataHeaders)
+		{
+			if (i.toLowerCase() == "content-length")
+			{
+				this.PostDataContentLength = parseInt(requestEvent.PostDataHeaders[i]);
+				return;
+			}
+		}
+		
+		for (var i in requestEvent.RequestHeaders)
+		{
+			if (i.toLowerCase() == "content-length")
+			{
+				this.PostDataContentLength = parseInt(requestEvent.RequestHeaders[i]);
+				return;
+			}
+		}
+	},
+	
+	calcRequestHeadersSize: function(requestEvent)
+	{
+		var byteString = "";
+		byteString += requestEvent.RequestMethod + " " + requestEvent.URIPath + " HTTP/" + requestEvent.RequestProtocolVersion + "\r\n";
+		
+		for (var i in requestEvent.RequestHeaders)
+		{
+			byteString += i + ": " + requestEvent.RequestHeaders[i] + "\r\n";
+		}
+		
+		for (var i in requestEvent.PostDataHeaders)
+		{
+			byteString += i + ": " + requestEvent.PostDataHeaders[i] + "\r\n";
+		}
+		
+		byteString += "\r\n";
+		
+		return byteString.length;
+	},
+	
+	calcResponseHeadersSize: function(requestEvent)
+	{
+		var byteString = "";
+		byteString += "HTTP/" + requestEvent.ResponseProtocolVersion + " " + requestEvent.ResponseStatus + " " + requestEvent.ResponseStatusText + "\r\n";
+		
+		for (var i in requestEvent.ResponseHeaders)
+		{
+			byteString += i + ": " + requestEvent.RequestHeaders[i] + "\r\n";
+		}
+		
+		byteString += "\r\n";
+		
+		return byteString.length;
 	},
 	
 	//M -> provide callback
@@ -1350,10 +1449,9 @@ HttpFoxRequest.prototype =
 			{
 				this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Filename", "n/a");
 			}
-		} catch (ex)
+		} 
+		catch (ex)
 		{
-			//dumpall("CACHE???", this.HttpChannel.QueryInterface(Components.interfaces.nsICachingChannel), 1);
-			//alert("ISFROMCACHE: " + this.HttpChannel.QueryInterface(Components.interfaces.nsICachingChannel).isFromCache());
 			this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "(error)", "(There was an error accessing the cache information)");
 		}
 	},
@@ -1389,29 +1487,49 @@ HttpFoxRequest.prototype =
 		this.RequestLog.push(logdata);
 	},
 	
+	getBytesLoaded: function()
+	{
+		if (this.RequestMethod == "HEAD")
+		{
+			return this.ResponseHeadersSize;
+		}
+		
+		return this.ResponseHeadersSize + this.BytesLoaded;
+	},
+	
+	getBytesLoadedTotal: function()
+	{
+		if (this.RequestMethod == "HEAD")
+		{
+			return this.ResponseHeadersSize;
+		}
+		
+		return this.ResponseHeadersSize + this.BytesLoadedTotal;
+	},
+	
+	getBytesSent: function()
+	{
+		return this.RequestHeadersSize + this.BytesSent;
+	},
+	
+	getBytesSentTotal: function()
+	{
+		return this.RequestHeadersSize + this.BytesSentTotal;
+	},
+	
 	complete: function()
 	{
 		this.IsFinal = true;
 		
-		//do final update of channel infos
-		//statuscode:
-		//aborted (user cancelled): 2152398850 > NS_BINDING_ABORTED (804B0002)
-		//DNS UNKNOWN HOST: 2152398878 > NS_ERROR_UNKNOWN_HOST (804B001E)
-		//IMAGE ERROR: 2152988677 > NS_IMAGELIB_ERROR_FAILURE (80540005)
-		//IMAGE ERROR: 2152988678 > (404 with some favicons) > NS_IMAGELIB_ERROR_NO_DECODER (80540006)
-		//IMAGE ERROR: 2152988680 - something broken (bug_1.txt log) > NS_IMAGELIB_ERROR_LOAD_ABORTED (80540008)
-		//
+		this.IsSending = false;
 		
-		try {
-		//dumpall("req", this.HttpChannel);
-		//alert("status1 - " + this.Url);
-		this.Status = this.HttpChannel.status;
-		//alert("status2 - " + this.Url + " - " + this.HttpChannel.status);
-		this.CacheKey_After = this.HttpChannel.cacheKey;
-		//alert("status3 - " + this.Url + " - " + this.HttpChannel.status);
+		try 
+		{
+			this.Status = this.HttpChannel.status;
+			this.CacheKey_After = this.HttpChannel.cacheKey;
 		}
-		catch(exc) {
-			alert('(url: ' + this.Url + 'exc: ' + exc);
+		catch(exc) 
+		{
 		}
 		
 		if (this.Status == HttpFoxNsResultErrors.NS_BINDING_ABORTED)
@@ -1422,19 +1540,6 @@ HttpFoxRequest.prototype =
 			//return;
 		}
 		
-		if (this.Status == 2152398878)
-		{
-			//TODO: error (dns, etc...
-		}
-		
-		// TODO: CHECK
-//		this.EventSource = this.HttpFoxEventSourceType.SCANNED_COMPLETE;
-		
-		if (this.Status == HttpFoxNsResultErrors.NS_BINDING_REDIRECTED)
-		{
-			//alert("REDIRECT_ERROR: " + this.Status + " - completed: - " + this.Url);
-		}
-		
 		this.updateFromRequestEvent(
 			new HttpFoxRequestEvent(
 				this.HttpFox, 
@@ -1443,31 +1548,28 @@ HttpFoxRequest.prototype =
 				null, 
 				getContextFromRequest(this.HttpChannel)));
 		
-		// ok
-		/*if (this.IsFromCache_Assuming) 
-		{
-			// is from cache
-			this.IsFromCache = true;
-			this.ResponseStatus = this.HttpChannel.responseStatus;
-			this.ResponseStatusText = this.HttpChannel.responseStatusText;
-			this.BytesLoaded = this.ContentLength = this.HttpChannel.contentLength;
-			this.ContentType = this.HttpChannel.contentType;
-			this.ContentCharset = this.HttpChannel.contentCharset;
-		}*/
-		
-		//TODO: move to adjustData 
-		if (this.ContentType == "application/x-unknown-content-type")
-		{
-			this.ContentType = this.HttpChannel.contentType;
-		}
-		
 		this.setFinished();
 		
-		//this.setIsContentAvailable();
+		try {
+			// release httpchannel, listeners and context
+			if (this.HttpChannel.loadGroup && this.HttpChannel.loadGroup.groupObserver) {
+				var go = HttpChannel.loadGroup.groupObserver;
+				go.QueryInterface(Components.interfaces.nsIWebProgress);
+				try 
+				{
+					go.removeProgressListener(this.HttpFox.Observer);
+				}
+				catch(ex) 
+				{}
+			}
+			
+			this.HttpChannel = null;
+		}
+		catch(e)
+		{
+			//dump("\nexc: " + e);
+		}
 		
-		// release httpchannel and context
-		this.HttpChannel = null;
-		//this.Context = null;
 		return;
 	},
 
@@ -1476,6 +1578,11 @@ HttpFoxRequest.prototype =
 		if (this.isRedirect()
 			|| this.isError()
 			|| this.IsAborted)
+		{
+			return false;
+		}
+		
+		if (this.RequestMethod == "HEAD")
 		{
 			return false;
 		}
@@ -1515,7 +1622,7 @@ HttpFoxRequest.prototype =
 	
 	isHTTPS : function()
 	{
-		if (this.nsiURI.scheme == "https")
+		if (this.URIScheme == "https")
 		{
 			return true;
 		}
@@ -1556,7 +1663,7 @@ HttpFoxRequestEvent.prototype =
 
 	// custom request properties
 	BytesLoaded: 0,
-	BytesTotal: 0,
+	BytesLoadedTotal: 0,
 	Timestamp: null,
 	HasCacheInfo: false,
 	
@@ -1569,6 +1676,7 @@ HttpFoxRequestEvent.prototype =
 	IsPostDataMIME: null,
 	PostDataMIMEBoundary: null,
 	PostDataMIMEParts: null,
+	IsPostDataTooBig: false,
 	QueryString: null,
 	QueryStringParameters: null,
 	CookiesSent: null,
@@ -1578,7 +1686,8 @@ HttpFoxRequestEvent.prototype =
 	// httpchannel-, request properties
 	Status: null,
 	Url: null,
-	nsiURI: null,
+	URIPath: null,
+	URIScheme: null,
 	RequestProtocolVersion: null,
 	RequestMethod: null,
 	ResponseProtocolVersion: null,
@@ -1587,12 +1696,8 @@ HttpFoxRequestEvent.prototype =
 	ContentType: null,
 	ContentCharset: null,
 	ContentLength: null,
-	Referrer: null,
-	LoadGroup: null,
 	LoadFlags: null,
 	Name: null,
-	Owner: null,
-	SecurityInfo: null,
 	RequestSucceeded: null,
 	IsNoStoreResponse: null,
 	IsNoCacheResponse: null,
@@ -1602,7 +1707,6 @@ HttpFoxRequestEvent.prototype =
 	CacheKey: null,
 	CacheAsFile: null,
 	CacheFile: null,
-	ProxyInfo: null,
 	Priority: null,
 	IsPending: null,
 	EntityId: null,
@@ -1614,16 +1718,12 @@ HttpFoxRequestEvent.prototype =
 		// get properties from httpchannel/request object
 		this.Status = this.HttpChannel.status ? this.HttpChannel.status : null;
 		this.Url = this.HttpChannel.URI ? this.HttpChannel.URI.asciiSpec : null;
-		this.nsiURI = this.HttpChannel.URI ? this.HttpChannel.URI : null; // weak reference?
+		this.URIScheme = this.HttpChannel.URI ? this.HttpChannel.URI.scheme : null;
+		this.URIPath = this.HttpChannel.URI ? this.HttpChannel.URI.path : null;
 		this.Name = this.HttpChannel.name ? this.HttpChannel.name : null;
-		this.Owner = this.HttpChannel.owner ? this.HttpChannel.owner : null;
-		this.SecurityInfo = this.HttpChannel.securityInfo ? this.HttpChannel.securityInfo : null;
 		this.RequestMethod = this.HttpChannel.requestMethod ? this.HttpChannel.requestMethod : null;
 		this.IsPending = this.HttpChannel.isPending();
-		this.Referrer = this.HttpChannel.referrer ? this.HttpChannel.referrer : null;
-		this.LoadGroup = this.HttpChannel.loadGroup;
 		this.LoadFlags = this.HttpChannel.loadFlags;
-		this.ProxyInfo = this.HttpChannel.proxyInfo ? this.HttpChannel.proxyInfo : null;
 		this.Priority = this.HttpChannel.priority ? this.HttpChannel.priority : null;
 		this.IsBackground = this.LoadFlags & Components.interfaces.nsIRequest.LOAD_BACKGROUND;
 
@@ -1687,14 +1787,14 @@ HttpFoxRequestEvent.prototype =
 		{
 			// update byte count
 			this.BytesLoaded = this.EventSourceData["progress"];
-			this.BytesTotal = this.EventSourceData["progressMax"];
+			this.BytesLoadedTotal = this.EventSourceData["progressMax"];
 		}
 		
 		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_PROGRESS_CHANGED)
 		{
 			// update byte count
 			this.BytesLoaded = this.EventSourceData["curSelfProgress"];
-			this.BytesTotal = this.EventSourceData["maxSelfProgress"];
+			this.BytesLoadedTotal = this.EventSourceData["maxSelfProgress"];
 		}
 	},
 	
@@ -1750,6 +1850,7 @@ HttpFoxRequestEvent.prototype =
 			this.IsFromCache = false;
 		}
 
+		/*
 		//if (this.IsFromCache)
 		//{
 			try 
@@ -1789,7 +1890,7 @@ HttpFoxRequestEvent.prototype =
 				this.HasCacheInfo = true;
 			} 
 			catch(ex) {}
-		}
+		}*/
 		/*else 
 		{
 			var token;
@@ -1852,7 +1953,7 @@ HttpFoxRequestEvent.prototype =
 	getCookiesSent: function() {
 		this.CookiesSent = new Array();
 		
-		var CookiesStored = getStoredCookies(this.RequestHeaders["Host"], this.nsiURI.path);
+		var CookiesStored = getStoredCookies(this.RequestHeaders["Host"], this.URIPath);
 		
 		if (this.RequestHeaders["Cookie"]) {
 			var requestCookies = this.RequestHeaders["Cookie"].split("; ");
@@ -2257,7 +2358,7 @@ HttpFoxSourceCache.prototype =
 		if (channel instanceof nsICachingChannel)
 		{
 			// no idea why, but this helps
-			dummyWait(100);
+			//dummyWait(100);
 		    
 		    var cacheChannel = QI(channel, nsICachingChannel);
 		    cacheChannel.loadFlags |= LOAD_ONLY_FROM_CACHE | VALIDATE_NEVER;
@@ -2500,19 +2601,30 @@ HttpFoxPostDataHandler.prototype =
 			this.clearPostHeaders();
 			size = this.stream.available();
 		}
+		
+		// read post body (only if non-binary/too big)
 		var postString = "";
+		
 		try 
 		{
-			// This is to avoid 'NS_BASE_STREAM_CLOSED' exception that may occurs
-			// See bug #188328.
-			for (var i = 0; i < size; i++) 
+			if (size < 500000)
 			{
-				var c = this.stream.read(1);
-				c ? postString += c : postString += '\0';
+				// This is to avoid 'NS_BASE_STREAM_CLOSED' exception that may occurs
+				// See bug #188328.
+				for (var i = 0; i < size; i++) 
+				{
+					var c = this.stream.read(1);
+					c ? postString += c : postString += '\0';
+				}	
+			}
+			else 
+			{
+				this.request.IsPostDataTooBig = true;
 			}
 		} 
-		catch(ex) 
+		catch(e)
 		{
+			dump("\nExc: " + e)
 			return "" + ex;
 		} 
 		finally 
@@ -2526,93 +2638,95 @@ HttpFoxPostDataHandler.prototype =
 			this.request.PostData = postString;
 			this.request.PostDataMIMEParts = new Array();
 			
-			
-			var rawMimeParts = new Array();
-			rawMimeParts = postString.split(this.request.PostDataMIMEBoundary);
-			
-			var ws = "\n";
-			if (rawMimeParts[1].indexOf("\r\n") == 0)
+			if (!this.request.IsPostDataTooBig)
 			{
-				ws = "\r\n";
-			}
-			else if (rawMimeParts[1].indexOf("\r") == 0)
-			{
-				ws = "\r";
-			}
-			
-			for (var i = 1; rawMimeParts[i]; i++)
-			{
-				try 
+				var rawMimeParts = new Array();
+				rawMimeParts = postString.split(this.request.PostDataMIMEBoundary);
+				
+				var ws = "\n";
+				if (rawMimeParts[1].indexOf("\r\n") == 0)
 				{
+					ws = "\r\n";
+				}
+				else if (rawMimeParts[1].indexOf("\r") == 0)
+				{
+					ws = "\r";
+				}
+				
+				for (var i = 1; rawMimeParts[i]; i++)
+				{
+					try 
+					{
+							
+						var mimePartData = new Object();
+						var rawMimePartParts = new Array();
+						rawMimePartParts = rawMimeParts[i].split(ws + ws);	
 						
-					var mimePartData = new Object();
-					var rawMimePartParts = new Array();
-					rawMimePartParts = rawMimeParts[i].split(ws + ws);	
-					
-					var varname = null;
-					RegExp.lastIndex = 0;
-					if (rawMimePartParts[0].match(/\bname="([^"]+)"/i)) 
-					{
-						varname = RegExp.$1;
-					}
-					if (!varname) 
-					{
+						var varname = null;
 						RegExp.lastIndex = 0;
-						if(rawMimePartParts[0].match(/\bname=([^\s:;]+)/i)) 
+						if (rawMimePartParts[0].match(/\bname="([^"]+)"/i)) 
 						{
 							varname = RegExp.$1;
 						}
-					}
-					
-					if (varname != null)
-					{
-						var filename = null;
-						RegExp.lastIndex = 0;
-						if (rawMimePartParts[0].match(/\b(filename="[^"]*")/i)) 
-						{
-							filename = RegExp.$1;
-						}
-						if (!filename) 
+						if (!varname) 
 						{
 							RegExp.lastIndex = 0;
-							if(rawMimePartParts[0].match(/\b(filename=[^\s:;]+)/i)) 
+							if(rawMimePartParts[0].match(/\bname=([^\s:;]+)/i)) 
+							{
+								varname = RegExp.$1;
+							}
+						}
+						
+						if (varname != null)
+						{
+							var filename = null;
+							RegExp.lastIndex = 0;
+							if (rawMimePartParts[0].match(/\b(filename="[^"]*")/i)) 
 							{
 								filename = RegExp.$1;
 							}
-						}
-		
-						var ctype = null;
-						RegExp.lastIndex = 0;
-						if (rawMimePartParts[0].match(/\b(Content-type:\s*"[^"]+)"/i)) 
-						{
-							ctype = RegExp.$1;
-						}
-						if (!ctype) 
-						{
+							if (!filename) 
+							{
+								RegExp.lastIndex = 0;
+								if(rawMimePartParts[0].match(/\b(filename=[^\s:;]+)/i)) 
+								{
+									filename = RegExp.$1;
+								}
+							}
+			
+							var ctype = null;
 							RegExp.lastIndex = 0;
-							if (rawMimePartParts[0].match(/\b(Content-Type:\s*[^\s:;]+)/i)) {
+							if (rawMimePartParts[0].match(/\b(Content-type:\s*"[^"]+)"/i)) 
+							{
 								ctype = RegExp.$1;
 							}
+							if (!ctype) 
+							{
+								RegExp.lastIndex = 0;
+								if (rawMimePartParts[0].match(/\b(Content-Type:\s*[^\s:;]+)/i)) {
+									ctype = RegExp.$1;
+								}
+							}
+							
+							// value
+							var value = rawMimePartParts[1].trim();
+							
+							mimePartData["varname"] = varname;
+							mimePartData["filename"] = filename;
+							mimePartData["ctype"] = ctype;
+							mimePartData["value"] = value;
+							
+							this.request.PostDataMIMEParts.push(mimePartData);
 						}
-						
-						// value
-						var value = rawMimePartParts[1].trim();
-						
-						mimePartData["varname"] = varname;
-						mimePartData["filename"] = filename;
-						mimePartData["ctype"] = ctype;
-						mimePartData["value"] = value;
-						
-						this.request.PostDataMIMEParts.push(mimePartData);
+					}
+					catch(e)
+					{
+						dump("\n\nEXC: " + e);
 					}
 				}
-				catch(e)
-				{
-					dump("\n\nEXC: " + e);
-				}
+				
+				return null;
 			}
-			
-			return null;
 		}
 		
 		// strip off trailing \r\n's
@@ -2656,23 +2770,19 @@ HttpFoxRequestLogData.prototype =
 	StateFlags: null,
 	IsFromCache: null,
 	Url: null,
-	LoadGroup: null,
 	IsPending: null,
 	BytesLoaded: null,
-	BytesTotal: null,
+	BytesLoadedTotal: null,
 	ResponseStatus: null,
 	ResponseStatusText: null,
 	Status: null,
-	SecurityInfo: null,
 	ContentType: null,
 	ContentCharset: null,
 	ContentLength: null,
-	Referrer: null,
 	RequestSucceeded: null,
 	IsNoStoreResponse: null,
 	IsNoCacheResponse: null,
 	EntityId: null,
-	ProxyInfo: null,
 	Priority: null,
 	HasCacheInfo: null,
 	
@@ -2688,23 +2798,19 @@ HttpFoxRequestLogData.prototype =
 		this.StateFlags = request.StateFlags;
 		this.IsFromCache = request.IsFromCache;
 		this.Url = request.Url;
-		this.LoadGroup = request.LoadGroup;
 		this.IsPending = request.IsPending;
 		this.BytesLoaded = request.BytesLoaded;
-		this.BytesTotal = request.BytesTotal;
+		this.BytesLoadedTotal = request.BytesLoadedTotal;
 		this.ResponseStatus = request.ResponseStatus;
 		this.ResponseStatusText = request.ResponseStatusText;
 		this.Status = request.Status;
-		this.SecurityInfo = request.SecurityInfo;
 		this.ContentType = request.ContentType;
 		this.ContentCharset = request.ContentCharset;
 		this.ContentLength = request.ContentLength;
-		this.Referrer = request.Referrer;
 		this.RequestSucceeded = request.RequestSucceeded;
 		this.IsNoStoreResponse = request.IsNoStoreResponse;
 		this.IsNoCacheResponse = request.IsNoCacheResponse;
 		this.EntityId = request.EntityId;
-		this.ProxyInfo = request.ProxyInfo;
 		this.Priority = request.Priority;
 		this.HasCacheInfo = request.HasCacheInfo;
 	}
