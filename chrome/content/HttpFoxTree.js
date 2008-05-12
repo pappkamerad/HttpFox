@@ -36,13 +36,6 @@ HttpFoxTree.prototype =
 		
 		this.TreeElement = treeElement;
 		this.TreeElement.view = this;
-		
-		//this.sourceData = new Array();
-		//this.gui = gui;
-		//this.data = HttpData;
-		//alert(document.getElementById("hf_RequestTree"));
-		//this.tree = document.getElementById("hf_RequestTree");
-		//this.tree.view = this;
 	},
 	
 	get rowCount() 

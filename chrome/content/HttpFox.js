@@ -536,8 +536,6 @@ HttpFoxController.prototype =
 	selectionChange_RequestTree: function() 
 	{
 		var currentRequest = this.RequestTree.getCurrent();
-		//dumpall('request.httpchannel', currentRequest.HttpChannel, 1);
-		//alert('isPending: ' + currentRequest.HttpChannel.isPending());
 		
 		// update debug
 		var debugPanel = document.getElementById("hf_DebugOutput");
@@ -973,9 +971,9 @@ HttpFoxController.prototype =
 		content += "<b>RequestMethod:</b> " + request.RequestMethod + "<br/>";
 		content += "<b>StartTimestamp:</b> " + request.StartTimestamp + "<br/>";
 		content += "<b>EndTimestamp:</b> " + request.EndTimestamp + "<br/>";
-		content += "<b>Loadflags: - request:</b> " + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.LOADFLAGS_REQUEST, request.LoadFlags) + "<br/>";
-		content += "<b>Loadflags: - channel:</b> " + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.LOADFLAGS_CHANNEL, request.LoadFlags) + "<br/>";
-		content += "<b>Loadflags: - caching:</b> " + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.LOADFLAGS_CACHING, request.LoadFlags) + "<br/>";
+		content += "<b>Loadflags: - request:</b> " + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.LOADFLAGS_REQUEST, request.LoadFlags) + " (" + request.LoadFlags + ") <br/>";
+		content += "<b>Loadflags: - channel:</b> " + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.LOADFLAGS_CHANNEL, request.LoadFlags) + " (" + request.LoadFlags + ") <br/>";
+		content += "<b>Loadflags: - caching:</b> " + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.LOADFLAGS_CACHING, request.LoadFlags) + " (" + request.LoadFlags + ") <br/>";
 		content += "<b>IsFromCache:</b> " + request.IsFromCache + "<br/>";
 		content += "<b>BytesLoaded:</b> " + request.BytesLoaded + "<br/>";
 		content += "<b>BytesLoadedTotal:</b> " + request.BytesLoadedTotal + "<br/>";

@@ -95,6 +95,7 @@ HttpFoxService.prototype =
 	addController: function(HttpFoxControllerReference)
 	{
 		this.Controllers.push(HttpFoxControllerReference);
+		HttpFoxControllerReference.ControllerIndex = this.Controllers.length;
 	},
 	
 	removeController: function(HttpFoxControllerReference)
@@ -210,7 +211,7 @@ HttpFoxService.prototype =
 	{
 		this.Requests[index].updateFromRequestEvent(updatedRequest);
 
-		this.callControllerMethod("redrawRequestTreeRow", {"p1": index});
+		this.callControllerMethod("redrawRequestTree", {"p1": index});
 	},
 	
 	//M
@@ -226,7 +227,7 @@ HttpFoxService.prototype =
 					// complete request. release channel reference.
 					var requestIndex = this.getPendingRequestForRequestEvent(this.PendingRequests[i]);
 					this.PendingRequests[i].complete();
-					this.callControllerMethod("redrawRequestTreeRow", {"p1": requestIndex});
+					this.callControllerMethod("redrawRequestTree", {"p1": requestIndex});
 					this.PendingRequests.splice(i, 1);
 					i--;
 				}
@@ -789,6 +790,7 @@ HttpFoxRequest.prototype =
 	RequestLog: null,
 	EventSource: null,
 	EventSourceData: null,
+	MasterIndex: null,
 	
 	// custom request properties
 	StartTimestamp: null,
@@ -985,7 +987,6 @@ HttpFoxRequest.prototype =
 				var progressMax = requestEvent.EventSourceData["maxSelfProgress"];
 			}
 		
-//			dump("\nprogress: " + progress + " - sending: " + this.IsSending + " - progressmax: " + progressMax);
 			if (this.IsLoadingBody || this.IsSending)
 			{
 				if (progress < progressMax)
@@ -1929,7 +1930,6 @@ HttpFoxRequestEvent.prototype =
 	    } 
 	    catch(ex) 
 	    {
-			//dump("postdata exc: " + ex);
 	    }
 	},
 	
@@ -2114,8 +2114,6 @@ HttpFoxObserver.prototype =
 			}
 			catch(ex) {
 				// guess this means the request is aborted and/or cached.
-				//dump('addProgessListener Error: ' + ex);
-				//eventSourceData["isAbortedHelper"] = true; not sure
 			}
 		}
 		
@@ -2332,7 +2330,6 @@ HttpFoxSourceCache.prototype =
         }
         catch(ex)
         {
-        	//alert(ex);
             return;
         }
 
@@ -2357,9 +2354,6 @@ HttpFoxSourceCache.prototype =
 		
 		if (channel instanceof nsICachingChannel)
 		{
-			// no idea why, but this helps
-			//dummyWait(100);
-		    
 		    var cacheChannel = QI(channel, nsICachingChannel);
 		    cacheChannel.loadFlags |= LOAD_ONLY_FROM_CACHE | VALIDATE_NEVER;
 		    cacheChannel.cacheKey = ckey;
@@ -2839,8 +2833,6 @@ function convertToUnicode(text, charset)
     }
     catch (exc)
     {
-		//this.ERROR(exc);
-		//alert('UTF8 Error: ' + exc);
         return text;
     }
 };
@@ -2900,7 +2892,7 @@ function getContextFromRequest(request)
 		return new HttpFoxContext(null, null, null, false);
 	}
 	
-	if (request.loadGroup == null) 
+	if (request.loadGroup == null || request.loadGroup.groupObserver == null) 
 	{
 		win = null;
 		return new HttpFoxContext(null, null, null, false);
@@ -2911,8 +2903,8 @@ function getContextFromRequest(request)
 	win = go.DOMWindow;
 	browser = this.getBrowserByWindow(win);
 	var chrome = browser ? browser.chrome : null;
-	//alert("WINDOW: " + win + " -charset: " + win.document.characterSet);
-	return new HttpFoxContext(win, browser, chrome, false);	
+
+	return new HttpFoxContext(win, browser, chrome, false);
 }
 
 function getBrowserByWindow(win)
@@ -2955,8 +2947,6 @@ function getStoredCookies(host, path)
                 //if((host == cookieHost || host.indexOf("." + cookieHost) != -1) && (path == cookiePath || path.indexOf(cookiePath) == 0))
                 if((host == cookieHost || host.indexOf("." + cookieHost) != -1) && (path == cookiePath || path.indexOf(cookiePath) == 0)) 
                 {
-                	//dumpall("foundcookie", cookie);
-                	//alert("cookie found: " + cookie.host);
                     cookies.push(cookie);
                 }
             }

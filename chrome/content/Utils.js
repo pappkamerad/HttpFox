@@ -328,11 +328,14 @@ function getContextFromRequest(request)
 	}
 	
 	var go = request.loadGroup.groupObserver;
+	if (go == null)
+	{
+		dumpall("j", request.loadGroup);
+	}
 	go.QueryInterface(Components.interfaces.nsIWebProgress);
 	win = go.DOMWindow;
 	browser = this.getBrowserByWindow(win);
 	var chrome = browser ? browser.chrome : null;
-	//alert("WINDOW: " + win + " -charset: " + win.document.characterSet);
 	return new HttpFoxContext(win, browser, chrome, false);	
 }
 
