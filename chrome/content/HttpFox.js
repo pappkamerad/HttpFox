@@ -801,7 +801,7 @@ HttpFoxController.prototype =
 		
 		for (i in request.QueryStringParameters)
 		{
-			this.addHeaderRow("hf_QueryStringChildren", i, urlDecode(request.QueryStringParameters[i]));
+			this.addHeaderRow("hf_QueryStringChildren", urlDecode(request.QueryStringParameters[i][0]), urlDecode(request.QueryStringParameters[i][1]));
 		}
 	},
 	
@@ -919,7 +919,7 @@ HttpFoxController.prototype =
 			
 			for (i in request.PostDataParameters)
 			{
-				this.addHeaderRow("hf_PostDataChildren", i, urlDecode(request.PostDataParameters[i]));
+				this.addHeaderRow("hf_PostDataChildren", urlDecode(request.PostDataParameters[i][0]), urlDecode(request.PostDataParameters[i][1]));
 			}
 		}
 		else

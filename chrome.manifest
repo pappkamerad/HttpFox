@@ -1,4 +1,5 @@
 content	httpfox chrome/content/
+content	httpfox chrome/content/XMLPrettyPrint.xsl contentaccessible=yes
 skin httpfox classic/1.0 chrome/skin/
 
 content httpfox chrome/content/Utils.js

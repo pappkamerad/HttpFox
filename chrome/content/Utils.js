@@ -450,8 +450,8 @@ function $(id, doc)
 
 function urlDecode(value)
 {
-	var decoded = unescape(value);
-	decoded = decoded.replace(/\+/g, " ");
+	var decoded = value.replace(/\+/g, " ");
+	decoded = unescape(decoded);
 	
 	return decoded;
 }

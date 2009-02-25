@@ -1946,7 +1946,7 @@ HttpFoxRequestEvent.prototype =
 		{
 			var nvName = queryStringParts[i].slice(0, queryStringParts[i].indexOf("=") != -1 ? queryStringParts[i].indexOf("=") : queryStringParts[i].length);
 			var nvValue = (queryStringParts[i].indexOf("=") != -1) ? queryStringParts[i].slice(queryStringParts[i].indexOf("=") + 1, queryStringParts[i].length) : "";
-			this.QueryStringParameters[nvName] = nvValue;
+			this.QueryStringParameters.push([nvName, nvValue]);
 		}
 	},
 	
@@ -2739,7 +2739,7 @@ HttpFoxPostDataHandler.prototype =
 			for (var i in postDataParts)
 			{
 				var nameValuePair = postDataParts[i].split("=");
-				this.request.PostDataParameters[nameValuePair[0]] = nameValuePair[1];
+				this.request.PostDataParameters.push([nameValuePair[0], nameValuePair[1]]);
 			}
 			return null;		
 		}
