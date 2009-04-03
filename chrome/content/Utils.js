@@ -26,12 +26,13 @@ function formatTimeDifference(startTime, endTime)
 	}
 	
 	// values ok
-	var diff = endTime.getTime() - startTime.getTime();
+	var diff = endTime - startTime;
+	
 	var string = "";
 	string += diff / 1000;
-	
 	var dummy = string.split(".");
-	var after = (dummy[1]) ? threeC(dummy[1]) : "000";
+	while (dummy[1].length < 3) dummy[1] += "0";
+	var after = (dummy[1]) ? dummy[1] : "000";
 	return dummy[0] + "." + after;
 }
 
@@ -54,8 +55,6 @@ function formatDateTime(myDate)
 
 function formatTime(time)
 {
-	var timestamp = time.getTime();
-
 	var h = (time - (time % 3600000)) / 3600000;
 	time = time - (h * 3600000);
 
@@ -72,7 +71,7 @@ function formatTime(time)
 	string += lZero(h);
 	string += ":" + lZero(m);
 	string += ":" + lZero(s);
-	string += "." + threeC(ms);
+	string += "." + pad(ms, 3);
 	
 	return string;
 }
@@ -83,14 +82,13 @@ function lZero(x)
 	return (-x > -10 && x >= 0 && "0" || "") + x;
 }
 
-function threeC(x)
+function pad(val, len)
 {
-	if (x == 0) {
-		return "000";
-	}
-	return (x * 1000).toString().substr(0, 3);
+	val = String(val);
+	len = len || 2;
+	while (val.length < len) val = "0" + val;
+	return val;
 }
-// ************************************************************************************************
 
 // size functions
 function humanizeSize(size, displayUntil)

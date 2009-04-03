@@ -201,9 +201,7 @@ HttpFoxService.prototype =
 				}
 			};
 			callback.parent = this;
-			this.IntervalChecker.initWithCallback(callback, 100, Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
-
-			//this.IntervalChecker = setInterval("HttpFox.checkPendingRequests()", 100);
+			this.IntervalChecker.initWithCallback(callback, 10, Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
 		}
 	},
 	
@@ -791,6 +789,7 @@ HttpFoxRequest.prototype =
 	EventSource: null,
 	EventSourceData: null,
 	MasterIndex: null,
+	HttpFoxRequestEventSink: null,
 	
 	// custom request properties
 	StartTimestamp: null,
@@ -874,6 +873,9 @@ HttpFoxRequest.prototype =
 		// a new request log
 		this.RequestLog = new Array();
 
+		// store event sink
+		this.HttpFoxRequestEventSink = requestEvent.HttpFoxRequestEventSink;
+		
 		// update/init from first requestevent
 		this.updateFromRequestEvent(requestEvent)
 	},
@@ -1038,9 +1040,6 @@ HttpFoxRequest.prototype =
 		{
 			// start sending
 			this.IsSending = true;
-			// calc header size
-			this.RequestHeadersSize = this.calcRequestHeadersSize(requestEvent);
-			this.getRequestContentLength(requestEvent);
 		}
 		
 		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE)
@@ -1048,19 +1047,7 @@ HttpFoxRequest.prototype =
 			// start receiving
 			this.IsSending = false;
 			this.HasReceivedResponseHeaders = true;
-			this.ResponseStartTimestamp = new Date();
-			// calc header size
-			this.ResponseHeadersSize = this.calcResponseHeadersSize(requestEvent);
-		}
-		
-		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.SCANNED_COMPLETE)
-		{
-			// if no examine response event before
-			/*if (!this.HasReceivedResponseHeaders && !this.IsFromCache)
-			{
-				// calc header size
-				this.ResponseHeadersSize = this.calcResponseHeadersSize(requestEvent);
-			}*/
+			this.ResponseStartTimestamp = (new Date()).getTime();
 		}
 		
 		if (this.Url == null)
@@ -1292,6 +1279,20 @@ HttpFoxRequest.prototype =
 			this.IsBackground = requestEvent.IsBackground;
 		}
 		
+		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_MODIFY_REQUEST)
+		{
+			// calc header size
+			this.RequestHeadersSize = this.calcRequestHeadersSize(requestEvent);
+			this.getRequestContentLength(requestEvent);
+		}
+		
+		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE)
+		{
+			// calc header size
+			this.RequestHeadersSize = this.calcRequestHeadersSize(this);
+			this.ResponseHeadersSize = this.calcResponseHeadersSize(requestEvent);
+		}
+		
 		// update bytes loaded/total
 		// BytesLoaded: 0,
 		if (this.IsSending) 
@@ -1302,7 +1303,7 @@ HttpFoxRequest.prototype =
 			}
  
 			// take sent total from contentlength
-			this.BytesSentTotal = this.PostDataContentLength ? this.PostDataContentLength : 0;
+			this.BytesSentTotal = (this.PostDataContentLength ? this.PostDataContentLength : 0) + this.RequestHeadersSize;
 		}
 		else
 		{
@@ -1324,6 +1325,7 @@ HttpFoxRequest.prototype =
 		{
 			this.BytesLoaded = this.ContentLength;
 		}
+		
 	},
 	
 	getRequestContentLength: function(requestEvent)
@@ -1475,12 +1477,12 @@ HttpFoxRequest.prototype =
 	
 	setStartTimestampNow: function()
 	{
-		this.StartTimestamp = new Date();
+		this.StartTimestamp = (new Date()).getTime();
 	},
 	
 	setEndTimestampNow: function()
 	{
-		this.EndTimestamp = new Date();
+		this.EndTimestamp = (new Date()).getTime();
 	},
 	
 	logEvent: function(logdata)
@@ -1515,7 +1517,7 @@ HttpFoxRequest.prototype =
 	
 	getBytesSentTotal: function()
 	{
-		return this.RequestHeadersSize + this.BytesSentTotal;
+		return this.RequestHeadersSize + this.PostDataContentLength;
 	},
 	
 	complete: function()
@@ -1523,6 +1525,8 @@ HttpFoxRequest.prototype =
 		this.IsFinal = true;
 		
 		this.IsSending = false;
+		
+		this.setFinished();
 		
 		try 
 		{
@@ -1549,8 +1553,6 @@ HttpFoxRequest.prototype =
 				null, 
 				getContextFromRequest(this.HttpChannel)));
 		
-		this.setFinished();
-		
 		try {
 			// release httpchannel, listeners and context
 			if (this.HttpChannel.loadGroup && this.HttpChannel.loadGroup.groupObserver) {
@@ -1564,7 +1566,10 @@ HttpFoxRequest.prototype =
 				{}
 			}
 			
+			this.HttpFoxRequestEventSink.HttpChannel.notificationCallbacks = this.HttpFoxRequestEventSink.OriginalNotificationCallbacks;
+			this.HttpFoxRequestEventSink = null;
 			this.HttpChannel = null;
+			
 		}
 		catch(e)
 		{
@@ -1576,9 +1581,9 @@ HttpFoxRequest.prototype =
 
 	isContentAvailable : function() 
 	{
-		if (this.isRedirect()
-			|| this.isError()
-			|| this.IsAborted)
+		if (this.isRedirect())
+			//|| this.isError()
+			//|| this.IsAborted)
 		{
 			return false;
 		}
@@ -1661,6 +1666,7 @@ HttpFoxRequestEvent.prototype =
 	EventSource: null,
 	EventSourceData: null,
 	Context: null, // reference
+	HttpFoxRequestEventSink: null,
 
 	// custom request properties
 	BytesLoaded: 0,
@@ -1714,7 +1720,7 @@ HttpFoxRequestEvent.prototype =
 	
 	init: function()
 	{
-		this.Timestamp = new Date();
+		this.Timestamp = (new Date()).getTime();
 		
 		// get properties from httpchannel/request object
 		this.Status = this.HttpChannel.status ? this.HttpChannel.status : null;
@@ -1767,7 +1773,7 @@ HttpFoxRequestEvent.prototype =
 		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE)
 		{
 			// ok. received a server response.
-			// Get Request Headers // why?
+			// Get Request Headers again. maybe be changed after us. (e.g. cache-control)
 			var dummyHeaderInfo = new HttpFoxHeaderInfo();
 			this.HttpChannel.visitRequestHeaders(dummyHeaderInfo);
 			this.RequestHeaders = dummyHeaderInfo.Headers;
@@ -2038,6 +2044,112 @@ HttpFoxRequestEvent.prototype =
 }
 // ************************************************************************************************
 
+// HttpFoxRequestEventSink
+function HttpFoxRequestEventSink(HttpFoxReference, HttpChannel)
+{
+	this.init(HttpFoxReference, HttpChannel);
+}
+HttpFoxRequestEventSink.prototype =
+{
+	// Properties
+	HttpFox: null,
+	OriginalNotificationCallbacks: null,
+	
+	// Constructor
+	init: function(HttpFoxReference, HttpChannel) 
+	{
+		this.HttpFox = HttpFoxReference;
+		if (HttpChannel.notificationCallbacks != null) 
+		{
+			this.OriginalNotificationCallbacks = HttpChannel.notificationCallbacks;
+		}
+		HttpChannel.notificationCallbacks = this;
+	},
+	
+	/**
+	* See nsIProgressEventSink
+	*/
+	onProgress: function(request, context, progress, progressMax)
+	{
+		var eventSourceData = new Object();
+		eventSourceData["progress"] = progress;
+		eventSourceData["progressMax"] = progressMax;
+		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_PROGRESS, eventSourceData, getContextFromRequest(request)));
+		// forward to possible other notificationCallbacks
+		try {
+			if (this.OriginalNotificationCallbacks != null) 
+			{
+				var i = this.OriginalNotificationCallbacks.getInterface(Components.interfaces.nsIProgressEventSink);
+				i.onProgress(request, context, progress, progressMax);
+			}
+		}
+		catch(e) {}
+	}, 
+   
+	onStatus: function(request, context, status, statusArg)
+	{
+		var eventSourceData = new Object();
+		eventSourceData["status"] = status;
+		eventSourceData["statusArg"] = statusArg;
+		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_STATUS, eventSourceData, getContextFromRequest(request)));
+		// forward to possible other notificationCallbacks
+		try {
+			if (this.OriginalNotificationCallbacks != null) 
+			{
+				var i = this.OriginalNotificationCallbacks.getInterface(Components.interfaces.nsIProgressEventSink);
+				i.onStatus(request, context, status, statusArg);
+			}
+		}
+		catch(e) {}
+	}, 
+	/************************************************/
+	
+	/**
+	* nsISupports
+	*/
+	QueryInterface: function(iid) 
+	{
+		if (!iid.equals(Components.interfaces.nsISupports) &&
+			!iid.equals(Components.interfaces.nsISupportsWeakReference) &&
+			!iid.equals(Components.interfaces.nsIProgressEventSink))
+		{
+			throw Components.results.NS_ERROR_NO_INTERFACE;
+		}
+        
+        return this;
+    },
+    /********************************************/
+    
+	/**
+	* nsIInterfaceRequestor
+	*/
+	getInterface: function(iid)
+	{
+		if (iid.equals(Components.interfaces.nsIProgressEventSink))
+		{
+		  	return this;
+		}
+		
+		try {
+			if (this.OriginalNotificationCallbacks != null) 
+			{
+				return this.OriginalNotificationCallbacks;
+			}
+		}
+		catch(e) {
+			//dump("brrr: " + e);
+			//dumpall("\n\n\n****EXC OBJECT IS", this.OriginalNotificationCallbacks);
+		}
+		
+		Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+		return null;
+	}
+	/********************************************/
+}
+
+
+// ************************************************************************************************
+
 // HttpFoxObserver
 function HttpFoxObserver(HttpFoxReference)
 {
@@ -2047,7 +2159,6 @@ HttpFoxObserver.prototype =
 {
 	// Properties
 	HttpFox: null,
-	OriginalNotificationCallbacks: null,
 	
 	// Constructor
 	init: function(HttpFoxReference) 
@@ -2094,16 +2205,6 @@ HttpFoxObserver.prototype =
 		var eventSourceData = new Object();
 
 		// hook up more listeners
-		try {
-			if (HttpChannel.notificationCallbacks.QueryInterface(Components.interfaces.nsISupportsString).data == "HttpFoxObserver"
-				&& HttpChannel.notificationCallbacks.QueryInterface(Components.interfaces.nsISupportsString).toString() != this.QueryInterface(Components.interfaces.nsISupportsString).toString())
-			{
-				this.OriginalNotificationCallbacks = HttpChannel.notificationCallbacks; 
-			}
-		}
-		catch(ex) {}
-		HttpChannel.notificationCallbacks = this;
-
 		HttpChannel.QueryInterface(Components.interfaces.nsIRequest);
 		if (HttpChannel.loadGroup && HttpChannel.loadGroup.groupObserver) {
 			// even more listeners
@@ -2119,14 +2220,18 @@ HttpFoxObserver.prototype =
 		
 		try {
 			// assume it is always a new request
-			this.HttpFox.handleRequestEvent(
-				new HttpFoxRequestEvent(
-					this.HttpFox, 
-					HttpChannel, 
-					this.HttpFox.HttpFoxEventSourceType.ON_MODIFY_REQUEST, 
-					eventSourceData, 
-					getContextFromRequest(HttpChannel)));
+			var event = new HttpFoxRequestEvent(
+				this.HttpFox, 
+				HttpChannel, 
+				this.HttpFox.HttpFoxEventSourceType.ON_MODIFY_REQUEST, 
+				eventSourceData, 
+				getContextFromRequest(HttpChannel));
+			
+			event.HttpFoxRequestEventSink = new HttpFoxRequestEventSink(this.HttpFox, HttpChannel);
+				
+			this.HttpFox.handleRequestEvent(event);
 			}
+			  
 		catch(e) 
 		{
 			dump("\n* Observer EXC: " + e + "\n");
@@ -2191,26 +2296,6 @@ HttpFoxObserver.prototype =
 	/********************************************/
 	
 	/**
-	* See nsIProgressEventSink
-	*/
-	onProgress: function(request, context, progress, progressMax)
-	{
-		var eventSourceData = new Object();
-		eventSourceData["progress"] = progress;
-		eventSourceData["progressMax"] = progressMax;
-		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_PROGRESS, eventSourceData, getContextFromRequest(request)));
-	}, 
-   
-	onStatus: function(request, context, status, statusArg)
-	{
-		var eventSourceData = new Object();
-		eventSourceData["status"] = status;
-		eventSourceData["statusArg"] = statusArg;
-		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_STATUS, eventSourceData, getContextFromRequest(request)));
-	}, 
-	/************************************************/
-	
-	/**
 	* nsIObserver
 	*/
 	observe: function(subject, topic, data) 
@@ -2257,30 +2342,14 @@ HttpFoxObserver.prototype =
 			!iid.equals(Components.interfaces.nsIURIContentListener) &&
 			!iid.equals(Components.interfaces.nsIStreamListener) &&
 			!iid.equals(Components.interfaces.nsIRequestObserver) &&
-			!iid.equals(Components.interfaces.nsIProgressEventSink) &&
 			!iid.equals(Components.interfaces.nsISupportsString))
 		{
 			throw Components.results.NS_ERROR_NO_INTERFACE;
 		}
         
         return this;
-    },
+    }
     /********************************************/
-    
-	/**
-	* nsIInterfaceRequestor
-	*/
-	getInterface: function(iid)
-	{
-		if (iid.equals(Components.interfaces.nsIProgressEventSink))
-		{
-		  	return this;
-		}
-		
-		Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
-		return null;
-	}
-	/********************************************/
 }
 // ************************************************************************************************
 

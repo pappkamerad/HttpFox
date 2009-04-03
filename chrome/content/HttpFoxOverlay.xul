@@ -72,7 +72,8 @@
 			<tree id="hf_RequestTree" context="hf_RequestTreeContextMenu" flex="1" onselect="HttpFox.selectionChange_RequestTree();">
 			  <treecols>
 			    <treecol id="hf_Column_Started" 
-			    	label="Started" 
+			    	label="Started"
+			    	persist="width hidden"
 			    	flex="0" 
 			    	style="width:75px; -moz-border-top-colors: ThreeDLightShadow ThreeDLightShadow; border-bottom-width: 1px; border-left-width: 0px; border-top-width: 1px; border-right-width: 1px;"/>
 			    
@@ -80,6 +81,7 @@
 			    
 			    <treecol id="hf_Column_Time"
 			    	label="Time"
+			    	persist="width hidden"
 			    	flex="0" 
 			    	style="width:55px; text-align:right; -moz-border-top-colors: ThreeDLightShadow ThreeDLightShadow; border-bottom-width: 1px; border-left-width: 1px; border-top-width: 1px; border-right-width: 1px;"/>
 			    
@@ -87,6 +89,7 @@
 			    
 			    <treecol id="hf_Column_Sent" 
 			    	label="Sent"
+			    	persist="width hidden"
 			    	flex="0" 
 			    	style="width:70px; text-align:right; -moz-border-top-colors: ThreeDLightShadow ThreeDLightShadow; border-bottom-width: 1px; border-left-width: 1px; border-top-width: 1px; border-right-width: 1px;"/>
 			    
@@ -94,6 +97,7 @@
 			    
 			    <treecol id="hf_Column_Received" 
 			    	label="Received"
+			    	persist="width hidden"
 			    	flex="0" 
 			    	style="width:80px; text-align:right; -moz-border-top-colors: ThreeDLightShadow ThreeDLightShadow; border-bottom-width: 1px; border-left-width: 1px; border-top-width: 1px; border-right-width: 1px;"/>
 			    
@@ -101,6 +105,7 @@
 			    
 			    <treecol id="hf_Column_Method" 
 			    	label="Method"
+			    	persist="width hidden"
 			    	flex="0" 
 			    	style="width:55px; -moz-border-top-colors: ThreeDLightShadow ThreeDLightShadow; border-bottom-width: 1px; border-left-width: 1px; border-top-width: 1px; border-right-width: 1px;"/>
 			    
@@ -108,6 +113,7 @@
 			    
 			    <treecol id="hf_Column_Result" 
 			    	label="Result"
+			    	persist="width hidden"
 			    	flex="0" 
 			    	style="width:65px; -moz-border-top-colors: ThreeDLightShadow ThreeDLightShadow; border-bottom-width: 1px; border-left-width: 1px; border-top-width: 1px; border-right-width: 1px;"/>
 			    
@@ -115,6 +121,7 @@
 			    
 			    <treecol id="hf_Column_Type" 
 			    	label="Type"
+			    	persist="width hidden"
 			    	flex="1" 
 			    	style="-moz-border-top-colors: ThreeDLightShadow ThreeDLightShadow; border-bottom-width: 1px; border-left-width: 1px; border-top-width: 1px; border-right-width: 1px;"/>
 			    
@@ -122,7 +129,8 @@
 			    
 			    <treecol id="hf_Column_URL" 
 					crop="center"
-			    	label="URL"
+			    	persist="width hidden"
+					label="URL"
 			    	flex="3" 
 			    	style="-moz-border-top-colors: ThreeDLightShadow ThreeDLightShadow; border-bottom-width: 1px; border-left-width: 1px; border-top-width: 1px; border-right-width: 0px;"/>
 			  </treecols>

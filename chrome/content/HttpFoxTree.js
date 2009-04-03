@@ -73,7 +73,7 @@ HttpFoxTree.prototype =
 	     	switch(column)
 	     	{
 	     		case "hf_Column_Started":
-	        		return formatTime(new Date(request.StartTimestamp.getTime() - this.HttpFox.HttpFoxService.StartTime.getTime()));
+	        		return formatTime(new Date(request.StartTimestamp - this.HttpFox.HttpFoxService.StartTime.getTime()));
 	        		
 				case "hf_Column_Time":
 					if (!request.IsFinished)

@@ -9,7 +9,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="hf_Window"
         title="HttpFox"
-        persist="screenX,screenY,width,height"
+        persist="screenX,screenY,width,height,sizemode"
         onload="">
 
 	<commandset id="mainCommandSet" />

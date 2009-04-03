@@ -125,7 +125,7 @@ HttpFoxController.prototype =
 		}
 		else
 		{
-			this.closePanel();
+			this.cmd_hf_togglePanel();
 		}
 	},
     
@@ -919,7 +919,11 @@ HttpFoxController.prototype =
 			
 			for (i in request.PostDataParameters)
 			{
-				this.addHeaderRow("hf_PostDataChildren", urlDecode(request.PostDataParameters[i][0]), urlDecode(request.PostDataParameters[i][1]));
+				if (request.PostDataParameters[i][0] != null && request.PostDataParameters[i][0] != "") 
+				{
+					this.addHeaderRow("hf_PostDataChildren", urlDecode(request.PostDataParameters[i][0]), urlDecode(request.PostDataParameters[i][1] != null ? request.PostDataParameters[i][1] : ""));	
+				}
+				
 			}
 		}
 		else
