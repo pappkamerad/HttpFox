@@ -568,7 +568,7 @@ HttpFoxController.prototype =
 		var contentPanel = document.getElementById("hf_RawContentOutput");
 		if (this.isSelectedTab_Content()) 
 		{
-			//dumpall("curr-request", currentRequest);
+			//net.decoded.utils.dumpall("curr-request", currentRequest);
 			//alert("avail.? ");
 			if (currentRequest.isContentAvailable())  {
 				// async
@@ -641,7 +641,7 @@ HttpFoxController.prototype =
 		contentPanelRaw.value = currentRequest.Content;
 		
 		// try to fill pretty print content
-		if (isContentTypeXml(currentRequest.ContentType))
+		if (net.decoded.utils.isContentTypeXml(currentRequest.ContentType))
 		{
 			// enable pretty
 			this.enableContentDisplayTypePrettyRadio();
@@ -671,7 +671,7 @@ HttpFoxController.prototype =
 	{
 		this.clearContentDisplay();
 		
-		document.getElementById("hf_RawContentOutput").value = "Error loading content (" + nsResultErrors[status.toString(16)] + ")";
+		document.getElementById("hf_RawContentOutput").value = "Error loading content (" + net.decoded.utils.nsResultErrors[status.toString(16)] + ")";
 	},
 	
 	showRawContentNotAvailable: function() 
@@ -801,7 +801,7 @@ HttpFoxController.prototype =
 		
 		for (i in request.QueryStringParameters)
 		{
-			this.addHeaderRow("hf_QueryStringChildren", urlDecode(request.QueryStringParameters[i][0]), urlDecode(request.QueryStringParameters[i][1]));
+			this.addHeaderRow("hf_QueryStringChildren", net.decoded.utils.urlDecode(request.QueryStringParameters[i][0]), net.decoded.utils.urlDecode(request.QueryStringParameters[i][1]));
 		}
 	},
 	
@@ -819,7 +819,7 @@ HttpFoxController.prototype =
 		
 		for (i in request.CookiesSent)
 		{
-			this.addCookieRow("hf_CookiesSentChildren", request.CookiesSent[i]["name"], request.CookiesSent[i]["value"], (request.CookiesSent[i]["path"]) ? request.CookiesSent[i]["path"] : "", (request.CookiesSent[i]["domain"]) ? request.CookiesSent[i]["domain"] : "", (request.CookiesSent[i]["expires"]) ? formatDateTime(request.CookiesSent[i]["expires"]) : "End Of Session");
+			this.addCookieRow("hf_CookiesSentChildren", request.CookiesSent[i]["name"], request.CookiesSent[i]["value"], (request.CookiesSent[i]["path"]) ? request.CookiesSent[i]["path"] : "", (request.CookiesSent[i]["domain"]) ? request.CookiesSent[i]["domain"] : "", (request.CookiesSent[i]["expires"]) ? net.decoded.utils.formatDateTime(request.CookiesSent[i]["expires"]) : "End Of Session");
 		}
 		
 		for (i in request.CookiesReceived)
@@ -921,7 +921,7 @@ HttpFoxController.prototype =
 			{
 				if (request.PostDataParameters[i][0] != null && request.PostDataParameters[i][0] != "") 
 				{
-					this.addHeaderRow("hf_PostDataChildren", urlDecode(request.PostDataParameters[i][0]), urlDecode(request.PostDataParameters[i][1] != null ? request.PostDataParameters[i][1] : ""));	
+					this.addHeaderRow("hf_PostDataChildren", net.decoded.utils.urlDecode(request.PostDataParameters[i][0]), net.decoded.utils.urlDecode(request.PostDataParameters[i][1] != null ? request.PostDataParameters[i][1] : ""));	
 				}
 				
 			}
@@ -933,7 +933,7 @@ HttpFoxController.prototype =
 			document.getElementById("hf_PostDataTree").collapsed = true;
 			
 			// check if url parameter style
-			if (isXml(request.PostData))
+			if (net.decoded.utils.isXml(request.PostData))
 			{
 				this.getPrettyPrintXML(request.PostData, "hf_PostDataPretty");	
 			}
@@ -1019,7 +1019,7 @@ HttpFoxController.prototype =
 			content += "<b> - Statuscode: </b>" + request.RequestLog[i].ResponseStatus + "<br/>";
 			content += "<b> - Timestamp: </b>" + request.RequestLog[i].Timestamp + "<br/>";
 			content += "<b> - HttpFox starttime: </b>" + request.HttpFox.StartTime + "<br/>";
-			//content += "- relative timestamp: " + formatTime(new Date(this.RequestLog[i].Timestamp.getTime() - this.HttpFox.StartTime.getTime())) + "<br/>";
+			//content += "- relative timestamp: " + net.decoded.utils.formatTime(new Date(this.RequestLog[i].Timestamp.getTime() - this.HttpFox.StartTime.getTime())) + "<br/>";
 			content += "<b> - IsFromCache: </b>" + request.RequestLog[i].IsFromCache + "<br/>";
 			content += "<b> - IsPending: </b>" + request.RequestLog[i].IsPending + "<br/>";
 			content += "<b> - BytesLoaded: </b>" + request.RequestLog[i].BytesLoaded + "<br/>";
@@ -1166,7 +1166,7 @@ HttpFoxController.prototype =
 	{
 		if (this.currentCellText != null) 
 		{
-			toClipboard(this.currentCellText);
+			net.decoded.utils.toClipboard(this.currentCellText);
 		}
 	},
 	
@@ -1184,7 +1184,7 @@ HttpFoxController.prototype =
 					copyString += "\t";
 				}
 			}
-			toClipboard(copyString);
+			net.decoded.utils.toClipboard(copyString);
 		}
 	},
 	
@@ -1210,14 +1210,14 @@ HttpFoxController.prototype =
 					copyString += "\n";
 				}
 			}
-			toClipboard(copyString);
+			net.decoded.utils.toClipboard(copyString);
 		}
 	},
 	
 	//G
 	OpenInWindow: function()
 	{
-		openWindow("HttpFox", "chrome://httpfox/content/HttpFoxWindow.xul", "", null);
+		net.decoded.utils.openWindow("HttpFox", "chrome://httpfox/content/HttpFoxWindow.xul", "", null);
 	},
 	
 	OpenOptions: function()

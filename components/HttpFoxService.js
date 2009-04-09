@@ -886,7 +886,7 @@ HttpFoxRequest.prototype =
 		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATE_CHANGED
 			//&& getStatusTextFromCode(HttpFoxStatusCodeType.WEBPROGRESS_TRANSITION, this.EventSourceData["flags"]) == "STATE_STOP"
 			&& this.EventSourceData["flags"] & Components.interfaces.nsIWebProgressListener.STATE_STOP
-			&& this.EventSourceData["status"] == HttpFoxNsResultErrors.NS_BINDING_ABORTED)
+			&& this.EventSourceData["status"] == utils.HttpFoxNsResultErrors.NS_BINDING_ABORTED)
 		{
 			// aborted
 			this.setAborted();
@@ -1431,10 +1431,10 @@ HttpFoxRequest.prototype =
 			var CacheInfo = this.CacheToken.QueryInterface(Components.interfaces.nsICacheEntryInfo);
 			
 			this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Key", CacheInfo.key);
-			this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Expires", formatDateTime(CacheInfo.expirationTime));
+			this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Expires", utils.formatDateTime(CacheInfo.expirationTime));
 			this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Hit Count", CacheInfo.fetchCount);
-			this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Last Hit", formatDateTime(CacheInfo.lastFetched));
-			this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Last Modification", formatDateTime(CacheInfo.lastModified));
+			this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Last Hit", utils.formatDateTime(CacheInfo.lastFetched));
+			this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Last Modification", utils.formatDateTime(CacheInfo.lastModified));
 			this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Client ID", CacheInfo.clientID);
 			this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Device ID", CacheInfo.deviceID);
 			this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Size", CacheInfo.dataSize);
@@ -1446,7 +1446,7 @@ HttpFoxRequest.prototype =
 				this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Filename", CacheFileInfo.leafName);
 				this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Filepath", CacheFileInfo.target);
 				this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Filesize", CacheFileInfo.fileSize);
-				this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "File Last Modification", formatDateTime(CacheFileInfo.lastModifiedTime / 1000));
+				this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "File Last Modification", utils.formatDateTime(CacheFileInfo.lastModifiedTime / 1000));
 			}
 			else
 			{
@@ -1537,7 +1537,7 @@ HttpFoxRequest.prototype =
 		{
 		}
 		
-		if (this.Status == HttpFoxNsResultErrors.NS_BINDING_ABORTED)
+		if (this.Status == utils.HttpFoxNsResultErrors.NS_BINDING_ABORTED)
 		//if (this.Status != 0)
 		{
 			// aborted
@@ -1551,7 +1551,7 @@ HttpFoxRequest.prototype =
 				this.HttpChannel, 
 				this.HttpFox.HttpFoxEventSourceType.SCANNED_COMPLETE, 
 				null, 
-				getContextFromRequest(this.HttpChannel)));
+				utils.getContextFromRequest(this.HttpChannel)));
 		
 		try {
 			// release httpchannel, listeners and context
@@ -1608,7 +1608,7 @@ HttpFoxRequest.prototype =
 	
 	isRedirect : function()
 	{
-		if (this.Status && this.Status == HttpFoxNsResultErrors.NS_BINDING_REDIRECTED) 
+		if (this.Status && this.Status == utils.HttpFoxNsResultErrors.NS_BINDING_REDIRECTED) 
 		{
 			return true;
 		}
@@ -1959,7 +1959,7 @@ HttpFoxRequestEvent.prototype =
 	getCookiesSent: function() {
 		this.CookiesSent = new Array();
 		
-		var CookiesStored = getStoredCookies(this.RequestHeaders["Host"], this.URIPath);
+		var CookiesStored = utils.getStoredCookies(this.RequestHeaders["Host"], this.URIPath);
 		
 		if (this.RequestHeaders["Cookie"]) {
 			var requestCookies = this.RequestHeaders["Cookie"].split("; ");
@@ -2022,7 +2022,7 @@ HttpFoxRequestEvent.prototype =
 				}
 				
 				// check against stored one
-				var CookiesStored = getStoredCookies(cookieData["domain"], cookieData["path"]);
+				var CookiesStored = utils.getStoredCookies(cookieData["domain"], cookieData["path"]);
 				for (var i = 0; i < CookiesStored.length; i++)
 				{
 					if (CookiesStored[i].name == cName && CookiesStored[i].value == cValue && CookiesStored[i].path == cookieData["path"]) 
@@ -2074,7 +2074,7 @@ HttpFoxRequestEventSink.prototype =
 		var eventSourceData = new Object();
 		eventSourceData["progress"] = progress;
 		eventSourceData["progressMax"] = progressMax;
-		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_PROGRESS, eventSourceData, getContextFromRequest(request)));
+		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_PROGRESS, eventSourceData, utils.getContextFromRequest(request)));
 		// forward to possible other notificationCallbacks
 		try {
 			if (this.OriginalNotificationCallbacks != null) 
@@ -2091,7 +2091,7 @@ HttpFoxRequestEventSink.prototype =
 		var eventSourceData = new Object();
 		eventSourceData["status"] = status;
 		eventSourceData["statusArg"] = statusArg;
-		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_STATUS, eventSourceData, getContextFromRequest(request)));
+		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_STATUS, eventSourceData, utils.getContextFromRequest(request)));
 		// forward to possible other notificationCallbacks
 		try {
 			if (this.OriginalNotificationCallbacks != null) 
@@ -2225,7 +2225,7 @@ HttpFoxObserver.prototype =
 				HttpChannel, 
 				this.HttpFox.HttpFoxEventSourceType.ON_MODIFY_REQUEST, 
 				eventSourceData, 
-				getContextFromRequest(HttpChannel));
+				utils.getContextFromRequest(HttpChannel));
 			
 			event.HttpFoxRequestEventSink = new HttpFoxRequestEventSink(this.HttpFox, HttpChannel);
 				
@@ -2241,13 +2241,13 @@ HttpFoxObserver.prototype =
 	onExamineResponse: function(HttpChannel) 
 	{
 		var eventSourceData = new Object();
-		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, HttpChannel, this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE, eventSourceData, getContextFromRequest(HttpChannel)));
+		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, HttpChannel, this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE, eventSourceData, utils.getContextFromRequest(HttpChannel)));
 	},
 	
 	onExamineMergedResponse: function(HttpChannel) 
 	{
 		var eventSourceData = new Object();
-		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, HttpChannel, this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_MERGED_RESPONSE, eventSourceData, getContextFromRequest(HttpChannel)));
+		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, HttpChannel, this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_MERGED_RESPONSE, eventSourceData, utils.getContextFromRequest(HttpChannel)));
 	},
 	
 	// INTERFACE IMPLEMENTATIONS
@@ -2259,7 +2259,7 @@ HttpFoxObserver.prototype =
 		var eventSourceData = new Object();
 		eventSourceData["flags"] = flags;
 		eventSourceData["status"] = status;
-		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATE_CHANGED, eventSourceData, getContextFromRequest(request)));
+		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATE_CHANGED, eventSourceData, utils.getContextFromRequest(request)));
 	},
 	
 	onProgressChange: function(progress, request, curSelfProgress, maxSelfProgress, curTotalProgress, maxTotalProgress) 
@@ -2269,14 +2269,14 @@ HttpFoxObserver.prototype =
 		eventSourceData["maxSelfProgress"] = maxSelfProgress;
 		eventSourceData["curTotalProgress"] = curTotalProgress;
 		eventSourceData["maxTotalProgress"] = maxTotalProgress;
-		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_PROGRESS_CHANGED, eventSourceData, getContextFromRequest(request)));
+		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_PROGRESS_CHANGED, eventSourceData, utils.getContextFromRequest(request)));
 	},
 	
 	onLocationChange: function(progress, request, uri) 
 	{
 		var eventSourceData = new Object();
 		eventSourceData["uri"] = uri;
-		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_LOCATION_CHANGED, eventSourceData, getContextFromRequest(request)));
+		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_LOCATION_CHANGED, eventSourceData, utils.getContextFromRequest(request)));
 	},
 	
 	onStatusChange: function(progress, request, status, message) 
@@ -2284,14 +2284,14 @@ HttpFoxObserver.prototype =
 		var eventSourceData = new Object();
 		eventSourceData["status"] = status;
 		eventSourceData["message"] = message;
-		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATUS_CHANGED, eventSourceData, getContextFromRequest(request)));
+		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATUS_CHANGED, eventSourceData, utils.getContextFromRequest(request)));
 	},
 	
 	onSecurityChange: function(progress, request, state) 
 	{
 		var eventSourceData = new Object();
 		eventSourceData["state"] = state;
-		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_SECURITY_CHANGED, eventSourceData, getContextFromRequest(request)));
+		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_SECURITY_CHANGED, eventSourceData, utils.getContextFromRequest(request)));
 	},
 	/********************************************/
 	
@@ -2388,13 +2388,13 @@ HttpFoxSourceCache.prototype =
         
     load: function(url, myPostData, ckey, request)
     {
-		var ioService = IOService.getService(nsIIOService);
+		var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
 
         var channel;
         try
         {
             channel = ioService.newChannel(url, null, null);
-            channel.loadFlags |= LOAD_FROM_CACHE | LOAD_TARGETED | VALIDATE_NEVER;
+            channel.loadFlags |= utils.LOAD_FROM_CACHE | utils.LOAD_TARGETED | utils.VALIDATE_NEVER;
 			channel.owner = new HttpFoxResponseLoaderFlagger();
         }
         catch(ex)
@@ -2402,17 +2402,17 @@ HttpFoxSourceCache.prototype =
             return;
         }
 
-		if (channel instanceof nsIUploadChannel)
+		if (channel instanceof Components.interfaces.nsIUploadChannel)
 		{
 			if (myPostData) 
 			{
 		    	var inputStream = Components.classes["@mozilla.org/io/string-input-stream;1"].createInstance(Components.interfaces.nsIStringInputStream);
 				inputStream.setData(myPostData, myPostData.length);
 
-				var postStream = QI(inputStream, CI("nsISeekableStream"));
+				var postStream = inputStream.QueryInterface(Components.interfaces.nsISeekableStream);
 				postStream.seek(0, 0);
 		        
-		        var uploadChannel = QI(channel, nsIUploadChannel);
+		        var uploadChannel = channel.QueryInterface(Components.interfaces.nsIUploadChannel);
 		        uploadChannel.setUploadStream(postStream, "application/x-www-form-urlencoded", -1);
 		       	
 		        var cachingChannel = channel.QueryInterface(Components.interfaces.nsIHttpChannel);
@@ -2421,10 +2421,10 @@ HttpFoxSourceCache.prototype =
 		    }
 		}
 		
-		if (channel instanceof nsICachingChannel)
+		if (channel instanceof Components.interfaces.nsICachingChannel)
 		{
-		    var cacheChannel = QI(channel, nsICachingChannel);
-		    cacheChannel.loadFlags |= LOAD_ONLY_FROM_CACHE | VALIDATE_NEVER;
+		    var cacheChannel = channel.QueryInterface(Components.interfaces.nsICachingChannel);
+		    cacheChannel.loadFlags |= utils.LOAD_ONLY_FROM_CACHE | utils.VALIDATE_NEVER;
 		    cacheChannel.cacheKey = ckey;
 		}
         
@@ -2449,10 +2449,10 @@ HttpFoxSourceCache.prototype =
             return;
         }
 
-        var ioService = IOService.getService(nsIIOService);
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
 
         var channel = ioService.newChannel(url, null, null);
-        channel.loadFlags |= LOAD_FROM_CACHE | LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
+        channel.loadFlags |= utils.LOAD_FROM_CACHE | utils.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
 
         var listener = new HttpFoxSourceCacheStreamListener(url, this, cb);
         channel.asyncOpen(listener, null);            
@@ -2479,16 +2479,16 @@ HttpFoxSourceCacheStreamListener.prototype =
     {
         this.done = true;
         
-        if (status != NS_BINDING_ABORTED)
+        if (status != utils.NS_BINDING_ABORTED)
         {
             context = this.data;
-            this.request.endGetRawContent(convertToUnicode(this.data, this.charset), status);
+            this.request.endGetRawContent(utils.convertToUnicode(this.data, this.charset), status);
         }
     },
 
     onDataAvailable: function(request, context, inStr, sourceOffset, count)
     {
-        this.data += readFromStream_Binary(inStr, this.charset);
+        this.data += utils.readFromStream_Binary(inStr, this.charset);
     }
 };
 // ************************************************************************************************
@@ -2881,43 +2881,8 @@ HttpFoxRequestLogData.prototype =
 // ************************************************************************************************
 
 // UTIL FUNCTIONS
-function readFromStream_Binary(stream, charset)
-{
-	var bstream = Components.classes["@mozilla.org/binaryinputstream;1"]
-					.createInstance(Components.interfaces.nsIBinaryInputStream);
-	bstream.setInputStream(stream);
 
-	var bytes = bstream.readBytes(bstream.available());
-	return bytes;
-}
 // ************************************************************************************************
-
-function convertToUnicode(text, charset)
-{
-    try
-    {
-        var conv = CCSV("@mozilla.org/intl/scriptableunicodeconverter", "nsIScriptableUnicodeConverter");
-        conv.charset = charset ? charset : "UTF-8";
-        return conv.ConvertToUnicode(text);
-    }
-    catch (exc)
-    {
-        return text;
-    }
-};
-// ************************************************************************************************
-
-function dummyWait(msecs) 
-{
-	var start = new Date().getTime();
-	var cur = start
-	while(cur - start < msecs)
-	{
-		cur = new Date().getTime();
-	}
-};
-// ************************************************************************************************
-
 
 String.prototype.trim = function(x) 
 {
@@ -2932,675 +2897,641 @@ String.prototype.trim = function(x)
 }
 // ************************************************************************************************
 
-// context helper functions
-function getContextFromWindow(win)
-{
-	if (win == null) 
-	{
-		return new HttpFoxContext(null, null, null, false);
-	}
-	else 
-	{
-		var browser = this.getBrowserByWindow(win);
-		var chrome = browser ? browser.chrome : null;
-		return new HttpFoxContext(win, browser, chrome, false);	
-	}
-}
+var utils = {
+	LOAD_FROM_CACHE: Components.interfaces.nsIRequest.LOAD_FROM_CACHE,
+	VALIDATE_NEVER: Components.interfaces.nsIRequest.VALIDATE_NEVER,
+	LOAD_TARGETED: Components.interfaces.nsIChannel.LOAD_TARGETED,
+	LOAD_BYPASS_LOCAL_CACHE_IF_BUSY: Components.interfaces.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY,
+	LOAD_ONLY_FROM_CACHE: Components.interfaces.nsICachingChannel.LOAD_ONLY_FROM_CACHE,
+	NS_BINDING_ABORTED: 0x804b0002,
 
-function getContextFromRequest(request)
-{
-	var win = null;
-	var browser = null;
+	// Utility function, dump an object by reflexion up to niv level
+	dumpall: function(name, obj, niv) 
+	{
+		if (!niv) {
+			niv=1;
+		}
+		var dumpdict = new Object();
 	
-	try 
-	{
-		request.QueryInterface(Components.interfaces.nsIChannel);
-	}
-	catch(ex)
-	{
-		return new HttpFoxContext(null, null, null, false);
-	}
-	
-	if (request.loadGroup == null || request.loadGroup.groupObserver == null) 
-	{
-		win = null;
-		return new HttpFoxContext(null, null, null, false);
-	}
-	
-	var go = request.loadGroup.groupObserver;
-	go.QueryInterface(Components.interfaces.nsIWebProgress);
-	win = go.DOMWindow;
-	browser = this.getBrowserByWindow(win);
-	var chrome = browser ? browser.chrome : null;
-
-	return new HttpFoxContext(win, browser, chrome, false);
-}
-
-function getBrowserByWindow(win)
-{
-	return null;
-}
-// ************************************************************************************************
-
-// Get the cookies
-function getStoredCookies(host, path)
-{
-    var cookies = new Array();
-    
-    // If the host is set
-    if(host)
-    {
-        var cookie            = null;
-        var cookieEnumeration = Components.classes["@mozilla.org/cookiemanager;1"].getService(Components.interfaces.nsICookieManager).enumerator;
-        var cookieHost        = null;
-        var cookiePath        = null;
-
-        // Loop through the cookies
-        while(cookieEnumeration.hasMoreElements())
-        {
-            cookie = cookieEnumeration.getNext().QueryInterface(Components.interfaces.nsICookie);
-
-            cookieHost = cookie.host;
-            cookiePath = cookie.path;
-
-            // If there is a host and path for this cookie
-            if(cookieHost && cookiePath)
-            {
-                // If the cookie host starts with '.'
-                if(cookieHost.charAt(0) == ".")
-                {
-                    cookieHost = cookieHost.substring(1);
-                }
-
-                // If the host and cookie host and path and cookie path match
-                //if((host == cookieHost || host.indexOf("." + cookieHost) != -1) && (path == cookiePath || path.indexOf(cookiePath) == 0))
-                if((host == cookieHost || host.indexOf("." + cookieHost) != -1) && (path == cookiePath || path.indexOf(cookiePath) == 0)) 
-                {
-                    cookies.push(cookie);
-                }
-            }
-        }
-    }
-
-    return cookies;
-}
-// ************************************************************************************************
-
-// Utility function, dump an object by reflexion up to niv level
-function dumpall(name, obj, niv) 
-{
-	if (!niv) {
-		niv=1;
-	}
-	var dumpdict = new Object();
-
-	dump ("\n\n-------------------------------------------------------\n");
-	dump ("Dump of the object: " + name + " (" + niv + " levels)\n");
-	dump ("Address: " + obj + "\n");
-	dump ("Interfaces: ");
-	
-	for (var i in Components.interfaces) 
-	{
-		try 
-		{
-			obj.QueryInterface(Components.interfaces[i]);
-			dump("" + Components.interfaces[i] + ", ");
-		} 
-		catch(ex) 
-		{}
-	}
-	dump("\n");
-	_dumpall(dumpdict,obj,niv,"","");
-	dump ("\n\n-------------------------------------------------------\n\n");
-
-	for (i in dumpdict) 
-	{
-		delete dumpdict[i];
-	}
-}
-
-function _dumpall(dumpdict, obj, niv, tab, path) 
-{
-	if (obj in dumpdict) 
-	{
-		dump(" (Already dumped)");
-	} 
-	else 
-	{
-		dumpdict[obj]=1;
+		dump ("\n\n-------------------------------------------------------\n");
+		dump ("Dump of the object: " + name + " (" + niv + " levels)\n");
+		dump ("Address: " + obj + "\n");
+		dump ("Interfaces: ");
 		
-		var i, r, str, typ;
-		for (i in obj) 
+		for (var i in Components.interfaces) 
 		{
 			try 
 			{
-				str = String(obj[i]).replace(/\n/g, "\n" + tab);
+				obj.QueryInterface(Components.interfaces[i]);
+				dump("" + Components.interfaces[i] + ", ");
 			} 
 			catch(ex) 
+			{}
+		}
+		dump("\n");
+		this._dumpall(dumpdict,obj,niv,"","");
+		dump ("\n\n-------------------------------------------------------\n\n");
+	
+		for (i in dumpdict) 
+		{
+			delete dumpdict[i];
+		}
+	},
+	
+	_dumpall: function(dumpdict, obj, niv, tab, path) 
+	{
+		if (obj in dumpdict) 
+		{
+			dump(" (Already dumped)");
+		} 
+		else 
+		{
+			dumpdict[obj]=1;
+			
+			var i, r, str, typ;
+			for (i in obj) 
 			{
-				str = String(ex);
-			}
-			try 
-			{
-				typ = "" + typeof(obj[i]);
-			} 
-			catch(ex) 
-			{
-				typ = "unknown";
-			}
-			dump ("\n" + tab + i + " (" + typ + (path ? ", " + path : "") + "): " + str);
-			if ((niv > 1) && (typ == "object")) 
-			{
-				_dumpall(dumpdict, obj[i], niv-1, tab + "\t", (path ? path + "->" + i : i));
+				try 
+				{
+					str = String(obj[i]).replace(/\n/g, "\n" + tab);
+				} 
+				catch(ex) 
+				{
+					str = String(ex);
+				}
+				try 
+				{
+					typ = "" + typeof(obj[i]);
+				} 
+				catch(ex) 
+				{
+					typ = "unknown";
+				}
+				dump ("\n" + tab + i + " (" + typ + (path ? ", " + path : "") + "): " + str);
+				if ((niv > 1) && (typ == "object")) 
+				{
+					this._dumpall(dumpdict, obj[i], niv-1, tab + "\t", (path ? path + "->" + i : i));
+				}
 			}
 		}
+	},
+	// ************************************************************************************************
+	
+	readFromStream_Binary: function(stream, charset)
+	{
+		var bstream = Components.classes["@mozilla.org/binaryinputstream;1"].createInstance(Components.interfaces.nsIBinaryInputStream);
+		bstream.setInputStream(stream);
+	
+		var bytes = bstream.readBytes(bstream.available());
+		return bytes;
+	},
+	//************************************************************************************************
+	
+	// context helper functions
+	getContextFromWindow: function(win)
+	{
+		if (win == null) 
+		{
+			return new HttpFoxContext(null, null, null, false);
+		}
+		else 
+		{
+			var browser = this.getBrowserByWindow(win);
+			var chrome = browser ? browser.chrome : null;
+			return new HttpFoxContext(win, browser, chrome, false);	
+		}
+	},
+	
+	getContextFromRequest: function(request)
+	{
+		var win = null;
+		var browser = null;
+		
+		try 
+		{
+			request.QueryInterface(Components.interfaces.nsIChannel);
+		}
+		catch(ex)
+		{
+			return new HttpFoxContext(null, null, null, false);
+		}
+		
+		if (request.loadGroup == null || request.loadGroup.groupObserver == null) 
+		{
+			win = null;
+			return new HttpFoxContext(null, null, null, false);
+		}
+		
+		var go = request.loadGroup.groupObserver;
+		go.QueryInterface(Components.interfaces.nsIWebProgress);
+		win = go.DOMWindow;
+		browser = this.getBrowserByWindow(win);
+		var chrome = browser ? browser.chrome : null;
+	
+		return new HttpFoxContext(win, browser, chrome, false);
+	},
+	
+	getBrowserByWindow: function(win)
+	{
+		return null;
+	},
+	// ************************************************************************************************
+	
+	convertToUnicode: function(text, charset)
+	{
+	    try
+	    {
+	        var conv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].getService(Components.interfaces.nsIScriptableUnicodeConverter);
+	        conv.charset = charset ? charset : "UTF-8";
+	        return conv.ConvertToUnicode(text);
+	    }
+	    catch (exc)
+	    {
+	        return text;
+	    }
+	},
+	// ************************************************************************************************
+	
+	// Get the cookies
+	getStoredCookies: function(host, path)
+	{
+	    var cookies = new Array();
+	    
+	    // If the host is set
+	    if(host)
+	    {
+	        var cookie            = null;
+	        var cookieEnumeration = Components.classes["@mozilla.org/cookiemanager;1"].getService(Components.interfaces.nsICookieManager).enumerator;
+	        var cookieHost        = null;
+	        var cookiePath        = null;
+	
+	        // Loop through the cookies
+	        while(cookieEnumeration.hasMoreElements())
+	        {
+	            cookie = cookieEnumeration.getNext().QueryInterface(Components.interfaces.nsICookie);
+	
+	            cookieHost = cookie.host;
+	            cookiePath = cookie.path;
+	
+	            // If there is a host and path for this cookie
+	            if(cookieHost && cookiePath)
+	            {
+	                // If the cookie host starts with '.'
+	                if(cookieHost.charAt(0) == ".")
+	                {
+	                    cookieHost = cookieHost.substring(1);
+	                }
+	
+	                // If the host and cookie host and path and cookie path match
+	                //if((host == cookieHost || host.indexOf("." + cookieHost) != -1) && (path == cookiePath || path.indexOf(cookiePath) == 0))
+	                if((host == cookieHost || host.indexOf("." + cookieHost) != -1) && (path == cookiePath || path.indexOf(cookiePath) == 0)) 
+	                {
+	                    cookies.push(cookie);
+	                }
+	            }
+	        }
+	    }
+	
+	    return cookies;
+	},
+	
+	HttpFoxNsResultErrors: 
+	{
+		NS_ERROR_BASE: 0xC1F30000,
+		NS_ERROR_NOT_IMPLEMENTED: 0x80004001,
+		NS_ERROR_INVALID_POINTER: 0x80004003,
+		NS_ERROR_ABORT: 0x80004004,
+		NS_ERROR_FAILURE: 0x80004005,
+		NS_ERROR_UNEXPECTED: 0x8000FFFF,
+		NS_ERROR_PROXY_INVALID_IN_PARAMETER: 0x80010010,
+		NS_ERROR_PROXY_INVALID_OUT_PARAMETER: 0x80010011,
+		NS_ERROR_NO_AGGREGATION: 0x80040110,
+		NS_ERROR_NOT_AVAILABLE: 0x80040111,
+		NS_ERROR_FACTORY_NOT_REGISTERED: 0x80040154,
+		NS_ERROR_FACTORY_REGISTER_AGAIN: 0x80040155,
+		NS_ERROR_FACTORY_NOT_LOADED: 0x800401F8,
+		NS_ERROR_OUT_OF_MEMORY: 0x8007000E,
+		NS_ERROR_ILLEGAL_VALUE: 0x80070057,
+		NS_ERROR_CANNOT_CONVERT_DATA: 0x80460001,
+		NS_ERROR_OBJECT_IS_IMMUTABLE: 0x80460002,
+		NS_ERROR_LOSS_OF_SIGNIFICANT_DATA: 0x80460003,
+		NS_ERROR_SERVICE_NOT_AVAILABLE: 0x80460016,
+		NS_ERROR_IS_DIR: 0x80460018,
+		NS_ERROR_ILLEGAL_DURING_SHUTDOWN: 0x8046001E,
+		NS_BASE_STREAM_CLOSED: 0x80470002,
+		NS_BASE_STREAM_OSERROR: 0x80470003,
+		NS_BASE_STREAM_ILLEGAL_ARGS: 0x80470004,
+		NS_BASE_STREAM_NO_CONVERTER: 0x80470005,
+		NS_BASE_STREAM_BAD_CONVERSION: 0x80470006,
+		NS_BASE_STREAM_WOULD_BLOCK: 0x80470007,
+		NS_ERROR_GFX_PRINTER_CMD_NOT_FOUND: 0x80480002,
+		NS_ERROR_GFX_PRINTER_CMD_FAILURE: 0x80480003,
+		NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE: 0x80480004,
+		NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND: 0x80480005,
+		NS_ERROR_GFX_PRINTER_ACCESS_DENIED: 0x80480006,
+		NS_ERROR_GFX_PRINTER_INVALID_ATTRIBUTE: 0x80480007,
+		NS_ERROR_GFX_PRINTER_PRINTER_NOT_READY: 0x80480009,
+		NS_ERROR_GFX_PRINTER_OUT_OF_PAPER: 0x8048000A,
+		NS_ERROR_GFX_PRINTER_PRINTER_IO_ERROR: 0x8048000B,
+		NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE: 0x8048000C,
+		NS_ERROR_GFX_PRINTER_FILE_IO_ERROR: 0x8048000D,
+		NS_ERROR_GFX_PRINTER_PRINTPREVIEW: 0x8048000E,
+		NS_ERROR_GFX_PRINTER_STARTDOC: 0x8048000F,
+		NS_ERROR_GFX_PRINTER_ENDDOC: 0x80480010,
+		NS_ERROR_GFX_PRINTER_STARTPAGE: 0x80480011,
+		NS_ERROR_GFX_PRINTER_ENDPAGE: 0x80480012,
+		NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW: 0x80480013,
+		NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED: 0x80480014,
+		NS_ERROR_GFX_PRINTER_ORIENTATION_NOT_SUPPORTED: 0x80480015,
+		NS_ERROR_GFX_PRINTER_COLORSPACE_NOT_SUPPORTED: 0x80480016,
+		NS_ERROR_GFX_PRINTER_TOO_MANY_COPIES: 0x80480017,
+		NS_ERROR_GFX_PRINTER_DRIVER_CONFIGURATION_ERROR: 0x80480018,
+		NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PP: 0x80480019,
+		NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED: 0x8048001A,
+		NS_ERROR_GFX_PRINTER_NO_XUL: 0x8048001B,
+		NS_ERROR_GFX_NO_PRINTDIALOG_IN_TOOLKIT: 0x8048001C,
+		NS_ERROR_GFX_NO_PRINTROMPTSERVICE: 0x8048001D,
+		NS_ERROR_GFX_PRINTER_PLEX_NOT_SUPPORTED: 0x8048001E,
+		NS_ERROR_GFX_PRINTER_DOC_IS_BUSY: 0x8048001F,
+		NS_ERROR_GFX_PRINTING_NOT_IMPLEMENTED: 0x80480020,
+		NS_ERROR_GFX_COULD_NOT_LOAD_PRINT_MODULE: 0x80480021,
+		NS_ERROR_GFX_PRINTER_RESOLUTION_NOT_SUPPORTED: 0x80480022,
+		NS_BINDING_FAILED: 0x804B0001,
+		NS_BINDING_ABORTED: 0x804B0002,
+		NS_BINDING_REDIRECTED: 0x804B0003,
+		NS_BINDING_RETARGETED: 0x804B0004,
+		NS_ERROR_MALFORMED_URI: 0x804B000A,
+		NS_ERROR_ALREADY_CONNECTED: 0x804B000B,
+		NS_ERROR_NOT_CONNECTED: 0x804B000C,
+		NS_ERROR_CONNECTION_REFUSED: 0x804B000D,
+		NS_ERROR_NET_TIMEOUT: 0x804B000E,
+		NS_ERROR_IN_PROGRESS: 0x804B000F,
+		NS_ERROR_OFFLINE: 0x804B0010,
+		NS_ERROR_NO_CONTENT: 0x804B0011,
+		NS_ERROR_UNKNOWN_PROTOCOL: 0x804B0012,
+		NS_ERROR_PORT_ACCESS_NOT_ALLOWED: 0x804B0013,
+		NS_ERROR_NET_RESET: 0x804B0014,
+		NS_ERROR_FTP_LOGIN: 0x804B0015,
+		NS_ERROR_FTP_CWD: 0x804B0016,
+		NS_ERROR_FTP_PASV: 0x804B0017,
+		NS_ERROR_FTP_PWD: 0x804B0018,
+		NS_ERROR_NOT_RESUMABLE: 0x804B0019,
+		NS_ERROR_INVALID_CONTENT_ENCODING: 0x804B001B,
+		NS_ERROR_FTP_LIST: 0x804B001C,
+		NS_ERROR_UNKNOWN_HOST: 0x804B001E,
+		NS_ERROR_REDIRECT_LOOP: 0x804B001F,
+		NS_ERROR_ENTITY_CHANGED: 0x804B0020,
+		NS_ERROR_UNKNOWN_PROXY_HOST: 0x804B002A,
+		NS_ERROR_UNKNOWN_SOCKET_TYPE: 0x804B0033,
+		NS_ERROR_SOCKET_CREATE_FAILED: 0x804B0034,
+		NS_ERROR_CACHE_KEY_NOT_FOUND: 0x804B003D,
+		NS_ERROR_CACHE_DATA_IS_STREAM: 0x804B003E,
+		NS_ERROR_CACHE_DATA_IS_NOT_STREAM: 0x804B003F,
+		NS_ERROR_CACHE_WAIT_FOR_VALIDATION: 0x804B0040,
+		NS_ERROR_CACHE_ENTRY_DOOMED: 0x804B0041,
+		NS_ERROR_CACHE_READ_ACCESS_DENIED: 0x804B0042,
+		NS_ERROR_CACHE_WRITE_ACCESS_DENIED: 0x804B0043,
+		NS_ERROR_CACHE_IN_USE: 0x804B0044,
+		NS_ERROR_DOCUMENT_NOT_CACHED: 0x804B0046,
+		NS_ERROR_NET_INTERRUPT: 0x804B0047,
+		NS_ERROR_PROXY_CONNECTION_REFUSED: 0x804B0048,
+		NS_ERROR_ALREADY_OPENED: 0x804B0049,
+		NS_ERROR_UNSAFE_CONTENT_TYPE: 0x804B004A,
+		NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS: 0x804B0050,
+		NS_ERROR_HOST_IS_IP_ADDRESS: 0x804B0051,
+		NS_ERROR_PLUGINS_PLUGINSNOTCHANGED: 0x804C03E8,
+		NS_ERROR_PLUGIN_DISABLED: 0x804C03E9,
+		NS_ERROR_PLUGIN_BLOCKLISTED: 0x804C03EA,
+		NS_ERROR_HTMLPARSER_EOF: 0x804E03E8,
+		NS_ERROR_HTMLPARSER_UNKNOWN: 0x804E03E9,
+		NS_ERROR_HTMLPARSER_CANTPROPAGATE: 0x804E03EA,
+		NS_ERROR_HTMLPARSER_CONTEXTMISMATCH: 0x804E03EB,
+		NS_ERROR_HTMLPARSER_BADFILENAME: 0x804E03EC,
+		NS_ERROR_HTMLPARSER_BADURL: 0x804E03ED,
+		NS_ERROR_HTMLPARSER_INVALIDPARSERCONTEXT: 0x804E03EE,
+		NS_ERROR_HTMLPARSER_INTERRUPTED: 0x804E03EF,
+		NS_ERROR_HTMLPARSER_BLOCK: 0x804E03F0,
+		NS_ERROR_HTMLPARSER_BADTOKENIZER: 0x804E03F1,
+		NS_ERROR_HTMLPARSER_BADATTRIBUTE: 0x804E03F2,
+		NS_ERROR_HTMLPARSER_UNRESOLVEDDTD: 0x804E03F3,
+		NS_ERROR_HTMLPARSER_MISPLACEDTABLECONTENT: 0x804E03F4,
+		NS_ERROR_HTMLPARSER_BADDTD: 0x804E03F5,
+		NS_ERROR_HTMLPARSER_BADCONTEXT: 0x804E03F6,
+		NS_ERROR_HTMLPARSER_STOPPARSING: 0x804E03F7,
+		NS_ERROR_HTMLPARSER_UNTERMINATEDSTRINGLITERAL: 0x804E03F8,
+		NS_ERROR_HTMLPARSER_HIERARCHYTOODEEP: 0x804E03F9,
+		NS_ERROR_HTMLPARSER_FAKE_ENDTAG: 0x804E03FA,
+		NS_ERROR_HTMLPARSER_INVALID_COMMENT: 0x804E03FB,
+		NS_ERROR_UCONV_NOCONV: 0x80500001,
+		NS_ERROR_UDEC_ILLEGALINPUT: 0x8050000E,
+		NS_ERROR_ILLEGAL_INPUT: 0x8050000E,
+		NS_ERROR_REG_BADTYPE: 0x80510001,
+		NS_ERROR_REG_BADTYPE: 0x80510001,
+		NS_ERROR_REG_NOT_FOUND: 0x80510003,
+		NS_ERROR_REG_NOT_FOUND: 0x80510003,
+		NS_ERROR_REG_NOFILE: 0x80510004,
+		NS_ERROR_REG_NOFILE: 0x80510004,
+		NS_ERROR_REG_BUFFER_TOO_SMALL: 0x80510005,
+		NS_ERROR_REG_BUFFER_TOO_SMALL: 0x80510005,
+		NS_ERROR_REG_NAME_TOO_LONG: 0x80510006,
+		NS_ERROR_REG_NAME_TOO_LONG: 0x80510006,
+		NS_ERROR_REG_NO_PATH: 0x80510007,
+		NS_ERROR_REG_NO_PATH: 0x80510007,
+		NS_ERROR_REG_READ_ONLY: 0x80510008,
+		NS_ERROR_REG_READ_ONLY: 0x80510008,
+		NS_ERROR_REG_BAD_UTF8: 0x80510009,
+		NS_ERROR_REG_BAD_UTF8: 0x80510009,
+		NS_ERROR_FILE_UNRECOGNIZED_PATH: 0x80520001,
+		NS_ERROR_FILE_UNRESOLVABLE_SYMLINK: 0x80520002,
+		NS_ERROR_FILE_EXECUTION_FAILED: 0x80520003,
+		NS_ERROR_FILE_UNKNOWN_TYPE: 0x80520004,
+		NS_ERROR_FILE_DESTINATION_NOT_DIR: 0x80520005,
+		NS_ERROR_FILE_TARGET_DOES_NOT_EXIST: 0x80520006,
+		NS_ERROR_FILE_COPY_OR_MOVE_FAILED: 0x80520007,
+		NS_ERROR_FILE_ALREADY_EXISTS: 0x80520008,
+		NS_ERROR_FILE_INVALID_PATH: 0x80520009,
+		NS_ERROR_FILE_DISK_FULL: 0x8052000A,
+		NS_ERROR_FILE_CORRUPTED: 0x8052000B,
+		NS_ERROR_FILE_NOT_DIRECTORY: 0x8052000C,
+		NS_ERROR_FILE_IS_DIRECTORY: 0x8052000D,
+		NS_ERROR_FILE_IS_LOCKED: 0x8052000E,
+		NS_ERROR_FILE_TOO_BIG: 0x8052000F,
+		NS_ERROR_FILE_NO_DEVICE_SPACE: 0x80520010,
+		NS_ERROR_FILE_NAME_TOO_LONG: 0x80520011,
+		NS_ERROR_FILE_NOT_FOUND: 0x80520012,
+		NS_ERROR_FILE_READ_ONLY: 0x80520013,
+		NS_ERROR_FILE_DIR_NOT_EMPTY: 0x80520014,
+		NS_ERROR_FILE_ACCESS_DENIED: 0x80520015,
+		NS_ERROR_DOM_INDEX_SIZE_ERR: 0x80530001,
+		NS_ERROR_DOM_DOMSTRING_SIZE_ERR: 0x80530002,
+		NS_ERROR_DOM_HIERARCHY_REQUEST_ERR: 0x80530003,
+		NS_ERROR_DOM_WRONG_DOCUMENT_ERR: 0x80530004,
+		NS_ERROR_DOM_INVALID_CHARACTER_ERR: 0x80530005,
+		NS_ERROR_DOM_NO_DATA_ALLOWED_ERR: 0x80530006,
+		NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR: 0x80530007,
+		NS_ERROR_DOM_NOT_FOUND_ERR: 0x80530008,
+		NS_ERROR_DOM_NOT_SUPPORTED_ERR: 0x80530009,
+		NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR: 0x8053000A,
+		NS_ERROR_DOM_INVALID_STATE_ERR: 0x8053000B,
+		NS_ERROR_DOM_SYNTAX_ERR: 0x8053000C,
+		NS_ERROR_DOM_INVALID_MODIFICATION_ERR: 0x8053000D,
+		NS_ERROR_DOM_NAMESPACE_ERR: 0x8053000E,
+		NS_ERROR_DOM_INVALID_ACCESS_ERR: 0x8053000F,
+		NS_ERROR_DOM_VALIDATION_ERR: 0x80530010,
+		NS_ERROR_DOM_TYPE_MISMATCH_ERR: 0x80530011,
+		NS_ERROR_DOM_SECURITY_ERR: 0x805303E8,
+		NS_ERROR_DOM_SECMAN_ERR: 0x805303E9,
+		NS_ERROR_DOM_WRONG_TYPE_ERR: 0x805303EA,
+		NS_ERROR_DOM_NOT_OBJECT_ERR: 0x805303EB,
+		NS_ERROR_DOM_NOT_XPC_OBJECT_ERR: 0x805303EC,
+		NS_ERROR_DOM_NOT_NUMBER_ERR: 0x805303ED,
+		NS_ERROR_DOM_NOT_BOOLEAN_ERR: 0x805303EE,
+		NS_ERROR_DOM_NOT_FUNCTION_ERR: 0x805303EF,
+		NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR: 0x805303F0,
+		NS_ERROR_DOM_BAD_DOCUMENT_DOMAIN: 0x805303F1,
+		NS_ERROR_DOM_PROP_ACCESS_DENIED: 0x805303F2,
+		NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED: 0x805303F3,
+		NS_ERROR_DOM_BAD_URI: 0x805303F4,
+		NS_ERROR_DOM_RETVAL_UNDEFINED: 0x805303F5,
+		NS_ERROR_DOM_QUOTA_REACHED: 0x805303F6,
+		NS_IMAGELIB_ERROR_FAILURE: 0x80540005,
+		NS_IMAGELIB_ERROR_NO_DECODER: 0x80540006,
+		NS_IMAGELIB_ERROR_NOT_FINISHED: 0x80540007,
+		NS_IMAGELIB_ERROR_LOAD_ABORTED: 0x80540008,
+		NS_IMAGELIB_ERROR_NO_ENCODER: 0x80540009,
+		NS_ERROR_EDITOR_NO_SELECTION: 0x80560001,
+		NS_ERROR_EDITOR_NO_TEXTNODE: 0x80560002,
+		NS_FOUND_TARGET: 0x80560003,
+		NS_ERROR_LAUNCHED_CHILD_PROCESS: 0x805800C8,
+		NS_ERROR_LDAP_OPERATIONS_ERROR: 0x80590001,
+		NS_ERROR_LDAP_PROTOCOL_ERROR: 0x80590002,
+		NS_ERROR_LDAP_TIMELIMIT_EXCEEDED: 0x80590003,
+		NS_ERROR_LDAP_SIZELIMIT_EXCEEDED: 0x80590004,
+		NS_ERROR_LDAP_COMPARE_FALSE: 0x80590005,
+		NS_ERROR_LDAP_COMPARE_TRUE: 0x80590006,
+		NS_ERROR_LDAP_STRONG_AUTH_NOT_SUPPORTED: 0x80590007,
+		NS_ERROR_LDAP_STRONG_AUTH_REQUIRED: 0x80590008,
+		NS_ERROR_LDAP_PARTIAL_RESULTS: 0x80590009,
+		NS_ERROR_LDAP_REFERRAL: 0x8059000A,
+		NS_ERROR_LDAP_ADMINLIMIT_EXCEEDED: 0x8059000B,
+		NS_ERROR_LDAP_UNAVAILABLE_CRITICAL_EXTENSION: 0x8059000C,
+		NS_ERROR_LDAP_CONFIDENTIALITY_REQUIRED: 0x8059000D,
+		NS_ERROR_LDAP_SASL_BIND_IN_PROGRESS: 0x8059000E,
+		NS_ERROR_LDAP_NO_SUCH_ATTRIBUTE: 0x80590010,
+		NS_ERROR_LDAP_UNDEFINED_TYPE: 0x80590011,
+		NS_ERROR_LDAP_INAPPROPRIATE_MATCHING: 0x80590012,
+		NS_ERROR_LDAP_CONSTRAINT_VIOLATION: 0x80590013,
+		NS_ERROR_LDAP_TYPE_OR_VALUE_EXISTS: 0x80590014,
+		NS_ERROR_LDAP_INVALID_SYNTAX: 0x80590015,
+		NS_ERROR_LDAP_NO_SUCH_OBJECT: 0x80590020,
+		NS_ERROR_LDAP_ALIAS_PROBLEM: 0x80590021,
+		NS_ERROR_LDAP_INVALID_DN_SYNTAX: 0x80590022,
+		NS_ERROR_LDAP_IS_LEAF: 0x80590023,
+		NS_ERROR_LDAP_ALIAS_DEREF_PROBLEM: 0x80590024,
+		NS_ERROR_LDAP_INAPPROPRIATE_AUTH: 0x80590030,
+		NS_ERROR_LDAP_INVALID_CREDENTIALS: 0x80590031,
+		NS_ERROR_LDAP_INSUFFICIENT_ACCESS: 0x80590032,
+		NS_ERROR_LDAP_BUSY: 0x80590033,
+		NS_ERROR_LDAP_UNAVAILABLE: 0x80590034,
+		NS_ERROR_LDAP_UNWILLING_TO_PERFORM: 0x80590035,
+		NS_ERROR_LDAP_LOOP_DETECT: 0x80590036,
+		NS_ERROR_LDAP_SORT_CONTROL_MISSING: 0x8059003C,
+		NS_ERROR_LDAP_INDEX_RANGE_ERROR: 0x8059003D,
+		NS_ERROR_LDAP_NAMING_VIOLATION: 0x80590040,
+		NS_ERROR_LDAP_OBJECT_CLASS_VIOLATION: 0x80590041,
+		NS_ERROR_LDAP_NOT_ALLOWED_ON_NONLEAF: 0x80590042,
+		NS_ERROR_LDAP_NOT_ALLOWED_ON_RDN: 0x80590043,
+		NS_ERROR_LDAP_ALREADY_EXISTS: 0x80590044,
+		NS_ERROR_LDAP_NO_OBJECT_CLASS_MODS: 0x80590045,
+		NS_ERROR_LDAP_RESULTS_TOO_LARGE: 0x80590046,
+		NS_ERROR_LDAP_AFFECTS_MULTIPLE_DSAS: 0x80590047,
+		NS_ERROR_LDAP_OTHER: 0x80590050,
+		NS_ERROR_LDAP_SERVER_DOWN: 0x80590051,
+		NS_ERROR_LDAP_LOCAL_ERROR: 0x80590052,
+		NS_ERROR_LDAP_ENCODING_ERROR: 0x80590053,
+		NS_ERROR_LDAP_DECODING_ERROR: 0x80590054,
+		NS_ERROR_LDAP_TIMEOUT: 0x80590055,
+		NS_ERROR_LDAP_AUTH_UNKNOWN: 0x80590056,
+		NS_ERROR_LDAP_FILTER_ERROR: 0x80590057,
+		NS_ERROR_LDAP_USER_CANCELLED: 0x80590058,
+		NS_ERROR_LDAP_PARAM_ERROR: 0x80590059,
+		NS_ERROR_LDAP_NO_MEMORY: 0x8059005A,
+		NS_ERROR_LDAP_CONNECT_ERROR: 0x8059005B,
+		NS_ERROR_LDAP_NOT_SUPPORTED: 0x8059005C,
+		NS_ERROR_LDAP_CONTROL_NOT_FOUND: 0x8059005D,
+		NS_ERROR_LDAP_NO_RESULTS_RETURNED: 0x8059005E,
+		NS_ERROR_LDAP_MORE_RESULTS_TO_RETURN: 0x8059005F,
+		NS_ERROR_LDAP_CLIENT_LOOP: 0x80590060,
+		NS_ERROR_LDAP_REFERRAL_LIMIT_EXCEEDED: 0x80590061,
+		NS_ERROR_CMS_VERIFY_NOT_SIGNED: 0x805A0400,
+		NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO: 0x805A0401,
+		NS_ERROR_CMS_VERIFY_BAD_DIGEST: 0x805A0402,
+		NS_ERROR_CMS_VERIFY_NOCERT: 0x805A0404,
+		NS_ERROR_CMS_VERIFY_UNTRUSTED: 0x805A0405,
+		NS_ERROR_CMS_VERIFY_ERROR_UNVERIFIED: 0x805A0407,
+		NS_ERROR_CMS_VERIFY_ERROR_PROCESSING: 0x805A0408,
+		NS_ERROR_CMS_VERIFY_BAD_SIGNATURE: 0x805A0409,
+		NS_ERROR_CMS_VERIFY_DIGEST_MISMATCH: 0x805A040A,
+		NS_ERROR_CMS_VERIFY_UNKNOWN_ALGO: 0x805A040B,
+		NS_ERROR_CMS_VERIFY_UNSUPPORTED_ALGO: 0x805A040C,
+		NS_ERROR_CMS_VERIFY_MALFORMED_SIGNATURE: 0x805A040D,
+		NS_ERROR_CMS_VERIFY_HEADER_MISMATCH: 0x805A040E,
+		NS_ERROR_CMS_VERIFY_NOT_YET_ATTEMPTED: 0x805A040F,
+		NS_ERROR_CMS_VERIFY_CERT_WITHOUT_ADDRESS: 0x805A0410,
+		NS_ERROR_CMS_ENCRYPT_NO_BULK_ALG: 0x805A0420,
+		NS_ERROR_CMS_ENCRYPT_INCOMPLETE: 0x805A0421,
+		NS_ERROR_DOM_INVALID_EXPRESSION_ERR: 0x805B0033,
+		NS_ERROR_DOM_TYPE_ERR: 0x805B0034,
+		NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR: 0x805C0001,
+		NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR: 0x805C0002,
+		NS_ERROR_WONT_HANDLE_CONTENT: 0x805D0001,
+		NS_ERROR_MALWARE_URI: 0x805D001E,
+		NS_ERROR_PHISHING_URI: 0x805D001F,
+		NS_ERROR_IMAGE_SRC_CHANGED: 0x805E0008,
+		NS_ERROR_IMAGE_BLOCKED: 0x805E0009,
+		NS_ERROR_CONTENT_BLOCKED: 0x805E000A,
+		NS_ERROR_CONTENT_BLOCKED_SHOW_ALT: 0x805E000B,
+		NS_PROPTABLE_PROP_NOT_THERE: 0x805E000E,
+		TM_ERROR: 0x80600001,
+		NS_ERROR_XSLT_PARSE_FAILURE: 0x80600001,
+		TM_ERROR_WRONG_QUEUE: 0x80600002,
+		NS_ERROR_XPATH_PARSE_FAILURE: 0x80600002,
+		TM_ERROR_NOT_POSTED: 0x80600003,
+		NS_ERROR_XSLT_ALREADY_SET: 0x80600003,
+		TM_ERROR_QUEUE_EXISTS: 0x80600004,
+		NS_ERROR_XSLT_EXECUTION_FAILURE: 0x80600004,
+		NS_ERROR_XPATH_UNKNOWN_FUNCTION: 0x80600005,
+		TM_SUCCESS_DELETE_QUEUE: 0x80600006,
+		NS_ERROR_XSLT_BAD_RECURSION: 0x80600006,
+		NS_ERROR_XSLT_BAD_VALUE: 0x80600007,
+		NS_ERROR_XSLT_NODESET_EXPECTED: 0x80600008,
+		NS_ERROR_XSLT_ABORTED: 0x80600009,
+		NS_ERROR_XSLT_NETWORK_ERROR: 0x8060000A,
+		NS_ERROR_XSLT_WRONG_MIME_TYPE: 0x8060000B,
+		NS_ERROR_XSLT_LOAD_RECURSION: 0x8060000C,
+		NS_ERROR_XPATH_BAD_ARGUMENT_COUNT: 0x8060000D,
+		NS_ERROR_XPATH_BAD_EXTENSION_FUNCTION: 0x8060000E,
+		NS_ERROR_XPATH_PAREN_EXPECTED: 0x8060000F,
+		NS_ERROR_XPATH_INVALID_AXIS: 0x80600010,
+		NS_ERROR_XPATH_NO_NODE_TYPE_TEST: 0x80600011,
+		NS_ERROR_XPATH_BRACKET_EXPECTED: 0x80600012,
+		NS_ERROR_XPATH_INVALID_VAR_NAME: 0x80600013,
+		NS_ERROR_XPATH_UNEXPECTED_END: 0x80600014,
+		NS_ERROR_XPATH_OPERATOR_EXPECTED: 0x80600015,
+		NS_ERROR_XPATH_UNCLOSED_LITERAL: 0x80600016,
+		NS_ERROR_XPATH_BAD_COLON: 0x80600017,
+		NS_ERROR_XPATH_BAD_BANG: 0x80600018,
+		NS_ERROR_XPATH_ILLEGAL_CHAR: 0x80600019,
+		NS_ERROR_XPATH_BINARY_EXPECTED: 0x8060001A,
+		NS_ERROR_XSLT_LOAD_BLOCKED_ERROR: 0x8060001B,
+		NS_ERROR_XPATH_INVALID_EXPRESSION_EVALUATED: 0x8060001C,
+		NS_ERROR_XPATH_UNBALANCED_CURLY_BRACE: 0x8060001D,
+		NS_ERROR_XSLT_BAD_NODE_NAME: 0x8060001E,
+		NS_ERROR_XSLT_VAR_ALREADY_SET: 0x8060001F,
+		NS_ERROR_DOM_SVG_WRONG_TYPE_ERR: 0x80620000,
+		NS_ERROR_DOM_SVG_INVALID_VALUE_ERR: 0x80620001,
+		NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE: 0x80620002,
+		MOZ_ERROR_STORAGE_ERROR: 0x80630001,
+		NS_ERROR_SCHEMAVALIDATOR_NO_SCHEMA_LOADED: 0x80640001,
+		NS_ERROR_SCHEMAVALIDATOR_NO_DOM_NODE_SPECIFIED: 0x80640002,
+		NS_ERROR_SCHEMAVALIDATOR_NO_TYPE_FOUND: 0x80640003,
+		NS_ERROR_SCHEMAVALIDATOR_TYPE_NOT_FOUND: 0x80640004,
+		NS_ERROR_DOM_FILE_NOT_FOUND_ERR: 0x80650000,
+		NS_ERROR_DOM_FILE_NOT_READABLE_ERR: 0x80650001,
+		NS_ERROR_WSDL_NOT_WSDL_ELEMENT: 0x80780001,
+		NS_ERROR_SCHEMA_NOT_SCHEMA_ELEMENT: 0x80780001,
+		NS_ERROR_SCHEMA_NOT_SCHEMA_ELEMENT: 0x80780001,
+		NS_ERROR_DOWNLOAD_COMPLETE: 0x80780001,
+		NS_ERROR_WSDL_SCHEMA_PROCESSING_ERROR: 0x80780002,
+		NS_ERROR_SCHEMA_UNKNOWN_TARGET_NAMESPACE: 0x80780002,
+		NS_ERROR_SCHEMA_UNKNOWN_TARGET_NAMESPACE: 0x80780002,
+		NS_ERROR_DOWNLOAD_NOT_PARTIAL: 0x80780002,
+		NS_ERROR_WSDL_BINDING_NOT_FOUND: 0x80780003,
+		NS_ERROR_SCHEMA_UNKNOWN_TYPE: 0x80780003,
+		NS_ERROR_SCHEMA_UNKNOWN_TYPE: 0x80780003,
+		NS_ERROR_WSDL_UNKNOWN_SCHEMA_COMPONENT: 0x80780004,
+		NS_ERROR_SCHEMA_UNKNOWN_PREFIX: 0x80780004,
+		NS_ERROR_SCHEMA_UNKNOWN_PREFIX: 0x80780004,
+		NS_ERROR_WSDL_UNKNOWN_WSDL_COMPONENT: 0x80780005,
+		NS_ERROR_SCHEMA_INVALID_STRUCTURE: 0x80780005,
+		NS_ERROR_SCHEMA_INVALID_STRUCTURE: 0x80780005,
+		NS_ERROR_WSDL_LOADING_ERROR: 0x80780006,
+		NS_ERROR_SCHEMA_INVALID_TYPE_USAGE: 0x80780006,
+		NS_ERROR_SCHEMA_INVALID_TYPE_USAGE: 0x80780006,
+		NS_ERROR_WSDL_RECURSIVE_IMPORT: 0x80780007,
+		NS_ERROR_SCHEMA_MISSING_TYPE: 0x80780007,
+		NS_ERROR_SCHEMA_MISSING_TYPE: 0x80780007,
+		NS_ERROR_WSDL_NOT_ENABLED: 0x80780008,
+		NS_ERROR_SCHEMA_FACET_VALUE_ERROR: 0x80780008,
+		NS_ERROR_SCHEMA_FACET_VALUE_ERROR: 0x80780008,
+		NS_ERROR_SCHEMA_LOADING_ERROR: 0x80780009,
+		NS_ERROR_SCHEMA_LOADING_ERROR: 0x80780009,
+		IPC_WAIT_NEXT_MESSAGE: 0x8078000A,
+		NS_ERROR_UNORM_MOREOUTPUT: 0x80780021,
+		NS_ERROR_WEBSHELL_REQUEST_REJECTED: 0x807803E9,
+		NS_ERROR_DOCUMENT_IS_PRINTMODE: 0x807807D1,
+		NS_ERROR_XFORMS_CALCUATION_EXCEPTION: 0x80780BB9,
+		NS_ERROR_XFORMS_CALCULATION_EXCEPTION: 0x80780BB9,
+		NS_ERROR_XFORMS_UNION_TYPE: 0x80780BBA
 	}
 }
-// ************************************************************************************************
-
-// Constants (from firebug)
-const nsIIOService = CI("nsIIOService");
-const nsIRequest = CI("nsIRequest");
-const nsIChannel = CI("nsIChannel");
-const nsICachingChannel = CI("nsICachingChannel");
-const nsIScriptableInputStream = CI("nsIScriptableInputStream");
-const nsIUploadChannel = CI("nsIUploadChannel");
-
-const IOService = CC("@mozilla.org/network/io-service;1");
-const ScriptableInputStream = CC("@mozilla.org/scriptableinputstream;1");
-
-const LOAD_FROM_CACHE = nsIRequest.LOAD_FROM_CACHE;
-const VALIDATE_NEVER = nsIRequest.VALIDATE_NEVER;
-const LOAD_TARGETED = nsIChannel.LOAD_TARGETED;
-const LOAD_BYPASS_LOCAL_CACHE_IF_BUSY = nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
-const LOAD_ONLY_FROM_CACHE = nsICachingChannel.LOAD_ONLY_FROM_CACHE;
-
-const NS_BINDING_ABORTED = 0x804b0002;
-// ************************************************************************************************
-
-// ************************************************************************************************
-// XPCOM Utilities
-//var _CI = Components.interfaces;
-//var _CC = Components.classes;
-function CC(cName)
-{
-	var _CC = Components.classes;
-    return _CC[cName];
-}
-
-function CI(ifaceName)
-{
-	var _CI = Components.interfaces;
-    return _CI[ifaceName];
-}
-
-function CCSV(cName, ifaceName)
-{
-	var _CC = Components.classes;
-	var _CI = Components.interfaces;
-    return _CC[cName].getService(_CI[ifaceName]);        
-}
-
-function CCIN(cName, ifaceName)
-{
-	var _CC = Components.classes;
-	var _CI = Components.interfaces;
-    return _CC[cName].createInstance(_CI[ifaceName]);
-}
-
-function QI(obj, iface)
-{
-    return obj.QueryInterface(iface);
-}
-// ************************************************************************************************
-
-// ENUMS AND HELPERS
-// HttpFoxRequestStateType // no need...
-var HttpFoxRequestStateType =
-{
-	WAITING_FOR_HEADER: 0,
-	RESOLVING: 1,
-	LOADING_BODY: 2,
-	FINISHED: 3,
-	ABORTED: 4
-}
-// ************************************************************************************************
-
-
-// ************************************************************************************************
-
-var HttpFoxNsResultErrors =
-{
-	NS_ERROR_BASE: 0xC1F30000,
-	NS_ERROR_NOT_IMPLEMENTED: 0x80004001,
-	NS_ERROR_INVALID_POINTER: 0x80004003,
-	NS_ERROR_ABORT: 0x80004004,
-	NS_ERROR_FAILURE: 0x80004005,
-	NS_ERROR_UNEXPECTED: 0x8000FFFF,
-	NS_ERROR_PROXY_INVALID_IN_PARAMETER: 0x80010010,
-	NS_ERROR_PROXY_INVALID_OUT_PARAMETER: 0x80010011,
-	NS_ERROR_NO_AGGREGATION: 0x80040110,
-	NS_ERROR_NOT_AVAILABLE: 0x80040111,
-	NS_ERROR_FACTORY_NOT_REGISTERED: 0x80040154,
-	NS_ERROR_FACTORY_REGISTER_AGAIN: 0x80040155,
-	NS_ERROR_FACTORY_NOT_LOADED: 0x800401F8,
-	NS_ERROR_OUT_OF_MEMORY: 0x8007000E,
-	NS_ERROR_ILLEGAL_VALUE: 0x80070057,
-	NS_ERROR_CANNOT_CONVERT_DATA: 0x80460001,
-	NS_ERROR_OBJECT_IS_IMMUTABLE: 0x80460002,
-	NS_ERROR_LOSS_OF_SIGNIFICANT_DATA: 0x80460003,
-	NS_ERROR_SERVICE_NOT_AVAILABLE: 0x80460016,
-	NS_ERROR_IS_DIR: 0x80460018,
-	NS_ERROR_ILLEGAL_DURING_SHUTDOWN: 0x8046001E,
-	NS_BASE_STREAM_CLOSED: 0x80470002,
-	NS_BASE_STREAM_OSERROR: 0x80470003,
-	NS_BASE_STREAM_ILLEGAL_ARGS: 0x80470004,
-	NS_BASE_STREAM_NO_CONVERTER: 0x80470005,
-	NS_BASE_STREAM_BAD_CONVERSION: 0x80470006,
-	NS_BASE_STREAM_WOULD_BLOCK: 0x80470007,
-	NS_ERROR_GFX_PRINTER_CMD_NOT_FOUND: 0x80480002,
-	NS_ERROR_GFX_PRINTER_CMD_FAILURE: 0x80480003,
-	NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE: 0x80480004,
-	NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND: 0x80480005,
-	NS_ERROR_GFX_PRINTER_ACCESS_DENIED: 0x80480006,
-	NS_ERROR_GFX_PRINTER_INVALID_ATTRIBUTE: 0x80480007,
-	NS_ERROR_GFX_PRINTER_PRINTER_NOT_READY: 0x80480009,
-	NS_ERROR_GFX_PRINTER_OUT_OF_PAPER: 0x8048000A,
-	NS_ERROR_GFX_PRINTER_PRINTER_IO_ERROR: 0x8048000B,
-	NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE: 0x8048000C,
-	NS_ERROR_GFX_PRINTER_FILE_IO_ERROR: 0x8048000D,
-	NS_ERROR_GFX_PRINTER_PRINTPREVIEW: 0x8048000E,
-	NS_ERROR_GFX_PRINTER_STARTDOC: 0x8048000F,
-	NS_ERROR_GFX_PRINTER_ENDDOC: 0x80480010,
-	NS_ERROR_GFX_PRINTER_STARTPAGE: 0x80480011,
-	NS_ERROR_GFX_PRINTER_ENDPAGE: 0x80480012,
-	NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW: 0x80480013,
-	NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED: 0x80480014,
-	NS_ERROR_GFX_PRINTER_ORIENTATION_NOT_SUPPORTED: 0x80480015,
-	NS_ERROR_GFX_PRINTER_COLORSPACE_NOT_SUPPORTED: 0x80480016,
-	NS_ERROR_GFX_PRINTER_TOO_MANY_COPIES: 0x80480017,
-	NS_ERROR_GFX_PRINTER_DRIVER_CONFIGURATION_ERROR: 0x80480018,
-	NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PP: 0x80480019,
-	NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED: 0x8048001A,
-	NS_ERROR_GFX_PRINTER_NO_XUL: 0x8048001B,
-	NS_ERROR_GFX_NO_PRINTDIALOG_IN_TOOLKIT: 0x8048001C,
-	NS_ERROR_GFX_NO_PRINTROMPTSERVICE: 0x8048001D,
-	NS_ERROR_GFX_PRINTER_PLEX_NOT_SUPPORTED: 0x8048001E,
-	NS_ERROR_GFX_PRINTER_DOC_IS_BUSY: 0x8048001F,
-	NS_ERROR_GFX_PRINTING_NOT_IMPLEMENTED: 0x80480020,
-	NS_ERROR_GFX_COULD_NOT_LOAD_PRINT_MODULE: 0x80480021,
-	NS_ERROR_GFX_PRINTER_RESOLUTION_NOT_SUPPORTED: 0x80480022,
-	NS_BINDING_FAILED: 0x804B0001,
-	NS_BINDING_ABORTED: 0x804B0002,
-	NS_BINDING_REDIRECTED: 0x804B0003,
-	NS_BINDING_RETARGETED: 0x804B0004,
-	NS_ERROR_MALFORMED_URI: 0x804B000A,
-	NS_ERROR_ALREADY_CONNECTED: 0x804B000B,
-	NS_ERROR_NOT_CONNECTED: 0x804B000C,
-	NS_ERROR_CONNECTION_REFUSED: 0x804B000D,
-	NS_ERROR_NET_TIMEOUT: 0x804B000E,
-	NS_ERROR_IN_PROGRESS: 0x804B000F,
-	NS_ERROR_OFFLINE: 0x804B0010,
-	NS_ERROR_NO_CONTENT: 0x804B0011,
-	NS_ERROR_UNKNOWN_PROTOCOL: 0x804B0012,
-	NS_ERROR_PORT_ACCESS_NOT_ALLOWED: 0x804B0013,
-	NS_ERROR_NET_RESET: 0x804B0014,
-	NS_ERROR_FTP_LOGIN: 0x804B0015,
-	NS_ERROR_FTP_CWD: 0x804B0016,
-	NS_ERROR_FTP_PASV: 0x804B0017,
-	NS_ERROR_FTP_PWD: 0x804B0018,
-	NS_ERROR_NOT_RESUMABLE: 0x804B0019,
-	NS_ERROR_INVALID_CONTENT_ENCODING: 0x804B001B,
-	NS_ERROR_FTP_LIST: 0x804B001C,
-	NS_ERROR_UNKNOWN_HOST: 0x804B001E,
-	NS_ERROR_REDIRECT_LOOP: 0x804B001F,
-	NS_ERROR_ENTITY_CHANGED: 0x804B0020,
-	NS_ERROR_UNKNOWN_PROXY_HOST: 0x804B002A,
-	NS_ERROR_UNKNOWN_SOCKET_TYPE: 0x804B0033,
-	NS_ERROR_SOCKET_CREATE_FAILED: 0x804B0034,
-	NS_ERROR_CACHE_KEY_NOT_FOUND: 0x804B003D,
-	NS_ERROR_CACHE_DATA_IS_STREAM: 0x804B003E,
-	NS_ERROR_CACHE_DATA_IS_NOT_STREAM: 0x804B003F,
-	NS_ERROR_CACHE_WAIT_FOR_VALIDATION: 0x804B0040,
-	NS_ERROR_CACHE_ENTRY_DOOMED: 0x804B0041,
-	NS_ERROR_CACHE_READ_ACCESS_DENIED: 0x804B0042,
-	NS_ERROR_CACHE_WRITE_ACCESS_DENIED: 0x804B0043,
-	NS_ERROR_CACHE_IN_USE: 0x804B0044,
-	NS_ERROR_DOCUMENT_NOT_CACHED: 0x804B0046,
-	NS_ERROR_NET_INTERRUPT: 0x804B0047,
-	NS_ERROR_PROXY_CONNECTION_REFUSED: 0x804B0048,
-	NS_ERROR_ALREADY_OPENED: 0x804B0049,
-	NS_ERROR_UNSAFE_CONTENT_TYPE: 0x804B004A,
-	NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS: 0x804B0050,
-	NS_ERROR_HOST_IS_IP_ADDRESS: 0x804B0051,
-	NS_ERROR_PLUGINS_PLUGINSNOTCHANGED: 0x804C03E8,
-	NS_ERROR_PLUGIN_DISABLED: 0x804C03E9,
-	NS_ERROR_PLUGIN_BLOCKLISTED: 0x804C03EA,
-	NS_ERROR_HTMLPARSER_EOF: 0x804E03E8,
-	NS_ERROR_HTMLPARSER_UNKNOWN: 0x804E03E9,
-	NS_ERROR_HTMLPARSER_CANTPROPAGATE: 0x804E03EA,
-	NS_ERROR_HTMLPARSER_CONTEXTMISMATCH: 0x804E03EB,
-	NS_ERROR_HTMLPARSER_BADFILENAME: 0x804E03EC,
-	NS_ERROR_HTMLPARSER_BADURL: 0x804E03ED,
-	NS_ERROR_HTMLPARSER_INVALIDPARSERCONTEXT: 0x804E03EE,
-	NS_ERROR_HTMLPARSER_INTERRUPTED: 0x804E03EF,
-	NS_ERROR_HTMLPARSER_BLOCK: 0x804E03F0,
-	NS_ERROR_HTMLPARSER_BADTOKENIZER: 0x804E03F1,
-	NS_ERROR_HTMLPARSER_BADATTRIBUTE: 0x804E03F2,
-	NS_ERROR_HTMLPARSER_UNRESOLVEDDTD: 0x804E03F3,
-	NS_ERROR_HTMLPARSER_MISPLACEDTABLECONTENT: 0x804E03F4,
-	NS_ERROR_HTMLPARSER_BADDTD: 0x804E03F5,
-	NS_ERROR_HTMLPARSER_BADCONTEXT: 0x804E03F6,
-	NS_ERROR_HTMLPARSER_STOPPARSING: 0x804E03F7,
-	NS_ERROR_HTMLPARSER_UNTERMINATEDSTRINGLITERAL: 0x804E03F8,
-	NS_ERROR_HTMLPARSER_HIERARCHYTOODEEP: 0x804E03F9,
-	NS_ERROR_HTMLPARSER_FAKE_ENDTAG: 0x804E03FA,
-	NS_ERROR_HTMLPARSER_INVALID_COMMENT: 0x804E03FB,
-	NS_ERROR_UCONV_NOCONV: 0x80500001,
-	NS_ERROR_UDEC_ILLEGALINPUT: 0x8050000E,
-	NS_ERROR_ILLEGAL_INPUT: 0x8050000E,
-	NS_ERROR_REG_BADTYPE: 0x80510001,
-	NS_ERROR_REG_BADTYPE: 0x80510001,
-	NS_ERROR_REG_NOT_FOUND: 0x80510003,
-	NS_ERROR_REG_NOT_FOUND: 0x80510003,
-	NS_ERROR_REG_NOFILE: 0x80510004,
-	NS_ERROR_REG_NOFILE: 0x80510004,
-	NS_ERROR_REG_BUFFER_TOO_SMALL: 0x80510005,
-	NS_ERROR_REG_BUFFER_TOO_SMALL: 0x80510005,
-	NS_ERROR_REG_NAME_TOO_LONG: 0x80510006,
-	NS_ERROR_REG_NAME_TOO_LONG: 0x80510006,
-	NS_ERROR_REG_NO_PATH: 0x80510007,
-	NS_ERROR_REG_NO_PATH: 0x80510007,
-	NS_ERROR_REG_READ_ONLY: 0x80510008,
-	NS_ERROR_REG_READ_ONLY: 0x80510008,
-	NS_ERROR_REG_BAD_UTF8: 0x80510009,
-	NS_ERROR_REG_BAD_UTF8: 0x80510009,
-	NS_ERROR_FILE_UNRECOGNIZED_PATH: 0x80520001,
-	NS_ERROR_FILE_UNRESOLVABLE_SYMLINK: 0x80520002,
-	NS_ERROR_FILE_EXECUTION_FAILED: 0x80520003,
-	NS_ERROR_FILE_UNKNOWN_TYPE: 0x80520004,
-	NS_ERROR_FILE_DESTINATION_NOT_DIR: 0x80520005,
-	NS_ERROR_FILE_TARGET_DOES_NOT_EXIST: 0x80520006,
-	NS_ERROR_FILE_COPY_OR_MOVE_FAILED: 0x80520007,
-	NS_ERROR_FILE_ALREADY_EXISTS: 0x80520008,
-	NS_ERROR_FILE_INVALID_PATH: 0x80520009,
-	NS_ERROR_FILE_DISK_FULL: 0x8052000A,
-	NS_ERROR_FILE_CORRUPTED: 0x8052000B,
-	NS_ERROR_FILE_NOT_DIRECTORY: 0x8052000C,
-	NS_ERROR_FILE_IS_DIRECTORY: 0x8052000D,
-	NS_ERROR_FILE_IS_LOCKED: 0x8052000E,
-	NS_ERROR_FILE_TOO_BIG: 0x8052000F,
-	NS_ERROR_FILE_NO_DEVICE_SPACE: 0x80520010,
-	NS_ERROR_FILE_NAME_TOO_LONG: 0x80520011,
-	NS_ERROR_FILE_NOT_FOUND: 0x80520012,
-	NS_ERROR_FILE_READ_ONLY: 0x80520013,
-	NS_ERROR_FILE_DIR_NOT_EMPTY: 0x80520014,
-	NS_ERROR_FILE_ACCESS_DENIED: 0x80520015,
-	NS_ERROR_DOM_INDEX_SIZE_ERR: 0x80530001,
-	NS_ERROR_DOM_DOMSTRING_SIZE_ERR: 0x80530002,
-	NS_ERROR_DOM_HIERARCHY_REQUEST_ERR: 0x80530003,
-	NS_ERROR_DOM_WRONG_DOCUMENT_ERR: 0x80530004,
-	NS_ERROR_DOM_INVALID_CHARACTER_ERR: 0x80530005,
-	NS_ERROR_DOM_NO_DATA_ALLOWED_ERR: 0x80530006,
-	NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR: 0x80530007,
-	NS_ERROR_DOM_NOT_FOUND_ERR: 0x80530008,
-	NS_ERROR_DOM_NOT_SUPPORTED_ERR: 0x80530009,
-	NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR: 0x8053000A,
-	NS_ERROR_DOM_INVALID_STATE_ERR: 0x8053000B,
-	NS_ERROR_DOM_SYNTAX_ERR: 0x8053000C,
-	NS_ERROR_DOM_INVALID_MODIFICATION_ERR: 0x8053000D,
-	NS_ERROR_DOM_NAMESPACE_ERR: 0x8053000E,
-	NS_ERROR_DOM_INVALID_ACCESS_ERR: 0x8053000F,
-	NS_ERROR_DOM_VALIDATION_ERR: 0x80530010,
-	NS_ERROR_DOM_TYPE_MISMATCH_ERR: 0x80530011,
-	NS_ERROR_DOM_SECURITY_ERR: 0x805303E8,
-	NS_ERROR_DOM_SECMAN_ERR: 0x805303E9,
-	NS_ERROR_DOM_WRONG_TYPE_ERR: 0x805303EA,
-	NS_ERROR_DOM_NOT_OBJECT_ERR: 0x805303EB,
-	NS_ERROR_DOM_NOT_XPC_OBJECT_ERR: 0x805303EC,
-	NS_ERROR_DOM_NOT_NUMBER_ERR: 0x805303ED,
-	NS_ERROR_DOM_NOT_BOOLEAN_ERR: 0x805303EE,
-	NS_ERROR_DOM_NOT_FUNCTION_ERR: 0x805303EF,
-	NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR: 0x805303F0,
-	NS_ERROR_DOM_BAD_DOCUMENT_DOMAIN: 0x805303F1,
-	NS_ERROR_DOM_PROP_ACCESS_DENIED: 0x805303F2,
-	NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED: 0x805303F3,
-	NS_ERROR_DOM_BAD_URI: 0x805303F4,
-	NS_ERROR_DOM_RETVAL_UNDEFINED: 0x805303F5,
-	NS_ERROR_DOM_QUOTA_REACHED: 0x805303F6,
-	NS_IMAGELIB_ERROR_FAILURE: 0x80540005,
-	NS_IMAGELIB_ERROR_NO_DECODER: 0x80540006,
-	NS_IMAGELIB_ERROR_NOT_FINISHED: 0x80540007,
-	NS_IMAGELIB_ERROR_LOAD_ABORTED: 0x80540008,
-	NS_IMAGELIB_ERROR_NO_ENCODER: 0x80540009,
-	NS_ERROR_EDITOR_NO_SELECTION: 0x80560001,
-	NS_ERROR_EDITOR_NO_TEXTNODE: 0x80560002,
-	NS_FOUND_TARGET: 0x80560003,
-	NS_ERROR_LAUNCHED_CHILD_PROCESS: 0x805800C8,
-	NS_ERROR_LDAP_OPERATIONS_ERROR: 0x80590001,
-	NS_ERROR_LDAP_PROTOCOL_ERROR: 0x80590002,
-	NS_ERROR_LDAP_TIMELIMIT_EXCEEDED: 0x80590003,
-	NS_ERROR_LDAP_SIZELIMIT_EXCEEDED: 0x80590004,
-	NS_ERROR_LDAP_COMPARE_FALSE: 0x80590005,
-	NS_ERROR_LDAP_COMPARE_TRUE: 0x80590006,
-	NS_ERROR_LDAP_STRONG_AUTH_NOT_SUPPORTED: 0x80590007,
-	NS_ERROR_LDAP_STRONG_AUTH_REQUIRED: 0x80590008,
-	NS_ERROR_LDAP_PARTIAL_RESULTS: 0x80590009,
-	NS_ERROR_LDAP_REFERRAL: 0x8059000A,
-	NS_ERROR_LDAP_ADMINLIMIT_EXCEEDED: 0x8059000B,
-	NS_ERROR_LDAP_UNAVAILABLE_CRITICAL_EXTENSION: 0x8059000C,
-	NS_ERROR_LDAP_CONFIDENTIALITY_REQUIRED: 0x8059000D,
-	NS_ERROR_LDAP_SASL_BIND_IN_PROGRESS: 0x8059000E,
-	NS_ERROR_LDAP_NO_SUCH_ATTRIBUTE: 0x80590010,
-	NS_ERROR_LDAP_UNDEFINED_TYPE: 0x80590011,
-	NS_ERROR_LDAP_INAPPROPRIATE_MATCHING: 0x80590012,
-	NS_ERROR_LDAP_CONSTRAINT_VIOLATION: 0x80590013,
-	NS_ERROR_LDAP_TYPE_OR_VALUE_EXISTS: 0x80590014,
-	NS_ERROR_LDAP_INVALID_SYNTAX: 0x80590015,
-	NS_ERROR_LDAP_NO_SUCH_OBJECT: 0x80590020,
-	NS_ERROR_LDAP_ALIAS_PROBLEM: 0x80590021,
-	NS_ERROR_LDAP_INVALID_DN_SYNTAX: 0x80590022,
-	NS_ERROR_LDAP_IS_LEAF: 0x80590023,
-	NS_ERROR_LDAP_ALIAS_DEREF_PROBLEM: 0x80590024,
-	NS_ERROR_LDAP_INAPPROPRIATE_AUTH: 0x80590030,
-	NS_ERROR_LDAP_INVALID_CREDENTIALS: 0x80590031,
-	NS_ERROR_LDAP_INSUFFICIENT_ACCESS: 0x80590032,
-	NS_ERROR_LDAP_BUSY: 0x80590033,
-	NS_ERROR_LDAP_UNAVAILABLE: 0x80590034,
-	NS_ERROR_LDAP_UNWILLING_TO_PERFORM: 0x80590035,
-	NS_ERROR_LDAP_LOOP_DETECT: 0x80590036,
-	NS_ERROR_LDAP_SORT_CONTROL_MISSING: 0x8059003C,
-	NS_ERROR_LDAP_INDEX_RANGE_ERROR: 0x8059003D,
-	NS_ERROR_LDAP_NAMING_VIOLATION: 0x80590040,
-	NS_ERROR_LDAP_OBJECT_CLASS_VIOLATION: 0x80590041,
-	NS_ERROR_LDAP_NOT_ALLOWED_ON_NONLEAF: 0x80590042,
-	NS_ERROR_LDAP_NOT_ALLOWED_ON_RDN: 0x80590043,
-	NS_ERROR_LDAP_ALREADY_EXISTS: 0x80590044,
-	NS_ERROR_LDAP_NO_OBJECT_CLASS_MODS: 0x80590045,
-	NS_ERROR_LDAP_RESULTS_TOO_LARGE: 0x80590046,
-	NS_ERROR_LDAP_AFFECTS_MULTIPLE_DSAS: 0x80590047,
-	NS_ERROR_LDAP_OTHER: 0x80590050,
-	NS_ERROR_LDAP_SERVER_DOWN: 0x80590051,
-	NS_ERROR_LDAP_LOCAL_ERROR: 0x80590052,
-	NS_ERROR_LDAP_ENCODING_ERROR: 0x80590053,
-	NS_ERROR_LDAP_DECODING_ERROR: 0x80590054,
-	NS_ERROR_LDAP_TIMEOUT: 0x80590055,
-	NS_ERROR_LDAP_AUTH_UNKNOWN: 0x80590056,
-	NS_ERROR_LDAP_FILTER_ERROR: 0x80590057,
-	NS_ERROR_LDAP_USER_CANCELLED: 0x80590058,
-	NS_ERROR_LDAP_PARAM_ERROR: 0x80590059,
-	NS_ERROR_LDAP_NO_MEMORY: 0x8059005A,
-	NS_ERROR_LDAP_CONNECT_ERROR: 0x8059005B,
-	NS_ERROR_LDAP_NOT_SUPPORTED: 0x8059005C,
-	NS_ERROR_LDAP_CONTROL_NOT_FOUND: 0x8059005D,
-	NS_ERROR_LDAP_NO_RESULTS_RETURNED: 0x8059005E,
-	NS_ERROR_LDAP_MORE_RESULTS_TO_RETURN: 0x8059005F,
-	NS_ERROR_LDAP_CLIENT_LOOP: 0x80590060,
-	NS_ERROR_LDAP_REFERRAL_LIMIT_EXCEEDED: 0x80590061,
-	NS_ERROR_CMS_VERIFY_NOT_SIGNED: 0x805A0400,
-	NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO: 0x805A0401,
-	NS_ERROR_CMS_VERIFY_BAD_DIGEST: 0x805A0402,
-	NS_ERROR_CMS_VERIFY_NOCERT: 0x805A0404,
-	NS_ERROR_CMS_VERIFY_UNTRUSTED: 0x805A0405,
-	NS_ERROR_CMS_VERIFY_ERROR_UNVERIFIED: 0x805A0407,
-	NS_ERROR_CMS_VERIFY_ERROR_PROCESSING: 0x805A0408,
-	NS_ERROR_CMS_VERIFY_BAD_SIGNATURE: 0x805A0409,
-	NS_ERROR_CMS_VERIFY_DIGEST_MISMATCH: 0x805A040A,
-	NS_ERROR_CMS_VERIFY_UNKNOWN_ALGO: 0x805A040B,
-	NS_ERROR_CMS_VERIFY_UNSUPPORTED_ALGO: 0x805A040C,
-	NS_ERROR_CMS_VERIFY_MALFORMED_SIGNATURE: 0x805A040D,
-	NS_ERROR_CMS_VERIFY_HEADER_MISMATCH: 0x805A040E,
-	NS_ERROR_CMS_VERIFY_NOT_YET_ATTEMPTED: 0x805A040F,
-	NS_ERROR_CMS_VERIFY_CERT_WITHOUT_ADDRESS: 0x805A0410,
-	NS_ERROR_CMS_ENCRYPT_NO_BULK_ALG: 0x805A0420,
-	NS_ERROR_CMS_ENCRYPT_INCOMPLETE: 0x805A0421,
-	NS_ERROR_DOM_INVALID_EXPRESSION_ERR: 0x805B0033,
-	NS_ERROR_DOM_TYPE_ERR: 0x805B0034,
-	NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR: 0x805C0001,
-	NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR: 0x805C0002,
-	NS_ERROR_WONT_HANDLE_CONTENT: 0x805D0001,
-	NS_ERROR_MALWARE_URI: 0x805D001E,
-	NS_ERROR_PHISHING_URI: 0x805D001F,
-	NS_ERROR_IMAGE_SRC_CHANGED: 0x805E0008,
-	NS_ERROR_IMAGE_BLOCKED: 0x805E0009,
-	NS_ERROR_CONTENT_BLOCKED: 0x805E000A,
-	NS_ERROR_CONTENT_BLOCKED_SHOW_ALT: 0x805E000B,
-	NS_PROPTABLE_PROP_NOT_THERE: 0x805E000E,
-	TM_ERROR: 0x80600001,
-	NS_ERROR_XSLT_PARSE_FAILURE: 0x80600001,
-	TM_ERROR_WRONG_QUEUE: 0x80600002,
-	NS_ERROR_XPATH_PARSE_FAILURE: 0x80600002,
-	TM_ERROR_NOT_POSTED: 0x80600003,
-	NS_ERROR_XSLT_ALREADY_SET: 0x80600003,
-	TM_ERROR_QUEUE_EXISTS: 0x80600004,
-	NS_ERROR_XSLT_EXECUTION_FAILURE: 0x80600004,
-	NS_ERROR_XPATH_UNKNOWN_FUNCTION: 0x80600005,
-	TM_SUCCESS_DELETE_QUEUE: 0x80600006,
-	NS_ERROR_XSLT_BAD_RECURSION: 0x80600006,
-	NS_ERROR_XSLT_BAD_VALUE: 0x80600007,
-	NS_ERROR_XSLT_NODESET_EXPECTED: 0x80600008,
-	NS_ERROR_XSLT_ABORTED: 0x80600009,
-	NS_ERROR_XSLT_NETWORK_ERROR: 0x8060000A,
-	NS_ERROR_XSLT_WRONG_MIME_TYPE: 0x8060000B,
-	NS_ERROR_XSLT_LOAD_RECURSION: 0x8060000C,
-	NS_ERROR_XPATH_BAD_ARGUMENT_COUNT: 0x8060000D,
-	NS_ERROR_XPATH_BAD_EXTENSION_FUNCTION: 0x8060000E,
-	NS_ERROR_XPATH_PAREN_EXPECTED: 0x8060000F,
-	NS_ERROR_XPATH_INVALID_AXIS: 0x80600010,
-	NS_ERROR_XPATH_NO_NODE_TYPE_TEST: 0x80600011,
-	NS_ERROR_XPATH_BRACKET_EXPECTED: 0x80600012,
-	NS_ERROR_XPATH_INVALID_VAR_NAME: 0x80600013,
-	NS_ERROR_XPATH_UNEXPECTED_END: 0x80600014,
-	NS_ERROR_XPATH_OPERATOR_EXPECTED: 0x80600015,
-	NS_ERROR_XPATH_UNCLOSED_LITERAL: 0x80600016,
-	NS_ERROR_XPATH_BAD_COLON: 0x80600017,
-	NS_ERROR_XPATH_BAD_BANG: 0x80600018,
-	NS_ERROR_XPATH_ILLEGAL_CHAR: 0x80600019,
-	NS_ERROR_XPATH_BINARY_EXPECTED: 0x8060001A,
-	NS_ERROR_XSLT_LOAD_BLOCKED_ERROR: 0x8060001B,
-	NS_ERROR_XPATH_INVALID_EXPRESSION_EVALUATED: 0x8060001C,
-	NS_ERROR_XPATH_UNBALANCED_CURLY_BRACE: 0x8060001D,
-	NS_ERROR_XSLT_BAD_NODE_NAME: 0x8060001E,
-	NS_ERROR_XSLT_VAR_ALREADY_SET: 0x8060001F,
-	NS_ERROR_DOM_SVG_WRONG_TYPE_ERR: 0x80620000,
-	NS_ERROR_DOM_SVG_INVALID_VALUE_ERR: 0x80620001,
-	NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE: 0x80620002,
-	MOZ_ERROR_STORAGE_ERROR: 0x80630001,
-	NS_ERROR_SCHEMAVALIDATOR_NO_SCHEMA_LOADED: 0x80640001,
-	NS_ERROR_SCHEMAVALIDATOR_NO_DOM_NODE_SPECIFIED: 0x80640002,
-	NS_ERROR_SCHEMAVALIDATOR_NO_TYPE_FOUND: 0x80640003,
-	NS_ERROR_SCHEMAVALIDATOR_TYPE_NOT_FOUND: 0x80640004,
-	NS_ERROR_DOM_FILE_NOT_FOUND_ERR: 0x80650000,
-	NS_ERROR_DOM_FILE_NOT_READABLE_ERR: 0x80650001,
-	NS_ERROR_WSDL_NOT_WSDL_ELEMENT: 0x80780001,
-	NS_ERROR_SCHEMA_NOT_SCHEMA_ELEMENT: 0x80780001,
-	NS_ERROR_SCHEMA_NOT_SCHEMA_ELEMENT: 0x80780001,
-	NS_ERROR_DOWNLOAD_COMPLETE: 0x80780001,
-	NS_ERROR_WSDL_SCHEMA_PROCESSING_ERROR: 0x80780002,
-	NS_ERROR_SCHEMA_UNKNOWN_TARGET_NAMESPACE: 0x80780002,
-	NS_ERROR_SCHEMA_UNKNOWN_TARGET_NAMESPACE: 0x80780002,
-	NS_ERROR_DOWNLOAD_NOT_PARTIAL: 0x80780002,
-	NS_ERROR_WSDL_BINDING_NOT_FOUND: 0x80780003,
-	NS_ERROR_SCHEMA_UNKNOWN_TYPE: 0x80780003,
-	NS_ERROR_SCHEMA_UNKNOWN_TYPE: 0x80780003,
-	NS_ERROR_WSDL_UNKNOWN_SCHEMA_COMPONENT: 0x80780004,
-	NS_ERROR_SCHEMA_UNKNOWN_PREFIX: 0x80780004,
-	NS_ERROR_SCHEMA_UNKNOWN_PREFIX: 0x80780004,
-	NS_ERROR_WSDL_UNKNOWN_WSDL_COMPONENT: 0x80780005,
-	NS_ERROR_SCHEMA_INVALID_STRUCTURE: 0x80780005,
-	NS_ERROR_SCHEMA_INVALID_STRUCTURE: 0x80780005,
-	NS_ERROR_WSDL_LOADING_ERROR: 0x80780006,
-	NS_ERROR_SCHEMA_INVALID_TYPE_USAGE: 0x80780006,
-	NS_ERROR_SCHEMA_INVALID_TYPE_USAGE: 0x80780006,
-	NS_ERROR_WSDL_RECURSIVE_IMPORT: 0x80780007,
-	NS_ERROR_SCHEMA_MISSING_TYPE: 0x80780007,
-	NS_ERROR_SCHEMA_MISSING_TYPE: 0x80780007,
-	NS_ERROR_WSDL_NOT_ENABLED: 0x80780008,
-	NS_ERROR_SCHEMA_FACET_VALUE_ERROR: 0x80780008,
-	NS_ERROR_SCHEMA_FACET_VALUE_ERROR: 0x80780008,
-	NS_ERROR_SCHEMA_LOADING_ERROR: 0x80780009,
-	NS_ERROR_SCHEMA_LOADING_ERROR: 0x80780009,
-	IPC_WAIT_NEXT_MESSAGE: 0x8078000A,
-	NS_ERROR_UNORM_MOREOUTPUT: 0x80780021,
-	NS_ERROR_WEBSHELL_REQUEST_REJECTED: 0x807803E9,
-	NS_ERROR_DOCUMENT_IS_PRINTMODE: 0x807807D1,
-	NS_ERROR_XFORMS_CALCUATION_EXCEPTION: 0x80780BB9,
-	NS_ERROR_XFORMS_CALCULATION_EXCEPTION: 0x80780BB9,
-	NS_ERROR_XFORMS_UNION_TYPE: 0x80780BBA
-}
-
-
-
-/***********************************************************
-class factory
-
-This object is a member of the global-scope Components.classes.
-It is keyed off of the contract ID. Eg:
-
-myHelloWorld = Components.classes["@dietrich.ganx4.com/helloworld;1"].
-                          createInstance(Components.interfaces.nsIHelloWorld);
-
-***********************************************************/
-var HttpFoxServiceFactory = {
-  createInstance: function (aOuter, aIID)
-  {
-    if (aOuter != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return (new HttpFoxService()).QueryInterface(aIID);
-  }
-};
 
 /***********************************************************
 module definition (xpcom registration)
 ***********************************************************/
-var HttpFoxServiceModule = {
-  registerSelf: function(aCompMgr, aFileSpec, aLocation, aType)
-  {
-    aCompMgr = aCompMgr.
-        QueryInterface(Components.interfaces.nsIComponentRegistrar);
-    aCompMgr.registerFactoryLocation(CLASS_ID, CLASS_NAME, 
-        CONTRACT_ID, aFileSpec, aLocation, aType);
-  },
+var HttpFoxServiceModule = 
+{
+	registerSelf: function(aCompMgr, aFileSpec, aLocation, aType)
+	{
+		aCompMgr = aCompMgr.
+			QueryInterface(Components.interfaces.nsIComponentRegistrar);
+		aCompMgr.registerFactoryLocation(CLASS_ID, CLASS_NAME, 
+			CONTRACT_ID, aFileSpec, aLocation, aType);
+	},
 
-  unregisterSelf: function(aCompMgr, aLocation, aType)
-  {
-    aCompMgr = aCompMgr.
-        QueryInterface(Components.interfaces.nsIComponentRegistrar);
-    aCompMgr.unregisterFactoryLocation(CLASS_ID, aLocation);        
-  },
-  
-  getClassObject: function(aCompMgr, aCID, aIID)
-  {
-    if (!aIID.equals(Components.interfaces.nsIFactory))
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+	unregisterSelf: function(aCompMgr, aLocation, aType)
+	{
+		aCompMgr = aCompMgr.
+			QueryInterface(Components.interfaces.nsIComponentRegistrar);
+		aCompMgr.unregisterFactoryLocation(CLASS_ID, aLocation);        
+	},
 
-    if (aCID.equals(CLASS_ID))
-      return HttpFoxServiceFactory;
+	getClassObject: function(aCompMgr, aCID, aIID)
+	{
+		if (!aIID.equals(Components.interfaces.nsIFactory))
+			throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
+		if (aCID.equals(CLASS_ID))
+			return this.HttpFoxServiceFactory;
 
-  canUnload: function(aCompMgr) { return true; }
+		throw Components.results.NS_ERROR_NO_INTERFACE;
+	},
+
+	canUnload: function(aCompMgr) 
+	{ 
+		return true;
+	},
+	
+	/***********************************************************
+	class factory
+
+	This object is a member of the global-scope Components.classes.
+	It is keyed off of the contract ID. Eg:
+
+	myHelloWorld = Components.classes["@dietrich.ganx4.com/helloworld;1"].
+                          createInstance(Components.interfaces.nsIHelloWorld);
+
+	***********************************************************/
+	HttpFoxServiceFactory:
+	{
+		createInstance: function(aOuter, aIID)
+		{
+			if (aOuter != null)
+				throw Components.results.NS_ERROR_NO_AGGREGATION;
+				
+			return (new HttpFoxService()).QueryInterface(aIID);
+		}
+	}
 };
 
 /***********************************************************
@@ -3609,4 +3540,7 @@ module initialization
 When the application registers the component, this function
 is called.
 ***********************************************************/
-function NSGetModule(aCompMgr, aFileSpec) { return HttpFoxServiceModule; }
+function NSGetModule(aCompMgr, aFileSpec) 
+{
+	return HttpFoxServiceModule;
+}

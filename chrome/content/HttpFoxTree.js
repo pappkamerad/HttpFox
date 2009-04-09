@@ -73,7 +73,7 @@ HttpFoxTree.prototype =
 	     	switch(column)
 	     	{
 	     		case "hf_Column_Started":
-	        		return formatTime(new Date(request.StartTimestamp - this.HttpFox.HttpFoxService.StartTime.getTime()));
+	        		return net.decoded.utils.formatTime(new Date(request.StartTimestamp - this.HttpFox.HttpFoxService.StartTime.getTime()));
 	        		
 				case "hf_Column_Time":
 					if (!request.IsFinished)
@@ -81,18 +81,18 @@ HttpFoxTree.prototype =
 						return "*";
 					}
 
-					return formatTimeDifference(request.StartTimestamp, request.EndTimestamp);
+					return net.decoded.utils.formatTimeDifference(request.StartTimestamp, request.EndTimestamp);
 					
 				case "hf_Column_Sent":
 					var rString = "";
 					
 					if (request.IsSending)
 					{
-						rString = humanizeSize(request.getBytesSent(), 6) + "/" + humanizeSize(request.getBytesSentTotal(), 6);
+						rString = net.decoded.utils.humanizeSize(request.getBytesSent(), 6) + "/" + net.decoded.utils.humanizeSize(request.getBytesSentTotal(), 6);
 					}
 					else
 					{
-						rString = humanizeSize(request.getBytesSentTotal(), 6);	
+						rString = net.decoded.utils.humanizeSize(request.getBytesSentTotal(), 6);	
 					}
 					
 					return rString;
@@ -113,11 +113,11 @@ HttpFoxTree.prototype =
 					if (!request.IsFinished)
 					{
 						// show loading body progress
-						rString = humanizeSize(request.getBytesLoaded(), 6) + "/" + humanizeSize(request.getBytesLoadedTotal(), 6);
+						rString = net.decoded.utils.humanizeSize(request.getBytesLoaded(), 6) + "/" + net.decoded.utils.humanizeSize(request.getBytesLoadedTotal(), 6);
 					}
 					else
 					{
-						rString = humanizeSize(request.getBytesLoaded(), 6);	
+						rString = net.decoded.utils.humanizeSize(request.getBytesLoaded(), 6);	
 					}
 					
 					if (request.IsFromCache || request.ResponseStatus == 304)
@@ -158,10 +158,10 @@ HttpFoxTree.prototype =
 					{
 						if (request.ContentType)
 						{
-							return request.ContentType + " (" + nsResultErrors[request.Status.toString(16)] + ")";
+							return request.ContentType + " (" + net.decoded.utils.nsResultErrors[request.Status.toString(16)] + ")";
 						}
 						
-						return nsResultErrors[request.Status.toString(16)];
+						return net.decoded.utils.nsResultErrors[request.Status.toString(16)];
 					}
 					
 					if (!request.HasReceivedResponseHeaders && !request.IsFromCache && !request.IsFinal)
