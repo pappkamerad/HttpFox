@@ -6,7 +6,7 @@
 
 		<em:name>HttpFox</em:name>
 		<em:id>{4093c4de-454a-4329-8aff-c6b0b123c386}</em:id>
-		<em:version>0.8.3</em:version>
+		<em:version>0.8.4</em:version>
 		<em:description>An HTTP analyzer addon for Firefox</em:description>
 		<em:creator>Martin Theimer</em:creator>
 		<em:homepageURL>http://code.google.com/p/httpfox/</em:homepageURL>
