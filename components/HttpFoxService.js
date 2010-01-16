@@ -119,6 +119,7 @@ HttpFoxService.prototype =
 	stopWatching: function() 
 	{
 		this.Observer.stop();
+		// TODO: detach eventsink and streamlistener
 		this.IsWatching = false;
 	},
 	
@@ -790,6 +791,7 @@ HttpFoxRequest.prototype =
 	EventSourceData: null,
 	MasterIndex: null,
 	HttpFoxRequestEventSink: null,
+	HttpFoxRequestStreamListener: null,
 	
 	// custom request properties
 	StartTimestamp: null,
@@ -837,6 +839,7 @@ HttpFoxRequest.prototype =
 	CookiesSent: null,
 	CookiesReceived: null,
 	IsBackground: false,
+	ResponseData: null,
 	
 	// httpchannel-, request properties
 	Status: null,
@@ -875,6 +878,8 @@ HttpFoxRequest.prototype =
 
 		// store event sink
 		this.HttpFoxRequestEventSink = requestEvent.HttpFoxRequestEventSink;
+		
+		
 		
 		// update/init from first requestevent
 		this.updateFromRequestEvent(requestEvent)
@@ -1042,13 +1047,18 @@ HttpFoxRequest.prototype =
 			this.IsSending = true;
 		}
 		
-		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE)
+		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE
+			|| requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_MERGED_RESPONSE)
 		{
 			// start receiving
 			this.IsSending = false;
 			this.HasReceivedResponseHeaders = true;
 			this.ResponseStartTimestamp = (new Date()).getTime();
-		}
+			// store stream listener
+			this.HttpFoxRequestStreamListener = requestEvent.HttpFoxRequestStreamListener;
+			this.HttpFoxRequestStreamListener.HttpFoxRequest = this;
+			this.ResponseData = "";
+		}		
 		
 		if (this.Url == null)
 		{
@@ -1568,6 +1578,10 @@ HttpFoxRequest.prototype =
 			
 			this.HttpFoxRequestEventSink.HttpChannel.notificationCallbacks = this.HttpFoxRequestEventSink.OriginalNotificationCallbacks;
 			this.HttpFoxRequestEventSink = null;
+			
+			this.HttpFoxRequestStreamListener.HttpChannel.setNewListener(this.HttpFoxRequestStreamListener.OriginalListener);
+			this.HttpFoxRequestStreamListener = null;
+			
 			this.HttpChannel = null;
 			
 		}
@@ -1667,6 +1681,7 @@ HttpFoxRequestEvent.prototype =
 	EventSourceData: null,
 	Context: null, // reference
 	HttpFoxRequestEventSink: null,
+	HttpFoxRequestStreamListener: null,
 
 	// custom request properties
 	BytesLoaded: 0,
@@ -2146,8 +2161,82 @@ HttpFoxRequestEventSink.prototype =
 	}
 	/********************************************/
 }
+// ************************************************************************************************
 
+// HttpFoxRequestStreamListener
+function HttpFoxRequestStreamListener(HttpFoxReference, HttpChannel)
+{
+	this.init(HttpFoxReference, HttpChannel);
+}
+HttpFoxRequestStreamListener.prototype =
+{
+	// Properties
+	HttpFox: null,
+	HttpChannel: null,
+	HttpFoxRequest: null,
+	OriginalListener: null,
+	
+	// Constructor
+	init: function(HttpFoxReference, HttpChannel) 
+	{
+		this.HttpFox = HttpFoxReference;
+		this.HttpChannel = HttpChannel;
+	},
+	
+	/**
+	* See nsIStreamListener
+	*/
+    onDataAvailable: function(request, context, inputStream, offset, count) 
+    {
+    	var binaryInputStream = CCIN("@mozilla.org/binaryinputstream;1",
+                "nsIBinaryInputStream");
+        var storageStream = CCIN("@mozilla.org/storagestream;1", "nsIStorageStream");
+        var binaryOutputStream = CCIN("@mozilla.org/binaryoutputstream;1",
+                "nsIBinaryOutputStream");
+           
+        binaryInputStream.setInputStream(inputStream);
+        storageStream.init(8192, count, null);
+        binaryOutputStream.setOutputStream(storageStream.getOutputStream(0));
 
+        // Copy received data as they come.
+        var data = binaryInputStream.readBytes(count);
+        this.HttpFoxRequest.ResponseData += data;
+
+        binaryOutputStream.writeBytes(data, count);
+
+    	dump("\n* onDataAvailable " + request.URI.asciiSpec);
+        this.OriginalListener.onDataAvailable(request, context, storageStream.newInputStream(0), offset, count);
+    },
+
+    onStartRequest: function(request, context)
+    {
+    	dump("\n* onStartRequest" + request.URI.asciiSpec);
+        this.OriginalListener.onStartRequest(request, context);
+    },
+
+    onStopRequest: function(request, context, statusCode) 
+    {
+    	dump("\n* onStopRequest (" + statusCode + ") " + request.URI.asciiSpec);
+    	//dump("\ncontent:\n" + this.HttpFoxRequest.ResponseData);
+        this.OriginalListener.onStopRequest(request, context, statusCode);
+    },
+	/********************************************/
+
+    /**
+	* nsISupports
+	*/
+	QueryInterface: function(iid) 
+	{
+		if (!iid.equals(Components.interfaces.nsISupports) &&
+			!iid.equals(Components.interfaces.nsIStreamListener))
+		{
+			throw Components.results.NS_ERROR_NO_INTERFACE;
+		}
+        
+        return this;
+    }
+	/************************************************/
+}
 // ************************************************************************************************
 
 // HttpFoxObserver
@@ -2241,13 +2330,29 @@ HttpFoxObserver.prototype =
 	onExamineResponse: function(HttpChannel) 
 	{
 		var eventSourceData = new Object();
-		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, HttpChannel, this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE, eventSourceData, getContextFromRequest(HttpChannel)));
+		var streamListener = new HttpFoxRequestStreamListener();
+        var event = new HttpFoxRequestEvent(
+			this.HttpFox, HttpChannel, this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE, eventSourceData, getContextFromRequest(HttpChannel))
+		event.HttpFoxRequestStreamListener = streamListener;
+		this.HttpFox.handleRequestEvent(event);
+		
+		// attach
+		HttpChannel.QueryInterface(Components.interfaces.nsITraceableChannel);
+        streamListener.OriginalListener = HttpChannel.setNewListener(streamListener);
 	},
 	
 	onExamineMergedResponse: function(HttpChannel) 
 	{
 		var eventSourceData = new Object();
-		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, HttpChannel, this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_MERGED_RESPONSE, eventSourceData, getContextFromRequest(HttpChannel)));
+		var streamListener = new HttpFoxRequestStreamListener();
+        var event = new HttpFoxRequestEvent(
+			this.HttpFox, HttpChannel, this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_MERGED_RESPONSE, eventSourceData, getContextFromRequest(HttpChannel))
+		event.HttpFoxRequestStreamListener = streamListener;
+		this.HttpFox.handleRequestEvent(event);
+		
+		// attach
+		HttpChannel.QueryInterface(Components.interfaces.nsITraceableChannel);
+        streamListener.OriginalListener = HttpChannel.setNewListener(streamListener);
 	},
 	
 	// INTERFACE IMPLEMENTATIONS
