@@ -2000,7 +2000,7 @@ HttpFoxRequestEvent.prototype =
 				var cName = dataSections[0].slice(0, dataSections[0].indexOf("="));
 				var cValue = dataSections[0].slice(cName.length + 1);
 				var cookieData = new Array();
-				cookieData["name"] = cName;
+				cookieData["name"] = cName.trim('left');
 				cookieData["value"] = cValue;
 				
 				// other infos
