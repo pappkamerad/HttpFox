@@ -16,7 +16,6 @@
 		<statusbarpanel id="hf_Status" 
 			context="hf_StatusContextMenu" 
 			onmousedown="HttpFox.onClickStatusIcon(event)">
-            
             <image id="hf_StatusLogoImage" tooltiptext="HttpFox" />
         </statusbarpanel>
     
@@ -26,15 +25,14 @@
             	command="cmd_hf_detach"
             	image="chrome://httpfox/skin/application_double.png"
             	/>
-            
             <menuseparator/>
-            
             <menuitem 
             	label="Options" 
             	oncommand="HttpFox.OpenOptions();"/>
         </menupopup>
 	</statusbar>
 	
+	<!-- view menu (firefox) -->
 	<menupopup id="menu_viewPopup">
 		<menuitem id="hf_menu_viewToggleHttpFox" 
 			insertbefore="toggle_taskbar"
@@ -44,46 +42,39 @@
 			command="cmd_hf_togglePanel" />
 	</menupopup>
 
+	<!-- view menu (seamonkey) -->
+    <menupopup id="menu_View_Popup">
+		<menuitem id="hf_menu_viewToggleHttpFox" 
+			insertafter="menuitem_fullScreen"
+			label="HttpFox" 
+			type="checkbox"
+			key="hf_key_1" 
+			command="cmd_hf_togglePanel" />
+    </menupopup>
+	
+	<!-- tools menu (seamonkey) -->
+	<menupopup id="toolsPopup">
+		<menu id="hf_menu_HttpFox" 
+			class="menuitem-iconic" 
+			image="chrome://httpfox/skin/globe16.png"
+			label="HttpFox" />
+    </menupopup>
+	
+	<!-- tools menu (firefox) -->
 	<menupopup id="menu_ToolsPopup">
 		<menu id="hf_menu_HttpFox" 
 			class="menuitem-iconic" 
 			image="chrome://httpfox/skin/globe16.png"
 			label="HttpFox" 
-			insertbefore="javascriptConsole" >
-			
-			<menupopup >
-				<menuitem id="hf_menu_viewToggleHttpFox" 
-					insertbefore="toggle_taskbar"
-					label="Toggle HttpFox" 
-					type="checkbox"
-					command="cmd_hf_togglePanel" />
-					
-				<menuitem 
-					label="Open In Own Window" 
-					command="cmd_hf_detach" />
-				
-				<menuseparator/>
-				
-				<menuitem 
-					label="Options" 
-					oncommand="HttpFox.OpenOptions();" />
-					
-            </menupopup>
-        </menu>
+			insertbefore="javascriptConsole" />
     </menupopup>
 
-	
 	<vbox id="appcontent"> <!-- overlay firefox content window -->
 		<splitter id="hf_PanelSplitter" collapsed="true" persist="height" />
-		
 		<vbox id="hf_PanelNormal" collapsed="true" persist="height" >
 			<vbox id="hf_RequestList" />
-
 			<splitter id="hf_MiddleSplitter" persist="height"/>
-			
 			<vbox id="hf_RequestDetails" />
 		</vbox>
-		
 	</vbox>
-
 </overlay>

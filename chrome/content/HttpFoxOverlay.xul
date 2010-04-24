@@ -23,6 +23,23 @@
 		<key id="hf_key_4" keycode="VK_F3" modifiers="control" command="cmd_hf_stopWatching"/>-->
     </keyset>
 
+	<menu id="hf_menu_HttpFox">
+		<menupopup>
+			<menuitem id="hf_menu_viewToggleHttpFox" 
+				insertbefore="toggle_taskbar"
+				label="Toggle HttpFox" 
+				type="checkbox"
+				command="cmd_hf_togglePanel" />
+			<menuitem 
+				label="Open In Own Window" 
+				command="cmd_hf_detach" />
+			<menuseparator/>
+			<menuitem 
+				label="Options" 
+				oncommand="HttpFox.OpenOptions();" />
+		</menupopup>
+	</menu>
+	
 	<!--<vbox id="hf_Panel" collapsed="true" persist="height" flex="1">-->
 		<vbox id="hf_RequestList" persist="height" flex="1">
 			<toolbox>

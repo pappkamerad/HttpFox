@@ -7,3 +7,4 @@ content httpfox chrome/content/HttpFox.js
 content httpfox chrome/content/HttpFoxTree.js
 
 overlay chrome://browser/content/browser.xul chrome://httpfox/content/browserOverlay.xul
+overlay chrome://navigator/content/navigatorOverlay.xul chrome://httpfox/content/browserOverlay.xul
