@@ -2000,7 +2000,7 @@ HttpFoxRequestEvent.prototype =
 				var cName = dataSections[0].slice(0, dataSections[0].indexOf("="));
 				var cValue = dataSections[0].slice(cName.length + 1);
 				var cookieData = new Array();
-				cookieData["name"] = cName.trim('left');
+				cookieData["name"] = utils.trim(cName, 'left');
 				cookieData["value"] = cValue;
 				
 				// other infos
@@ -2772,7 +2772,7 @@ HttpFoxPostDataHandler.prototype =
 							}
 							
 							// value
-							var value = rawMimePartParts[1].trim();
+							var value = utils.trim(rawMimePartParts[1]);
 							
 							mimePartData["varname"] = varname;
 							mimePartData["filename"] = filename;
@@ -2878,25 +2878,10 @@ HttpFoxRequestLogData.prototype =
 		this.HasCacheInfo = request.HasCacheInfo;
 	}
 }
-// ************************************************************************************************
 
+// ************************************************************************************************
 // UTIL FUNCTIONS
-
 // ************************************************************************************************
-
-String.prototype.trim = function(x) 
-{
-	if (x=='left')
-		return this.replace(/^\s*/,'');
-	if (x=='right')
-		return this.replace(/\s*$/,'');
-	if (x=='normalize')
-		return this.replace(/\s{2,}/g,' ').trim();
-		
-	return this.trim('left').trim('right');
-}
-// ************************************************************************************************
-
 var utils = {
 	LOAD_FROM_CACHE: Components.interfaces.nsIRequest.LOAD_FROM_CACHE,
 	VALIDATE_NEVER: Components.interfaces.nsIRequest.VALIDATE_NEVER,
@@ -2904,6 +2889,24 @@ var utils = {
 	LOAD_BYPASS_LOCAL_CACHE_IF_BUSY: Components.interfaces.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY,
 	LOAD_ONLY_FROM_CACHE: Components.interfaces.nsICachingChannel.LOAD_ONLY_FROM_CACHE,
 	NS_BINDING_ABORTED: 0x804b0002,
+
+    trim: function(value, type)
+    {
+    	if (type == 'left') 
+        {
+            return value.replace(/^\s*/, '');
+        }
+	    if (type == 'right') 
+        {
+            return value.replace(/\s*$/, '');
+        }
+	    if (type == 'normalize') 
+        {
+            return trim(value.replace(/\s{2,}/g, ' '));
+        }
+
+	    return trim(trim(value, 'left'), 'right');
+    },
 
 	// Utility function, dump an object by reflexion up to niv level
 	dumpall: function(name, obj, niv) 
