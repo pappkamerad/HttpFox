@@ -25,6 +25,10 @@ function HttpFoxController()
 HttpFoxController.prototype =
 {
 	HttpFoxService: null,
+	
+	StringBundleService: null,
+	
+	StringBundle: null,
 
 	RequestTree: null,
 
@@ -51,6 +55,12 @@ HttpFoxController.prototype =
 
 		this.HttpFoxService = Components.classes["@decoded.net/httpfox;1"].getService().wrappedJSObject;
 
+		this.StringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
+		
+		this.stringBundle = this.StringBundleService.createBundle("chrome://httpfox/locale/HttpFox.properties");
+			
+		if (!this.stringBundle || !this.stringBundle.getSimpleEnumeration().hasMoreElements()) throw "Could not load localized strings!";
+		
 		this.loadXMLPrettyPrintXSL();
 	},
 
@@ -83,7 +93,7 @@ HttpFoxController.prototype =
 		}
 
 	},
-
+	
 	loadXMLPrettyPrintXSL: function ()
 	{
 		var xslDoc = document.implementation.createDocument("", "", null);
@@ -609,7 +619,14 @@ HttpFoxController.prototype =
 	{
 		document.getElementById("hf_PrettyContentOutput").contentDocument.body.innerHTML = "";
 		document.getElementById("hf_RawContentOutput").value = "";
-		document.getElementById("hf_ContentTypeLabel").value = "Type: ";
+		try 
+		{
+			document.getElementById("hf_ContentTypeLabel").value = this.stringBundle.GetStringFromName("overlay.requestdetails.contenttab.raw.type.label");
+		} 
+		catch (e) 
+		{
+			alert('error:' + e )
+		}
 		this.disableContentDisplayTypePrettyRadio();
 	},
 
@@ -624,7 +641,7 @@ HttpFoxController.prototype =
 		this.clearContentDisplay();
 
 		// display content-type
-		document.getElementById("hf_ContentTypeLabel").value = "Type: " + (currentRequest.ContentType ? currentRequest.ContentType : "");
+		document.getElementById("hf_ContentTypeLabel").value = this.stringBundle.GetStringFromName("overlay.requestdetails.contenttab.raw.type.label") + " " + (currentRequest.ContentType ? currentRequest.ContentType : "");
 
 		// not finished
 		if (status == -1)
@@ -669,28 +686,28 @@ HttpFoxController.prototype =
 	{
 		this.clearContentDisplay();
 
-		document.getElementById("hf_RawContentOutput").value = "Loading...";
+		document.getElementById("hf_RawContentOutput").value = this.stringBundle.GetStringFromName("overlay.requestdetails.contenttab.raw.loading");
 	},
 
 	showRawContentError: function (status)
 	{
 		this.clearContentDisplay();
 
-		document.getElementById("hf_RawContentOutput").value = "Error loading content (" + net.decoded.utils.nsResultErrors[status.toString(16)] + ")";
+		document.getElementById("hf_RawContentOutput").value = this.stringBundle.GetStringFromName("overlay.requestdetails.contenttab.raw.error") + net.decoded.utils.nsResultErrors[status.toString(16)] + ")";
 	},
 
 	showRawContentNotAvailable: function ()
 	{
 		this.clearContentDisplay();
 
-		document.getElementById("hf_RawContentOutput").value = "Not available";
+		document.getElementById("hf_RawContentOutput").value = this.stringBundle.GetStringFromName("overlay.requestdetails.contenttab.raw.notavailable");
 	},
 
 	showRawContentNotFinished: function ()
 	{
 		this.clearContentDisplay();
 
-		document.getElementById("hf_RawContentOutput").value = "Not ready...";
+		document.getElementById("hf_RawContentOutput").value = this.stringBundle.GetStringFromName("overlay.requestdetails.contenttab.raw.notready");
 	},
 
 	//G
@@ -751,7 +768,7 @@ HttpFoxController.prototype =
 		this.clearTreeEntries("hf_RequestHeadersChildren");
 
 		// request line
-		this.addHeaderRow("hf_RequestHeadersChildren", "(Request-Line)", request.RequestMethod + " " + request.URIPath + " HTTP/" + request.RequestProtocolVersion);
+		this.addHeaderRow("hf_RequestHeadersChildren", this.stringBundle.GetStringFromName("overlay.requestdetails.headerstab.request.headerrow.col.line"), request.RequestMethod + " " + request.URIPath + " HTTP/" + request.RequestProtocolVersion);
 
 		for (i in request.RequestHeaders)
 		{
@@ -772,7 +789,7 @@ HttpFoxController.prototype =
 		// response status and text
 		if (request.ResponseHeaders != null)
 		{
-			this.addHeaderRow("hf_ResponseHeadersChildren", "(Status-Line)", "HTTP/" + request.ResponseProtocolVersion + " " + request.ResponseStatus + " " + request.ResponseStatusText);
+			this.addHeaderRow("hf_ResponseHeadersChildren", this.stringBundle.GetStringFromName("overlay.requestdetails.headerstab.response.headerrow.col.line"), "HTTP/" + request.ResponseProtocolVersion + " " + request.ResponseStatus + " " + request.ResponseStatusText);
 		}
 
 		for (i in request.ResponseHeaders)
@@ -800,7 +817,8 @@ HttpFoxController.prototype =
 
 		if (request.QueryString == null)
 		{
-			this.addHeaderRow("hf_QueryStringChildren", "(none)", "(The URL does not contain a query string)");
+			this.addHeaderRow("hf_QueryStringChildren", this.stringBundle.GetStringFromName("overlay.requestdetails.querytab.headerrow.col.param"), 
+				this.stringBundle.GetStringFromName("overlay.requestdetails.querytab.headerrow.col.value"));
 			return;
 		}
 
@@ -861,7 +879,7 @@ HttpFoxController.prototype =
 		// fill raw data
 		if (request.IsPostDataTooBig)
 		{
-			document.getElementById("hf_PostDataRawOutput").value = "too big...";
+			document.getElementById("hf_PostDataRawOutput").value = this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.toobig");
 		}
 		else
 		{
@@ -870,12 +888,13 @@ HttpFoxController.prototype =
 
 		// fill pretty data
 		var mimeLabel = document.getElementById("hf_PostDataMimeType");
-		mimeLabel.value = "Type: ";
+		mimeLabel.value = this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.pretty.type");
 		this.clearTreeEntries("hf_PostDataChildren");
 
 		if (request.PostData == null)
 		{
-			this.addHeaderRow("hf_PostDataChildren", "(none)", "(This request contained no POST data)");
+			this.addHeaderRow("hf_PostDataChildren", this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.headerrow.col.param"), 
+				this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.headerrow.col.value"));
 			return;
 		}
 
@@ -898,7 +917,7 @@ HttpFoxController.prototype =
 			}
 		}
 
-		mimeLabel.value = "Type: " + ctypedisplay;
+		mimeLabel.value = this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.mimetype") + ctypedisplay;
 
 		if (request.IsPostDataMIME)
 		{

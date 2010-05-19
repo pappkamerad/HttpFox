@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
- 
+<!DOCTYPE window SYSTEM "chrome://httpfox/locale/HttpFox.dtd"> 
 <prefwindow id="hf_PrefWindow"
-     title="HttpFox Options"
+     title="&options.title;"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  
-	<prefpane id="hf_PrefPane" label="HttpFox Options">
+	<prefpane id="hf_PrefPane" label="&options.title;">
 		<preferences>
 			<preference id="pref_StartAtBrowserStart" name="extensions.httpfox.StartAtBrowserStart" type="bool"/>
 			<preference id="pref_AlwaysOpenDetached" name="extensions.httpfox.AlwaysOpenDetached" type="bool"/>
@@ -14,10 +14,10 @@
 		</preferences>
 	 
 		<vbox align="left">
-			<checkbox label="Automatically start watching when browser starts" preference="pref_StartAtBrowserStart" id="StartAtBrowserStart" />
-			<checkbox label="Open HttpFox always in own window" preference="pref_AlwaysOpenDetached" id="AlwaysOpenDetached" />
-			<checkbox label="Color the requests based on status" preference="pref_ColorRequests" id="ColorRequests" />
-			<checkbox label="Remove the INHIBIT_CACHING request-channel flag (helps to get the responsecontent from cache)" preference="pref_ForceCaching" id="ForceCaching" />
+			<checkbox label="&options.startAtBrowserStart.checkbox;" preference="pref_StartAtBrowserStart" id="StartAtBrowserStart" />
+			<checkbox label="&options.alwaysOpenDetached.checkbox;" preference="pref_AlwaysOpenDetached" id="AlwaysOpenDetached" />
+			<checkbox label="&options.colorRequests.checkbox;" preference="pref_ColorRequests" id="ColorRequests" />
+			<checkbox label="&options.forceCaching.checkbox;" preference="pref_ForceCaching" id="ForceCaching" />
 		</vbox>
 	</prefpane>
  

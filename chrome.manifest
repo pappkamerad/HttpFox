@@ -8,3 +8,6 @@ content httpfox chrome/content/HttpFoxTree.js
 
 overlay chrome://browser/content/browser.xul chrome://httpfox/content/browserOverlay.xul
 overlay chrome://navigator/content/navigatorOverlay.xul chrome://httpfox/content/browserOverlay.xul
+
+locale  httpfox  en-US       chrome/locale/en-US/
+locale  httpfox  ja-JP       chrome/locale/ja-JP/
