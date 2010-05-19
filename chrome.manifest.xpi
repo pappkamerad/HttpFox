@@ -1,7 +1,10 @@
-content	httpfox jar:chrome/httpfox.jar!/content/
-content	httpfox jar:chrome/httpfox.jar!/content/XMLPrettyPrint.xsl contentaccessible=yes
+content httpfox jar:chrome/httpfox.jar!/content/
+content httpfox jar:chrome/httpfox.jar!/content/XMLPrettyPrint.xsl contentaccessible=yes
 
 skin httpfox classic/1.0 jar:chrome/httpfox.jar!/skin/
 
 overlay chrome://browser/content/browser.xul chrome://httpfox/content/browserOverlay.xul
 overlay chrome://navigator/content/navigatorOverlay.xul chrome://httpfox/content/browserOverlay.xul
+
+locale httpfox en-US jar:chrome/httpfox.jar!/locale/en-US/
+locale httpfox ja-JP jar:chrome/httpfox.jar!/locale/ja-JP/
