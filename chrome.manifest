@@ -1,5 +1,6 @@
 content	httpfox chrome/content/
 content	httpfox chrome/content/XMLPrettyPrint.xsl contentaccessible=yes
+
 skin httpfox classic/1.0 chrome/skin/
 
 component {307fd88d-5c81-4487-bb0d-42e228a68767} components/HttpFoxService.js
@@ -15,3 +16,4 @@ overlay chrome://navigator/content/navigatorOverlay.xul chrome://httpfox/content
 locale  httpfox  en-US       chrome/locale/en-US/
 locale  httpfox  ja-JP       chrome/locale/ja-JP/
 locale  httpfox  nl-NL       chrome/locale/nl-NL/
+locale  httpfox  de-DE       chrome/locale/de-DE/
