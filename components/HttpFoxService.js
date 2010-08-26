@@ -1735,9 +1735,9 @@ HttpFoxRequestEvent.prototype =
 		
 		// get properties from httpchannel/request object
 		this.Status = this.HttpChannel.status ? this.HttpChannel.status : null;
-		this.Url = this.HttpChannel.URI ? this.HttpChannel.URI.asciiSpec : null;
+		this.Url = this.HttpChannel.URI ? this.getFinalUrl(this.HttpChannel.URI.asciiSpec) : null;
 		this.URIScheme = this.HttpChannel.URI ? this.HttpChannel.URI.scheme : null;
-		this.URIPath = this.HttpChannel.URI ? this.HttpChannel.URI.path : null;
+		this.URIPath = this.HttpChannel.URI ? this.getFinalUrl(this.HttpChannel.URI.path) : null;
 		this.Name = this.HttpChannel.name ? this.HttpChannel.name : null;
 		this.RequestMethod = this.HttpChannel.requestMethod ? this.HttpChannel.requestMethod : null;
 		this.IsPending = this.HttpChannel.isPending();
@@ -1816,6 +1816,11 @@ HttpFoxRequestEvent.prototype =
 		}
 	},
 	
+	getFinalUrl: function(channelUri)
+	{
+		return channelUri.split("#")[0];
+	},
+
 	getRequestProtocolVersion: function()
 	{
 		try 

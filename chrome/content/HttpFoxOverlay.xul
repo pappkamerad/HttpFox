@@ -383,14 +383,14 @@
 										<treechildren id="hf_PostDataChildren"/>
 									</tree>
 	
-									<browser class="textbox_browser" collapsed="true" id="hf_PostDataPretty" style="background-color:#FFFFFF; font-family: -moz-fixed; font-weight: normal;" type="content" flex="1" readonly="true" wrap="false" multiline="true"/>
+									<browser id="hf_PostDataPretty" class="textbox_browser" collapsed="true" style="background-color:#FFFFFF; font-family: -moz-fixed; font-weight: normal;" type="content" flex="1" readonly="true" wrap="false" multiline="true"/>
 								</box>
 	
 								<box flex="1" id="hf_PostDataRawBox">	
 									<textbox id="hf_PostDataRawOutput" style="background-color:#FFFFFF; font-family: -moz-fixed; font-weight: normal;" type="content" flex="1" readonly="true" wrap="false" multiline="true"/>
 								</box>
 								
-								<radiogroup orient="horizontal">
+								<radiogroup id="hf_PostDataRadioGroup" orient="horizontal">
 									<radio id="hf_PostDataRadioPretty" label="&overlay.requestdetails.posttab.pretty.radio;" onclick="HttpFox.selectionChange_PostDataDisplayTypePretty();" selected="true" />
 									<radio id="hf_PostDataRadioRaw" label="&overlay.requestdetails.posttab.raw.radio;" onclick="HttpFox.selectionChange_PostDataDisplayTypeRaw();" />
 								</radiogroup>

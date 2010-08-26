@@ -430,6 +430,11 @@ HttpFoxController.prototype =
 
 	selectionChange_PostDataDisplayTypePretty: function ()
 	{
+		if (document.getElementById("hf_PostDataRadioPretty").disabled)
+		{
+			return;
+		}
+
 		this.PostDataViewMode = 0;
 		document.getElementById("hf_PostDataPrettyBox").collapsed = false;
 		document.getElementById("hf_PostDataRawBox").collapsed = true;
@@ -437,6 +442,11 @@ HttpFoxController.prototype =
 
 	selectionChange_PostDataDisplayTypeRaw: function ()
 	{
+		if (document.getElementById("hf_PostDataRadioPretty").disabled)
+		{
+			return;
+		}
+
 		this.PostDataViewMode = 1;
 		document.getElementById("hf_PostDataPrettyBox").collapsed = true;
 		document.getElementById("hf_PostDataRawBox").collapsed = false;
@@ -487,6 +497,30 @@ HttpFoxController.prototype =
 		else
 		{
 			this.selectionChange_ContentDisplayTypeRaw();
+		}
+	},
+
+	disablePostDataDisplayTypePrettyRadio: function ()
+	{
+		document.getElementById("hf_PostDataRadioGroup").selectedIndex = 1;
+		document.getElementById("hf_PostDataRadioPretty").disabled = true;
+		document.getElementById("hf_PostDataRadioGroup").disabled = true;
+		document.getElementById("hf_PostDataPrettyBox").collapsed = true;
+		document.getElementById("hf_PostDataRawBox").collapsed = false;
+	},
+
+	enablePostDataDisplayTypePrettyRadio: function ()
+	{
+		document.getElementById("hf_PostDataRadioGroup").selectedIndex = this.PostDataViewMode;
+		document.getElementById("hf_PostDataRadioPretty").disabled = false;
+		document.getElementById("hf_PostDataRadioGroup").disabled = false;
+		if (this.PostDataViewMode == 0)
+		{
+			this.selectionChange_PostDataDisplayTypePretty();
+		}
+		else
+		{
+			this.selectionChange_PostDataDisplayTypeRaw();
 		}
 	},
 
@@ -889,14 +923,21 @@ HttpFoxController.prototype =
 		}
 
 		// fill pretty data
+		// enable pretty
+		this.enablePostDataDisplayTypePrettyRadio();
+
 		var mimeLabel = document.getElementById("hf_PostDataMimeType");
 		mimeLabel.value = this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.pretty.type");
 		this.clearTreeEntries("hf_PostDataChildren");
 
 		if (request.PostData == null)
 		{
-			this.addHeaderRow("hf_PostDataChildren", this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.headerrow.col.param"),
+			this.addHeaderRow("hf_PostDataChildren",
+				this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.headerrow.col.param"),
 				this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.headerrow.col.value"));
+
+			document.getElementById("hf_PostDataRawOutput").value = this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.headerrow.col.value");
+			
 			return;
 		}
 
@@ -919,7 +960,7 @@ HttpFoxController.prototype =
 			}
 		}
 
-		mimeLabel.value = this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.mimetype") + ctypedisplay;
+		mimeLabel.value = this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.mimetype") + " " + ctypedisplay;
 
 		if (request.IsPostDataMIME)
 		{
@@ -950,24 +991,22 @@ HttpFoxController.prototype =
 				{
 					this.addHeaderRow("hf_PostDataChildren", net.decoded.utils.urlDecode(request.PostDataParameters[i][0]), net.decoded.utils.urlDecode(request.PostDataParameters[i][1] != null ? request.PostDataParameters[i][1] : ""));
 				}
-
 			}
 		}
 		else
 		{
-			// raw content
-			document.getElementById("hf_PostDataPretty").collapsed = false;
-			document.getElementById("hf_PostDataTree").collapsed = true;
-
 			// check if url parameter style
 			if (net.decoded.utils.isXml(request.PostData))
 			{
+				// display pretty plain content
+				document.getElementById("hf_PostDataPretty").collapsed = false;
+				document.getElementById("hf_PostDataTree").collapsed = true;
 				this.getPrettyPrintXML(request.PostData, "hf_PostDataPretty");
 			}
 			else
 			{
 				// just raw...
-				document.getElementById("hf_PostDataPretty").contentDocument.body.innerHTML = request.PostData;
+				this.disablePostDataDisplayTypePrettyRadio();
 			}
 		}
 	},
