@@ -3,6 +3,9 @@ content httpfox jar:chrome/httpfox.jar!/content/XMLPrettyPrint.xsl contentaccess
 
 skin httpfox classic/1.0 jar:chrome/httpfox.jar!/skin/
 
+component {307fd88d-5c81-4487-bb0d-42e228a68767} components/HttpFoxService.js
+contract @decoded.net/httpfox;1 {307fd88d-5c81-4487-bb0d-42e228a68767}
+
 overlay chrome://browser/content/browser.xul chrome://httpfox/content/browserOverlay.xul
 overlay chrome://navigator/content/navigatorOverlay.xul chrome://httpfox/content/browserOverlay.xul
 

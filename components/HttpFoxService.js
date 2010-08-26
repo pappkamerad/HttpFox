@@ -35,6 +35,11 @@ const CLASS_NAME = "HttpFox Service";
 // textual unique identifier
 const CONTRACT_ID = "@decoded.net/httpfox;1";
 
+// import utils
+try {
+	Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+}
+catch(e) {}
 
 /***********************************************************
 class definition
@@ -49,6 +54,10 @@ function HttpFoxService()
 // class definition
 HttpFoxService.prototype = 
 {
+	classID: CLASS_ID,
+	classDescription: CLASS_NAME,
+	contractID: CONTRACT_ID,
+
 	// Controller/Interface list
 	Controllers: null,
 	
@@ -605,7 +614,7 @@ HttpFoxService.prototype.HttpFoxEventSourceType =
 	WEBPROGRESS_ON_PROGRESS_CHANGED: 8,
 	WEBPROGRESS_ON_LOCATION_CHANGED: 9,
 	SCANNED_COMPLETE: 10
-}; 
+};
 
 HttpFoxService.prototype.HttpFoxStatusCodeType =
 {
@@ -619,6 +628,8 @@ HttpFoxService.prototype.HttpFoxStatusCodeType =
 	LOADFLAGS_CHANNEL: 7,
 	LOADFLAGS_CACHING: 8
 };
+
+
 
 function HttpFoxPreferences() 
 {
@@ -3537,6 +3548,7 @@ var HttpFoxServiceModule =
 	}
 };
 
+// FF 2
 /***********************************************************
 module initialization
 
@@ -3546,4 +3558,13 @@ is called.
 function NSGetModule(aCompMgr, aFileSpec) 
 {
 	return HttpFoxServiceModule;
+}
+
+// FF 4+
+if (typeof XPCOMUtils != "undefined")
+{
+	if (XPCOMUtils.generateNSGetFactory) {
+		// FF 4+
+		var NSGetFactory = XPCOMUtils.generateNSGetFactory([HttpFoxService]);	
+	}
 }

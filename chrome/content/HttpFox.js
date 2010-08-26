@@ -25,9 +25,9 @@ function HttpFoxController()
 HttpFoxController.prototype =
 {
 	HttpFoxService: null,
-	
+
 	StringBundleService: null,
-	
+
 	StringBundle: null,
 
 	RequestTree: null,
@@ -56,11 +56,11 @@ HttpFoxController.prototype =
 		this.HttpFoxService = Components.classes["@decoded.net/httpfox;1"].getService().wrappedJSObject;
 
 		this.StringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
-		
+
 		this.stringBundle = this.StringBundleService.createBundle("chrome://httpfox/locale/HttpFox.properties");
-			
+
 		if (!this.stringBundle || !this.stringBundle.getSimpleEnumeration().hasMoreElements()) throw "Could not load localized strings!";
-		
+
 		this.loadXMLPrettyPrintXSL();
 	},
 
@@ -93,7 +93,7 @@ HttpFoxController.prototype =
 		}
 
 	},
-	
+
 	loadXMLPrettyPrintXSL: function ()
 	{
 		var xslDoc = document.implementation.createDocument("", "", null);
@@ -619,13 +619,13 @@ HttpFoxController.prototype =
 	{
 		document.getElementById("hf_PrettyContentOutput").contentDocument.body.innerHTML = "";
 		document.getElementById("hf_RawContentOutput").value = "";
-		try 
+		try
 		{
 			document.getElementById("hf_ContentTypeLabel").value = this.stringBundle.GetStringFromName("overlay.requestdetails.contenttab.raw.type.label");
-		} 
-		catch (e) 
+		}
+		catch (e)
 		{
-			alert('error:' + e )
+			alert('error:' + e)
 		}
 		this.disableContentDisplayTypePrettyRadio();
 	},
@@ -817,7 +817,7 @@ HttpFoxController.prototype =
 
 		if (request.QueryString == null)
 		{
-			this.addHeaderRow("hf_QueryStringChildren", this.stringBundle.GetStringFromName("overlay.requestdetails.querytab.headerrow.col.param"), 
+			this.addHeaderRow("hf_QueryStringChildren", this.stringBundle.GetStringFromName("overlay.requestdetails.querytab.headerrow.col.param"),
 				this.stringBundle.GetStringFromName("overlay.requestdetails.querytab.headerrow.col.value"));
 			return;
 		}
@@ -839,6 +839,8 @@ HttpFoxController.prototype =
 			// no cookies
 			return;
 		}
+
+		var i;
 
 		for (i in request.CookiesSent)
 		{
@@ -893,7 +895,7 @@ HttpFoxController.prototype =
 
 		if (request.PostData == null)
 		{
-			this.addHeaderRow("hf_PostDataChildren", this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.headerrow.col.param"), 
+			this.addHeaderRow("hf_PostDataChildren", this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.headerrow.col.param"),
 				this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.headerrow.col.value"));
 			return;
 		}

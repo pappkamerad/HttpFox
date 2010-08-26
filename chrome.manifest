@@ -2,6 +2,9 @@ content	httpfox chrome/content/
 content	httpfox chrome/content/XMLPrettyPrint.xsl contentaccessible=yes
 skin httpfox classic/1.0 chrome/skin/
 
+component {307fd88d-5c81-4487-bb0d-42e228a68767} components/HttpFoxService.js
+contract @decoded.net/httpfox;1 {307fd88d-5c81-4487-bb0d-42e228a68767}
+
 content httpfox chrome/content/Utils.js
 content httpfox chrome/content/HttpFox.js
 content httpfox chrome/content/HttpFoxTree.js

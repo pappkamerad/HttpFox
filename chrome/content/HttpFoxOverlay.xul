@@ -80,11 +80,11 @@
 					<command id="cmd_Clipboard_CopyTreeAllRows" oncommand="HttpFox.Clipboard_CopyTreeAllRows()" />
 				</commandset>
 				
-				<popup id="hf_RequestTreeContextMenu" onpopupshowing="HttpFox.updateRequestContextMenu(event)">
+				<menupopup id="hf_RequestTreeContextMenu" onpopupshowing="HttpFox.updateRequestContextMenu(event)">
 					<menuitem label="&overlay.requestlist.popup.copyTreeRowCell.label;" command="cmd_Clipboard_CopyTreeRowCell" />
 					<menuitem label="&overlay.requestlist.popup.copyTreeRow.label;" command="cmd_Clipboard_CopyTreeRow"/>
 					<menuitem label="&overlay.requestlist.popup.copyTreeAllRows.label;" command="cmd_Clipboard_CopyTreeAllRows" />
-				</popup>
+				</menupopup>
 			</popupset>
 
 			<tree id="hf_RequestTree" context="hf_RequestTreeContextMenu" flex="1" onselect="HttpFox.selectionChange_RequestTree();">
@@ -167,13 +167,13 @@
 		  			<command id="cmd_Clipboard_CopyTreeAllRows" oncommand="HttpFox.Clipboard_CopyTreeAllRows()" />
 		  		</commandset>
 		  		
-	  			<popup id="hf_RequestDetailsContextMenu" onpopupshowing="HttpFox.updateRequestContextMenu(event)">
+				<menupopup id="hf_RequestDetailsContextMenu" onpopupshowing="HttpFox.updateRequestContextMenu(event)">
 	  				<menuitem label="&overlay.requestdetails.popup.copyTreeRowCell.label;" command="cmd_Clipboard_CopyTreeRowCell" />
 	  				<menuitem label="&overlay.requestdetails.popup.copyTreeRow.label;" command="cmd_Clipboard_CopyTreeRow"/>
 	  				<menuitem label="&overlay.requestdetails.popup.copyTreeAllRows.label;" command="cmd_Clipboard_CopyTreeAllRows" />
-	  			</popup>
+	  			</menupopup>
 	  		</popupset>
-				  		
+
 			<hbox flex="1">
 				<tabbox id="hf_Tablist" flex="1" >
 					<tabs id="hf_RequestDetailsTabs" onselect="HttpFox.selectionChange_RequestDetails();">
