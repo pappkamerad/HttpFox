@@ -174,7 +174,7 @@
 	  			</popup>
 	  		</popupset>
 				  		
-			<hbox flex="1" style="overflow: auto;">
+			<hbox flex="1">
 				<tabbox id="hf_Tablist" flex="1" >
 					<tabs id="hf_RequestDetailsTabs" onselect="HttpFox.selectionChange_RequestDetails();">
 					    <tab label="&overlay.requestdetails.tablist.headers.label;" />
