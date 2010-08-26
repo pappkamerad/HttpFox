@@ -8,3 +8,4 @@ overlay chrome://navigator/content/navigatorOverlay.xul chrome://httpfox/content
 
 locale httpfox en-US jar:chrome/httpfox.jar!/locale/en-US/
 locale httpfox ja-JP jar:chrome/httpfox.jar!/locale/ja-JP/
+locale httpfox nl-NL jar:chrome/httpfox.jar!/locale/nl-NL/

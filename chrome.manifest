@@ -11,3 +11,4 @@ overlay chrome://navigator/content/navigatorOverlay.xul chrome://httpfox/content
 
 locale  httpfox  en-US       chrome/locale/en-US/
 locale  httpfox  ja-JP       chrome/locale/ja-JP/
+locale  httpfox  nl-NL       chrome/locale/nl-NL/
