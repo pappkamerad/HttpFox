@@ -42,8 +42,7 @@
 	<!--<vbox id="hf_Panel" collapsed="true" persist="height" flex="1">-->
 		<vbox id="hf_RequestList" persist="height" flex="1">
 			<toolbox>
-			<!--<toolbar id="hf_TopBar" align="center" flex="0" style="-moz-border-top-colors: ThreeDLightShadow ThreeDLightShadow; border-bottom-width: 0px; border-left-width: 0px; border-top-width: 1px; border-right-width: 1px;">-->
-				<toolbar id="hf_TopBar" align="center" flex="0">
+				<toolbar id="hf_TopBar" class="chromeclass-menubar" align="center" flex="0">
 					<toolbarbutton id="hf_TopBarButton_Start" label="&overlay.requestlist.toolbox.toolbar.start.button;"
 						tooltiptext="&overlay.requestlist.toolbox.toolbar.start.tooltip;" command="cmd_hf_startWatching" />
 	
@@ -72,7 +71,6 @@
 				</toolbar>
 			</toolbox>
 			
-		<!--<hbox flex="1">-->
 			<popupset>
 				<commandset>
 					<command id="cmd_Clipboard_CopyTreeRowCell" oncommand="HttpFox.Clipboard_CopyTreeRowCell()" />
