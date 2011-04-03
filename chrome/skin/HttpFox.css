@@ -37,6 +37,10 @@
 	padding: 0;
 }
 
+#hf_appmenu_HttpFox, #hf_menu_HttpFox {
+    list-style-image: url(chrome://httpfox/skin/globe16.png);
+} 
+
 #hf_PanelSplitter { /*border-top: 1px solid !important;
     -moz-border-top-colors: threedShadow !important;
     border-bottom: 1px solid !important;
