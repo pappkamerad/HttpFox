@@ -52,7 +52,7 @@
 	<!-- tools menu (seamonkey) -->
 	<menupopup id="toolsPopup">
 		<menu id="hf_menu_HttpFox" 
-			class="menuitem-iconic" 
+			class="menu-iconic" 
 			label="&browseroverlay.menutools.httpfox.label;" />
 	</menupopup>
 	
@@ -70,7 +70,7 @@
 			iconic="true"
 			label="&browseroverlay.menutools.httpfox.label;" 
 			insertbefore="appmenu_webConsole"
-			key="hf_key_1" 
+			key="hf_key_1"
 			command="cmd_hf_togglePanel" />
 		<menuseparator insertbefore="appmenu_webConsole" />
 	</menupopup>

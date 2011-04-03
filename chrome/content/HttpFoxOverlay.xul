@@ -28,6 +28,7 @@
 				insertbefore="toggle_taskbar"
 				label="&overlay.requestlist.menu.menupop.toggle.label;" 
 				type="checkbox"
+				key="hf_key_1" 
 				command="cmd_hf_togglePanel" />
 			<menuitem 
 				label="&overlay.requestlist.menu.menupop.detach.label;" 
@@ -45,6 +46,7 @@
 				insertbefore="toggle_taskbar"
 				label="&overlay.requestlist.menu.menupop.toggle.label;" 
 				type="checkbox"
+				key="hf_key_1" 
 				command="cmd_hf_togglePanel" />
 			<menuitem 
 				label="&overlay.requestlist.menu.menupop.detach.label;" 
