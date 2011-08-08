@@ -1,63 +1,20 @@
-/*
-	HttpFox - An HTTP analyzer addon for Firefox
-	Copyright (C) 2008 Martin Theimer
-	
-	This program is free software; you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation; either version 2 of the License, or
-	(at your option) any later version.
-	
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-	
-	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-*/
-
 // tree implementation for request/response output on main window
-function HttpFoxTree(treeElement, HttpFoxControllerReference)
+function HttpFoxTree(treeElement, httpFoxControllerReference)
 {
-   this.init(treeElement, HttpFoxControllerReference);
+	Cu["import"]("resource://httpfox/Utils.jsm");
+	Cu["import"]("resource://httpfox/HttpFoxDataHelper.jsm");
+	
+	this.HttpFox = httpFoxControllerReference;
+	this.TreeElement = treeElement;
+	this.TreeElement.view = this;
 }
 
 HttpFoxTree.prototype = 
 {
 	HttpFox: null,
 	TreeElement: null,
-	//treebox: null,
 	selection: null,
 	
-	init: function(treeElement, HttpFoxControllerReference)
-	{
-		this.HttpFox = HttpFoxControllerReference;
-		
-		this.TreeElement = treeElement;
-		this.TreeElement.view = this;
-	},
-	
-	get rowCount() 
-	{
-		return this.HttpFox.FilteredRequests.length;
-		//return this.HttpFox.Requests.length;
-	},
-   
-	/*set data(httpdata) {
-		var oldCount = this.rowCount;
-		this.sourceData = httpdata;
-		//this.filteredData = this.sourceData.requests;
-		// hook into the push function of the array
-		this.sourceData.tree = this;
-		this.sourceData.oldPush = this.sourceData.push;
-		this.sourceData.push = myPush;
-		//this.filteredData = this.sourceData.requests;
-		this.rowCountChanged(0, -oldCount);
-		//this.gui.hasData = (this.sourceData.requests.length > 0);
-		//this.filter(this.gui.currentFilter);
-	},*/ 
-   
 	getCellText: function(row, column) 
 	{
 		var request = this.HttpFox.FilteredRequests[row];
@@ -73,17 +30,20 @@ HttpFoxTree.prototype =
 	     	switch(column)
 	     	{
 	     		case "hf_Column_Started":
+					return HFU.formatDateTime(request.StartTimestamp);
 	        		return formatTime(new Date(request.StartTimestamp - this.HttpFox.HttpFoxService.StartTime.getTime()));
 	        		
 				case "hf_Column_Time":
-					if (!request.IsFinished)
+					if (!request.IsComplete)
 					{
 						return "*";
 					}
 
+					return request.Duration;
 					return formatTimeDifference(request.StartTimestamp, request.EndTimestamp);
 					
 				case "hf_Column_Sent":
+					return "";
 					var rString = "";
 					
 					if (request.IsSending)
@@ -98,6 +58,7 @@ HttpFoxTree.prototype =
 					return rString;
 					
 				case "hf_Column_Received":
+					return request.ResponseSize;
 					var rString = "";
 					
 					/*if (request.IsAborted)
@@ -131,6 +92,8 @@ HttpFoxTree.prototype =
 					return request.RequestMethod;
 					
 				case "hf_Column_Result":
+					//return request.ResponseStatus;
+
 					if (request.IsAborted)
 					{
 						return "(Aborted)";
@@ -146,25 +109,27 @@ HttpFoxTree.prototype =
 						return "(Cache)";
 					}
 					
-					if (!request.HasReceivedResponseHeaders && !request.IsFinal)
-					{
-						return "*";
-					}	
+//					if (!request.HasReceivedResponseHeaders && !request.IsFinal)
+//					{
+//						return "*";
+//					}	
 						
 					return request.ResponseStatus;
 					
 				case "hf_Column_Type":
+					//return request.ContentType;
+
 					if (request.hasErrorCode())
 					{
 						if (request.ContentType)
 						{
-							return request.ContentType + " (" + nsResultErrors[request.Status.toString(16)] + ")";
+							return request.ContentType + " (" + HttpFoxNsResultErrorStrings[request.Status.toString(16).toUpperCase()] + ")";
 						}
 						
-						return nsResultErrors[request.Status.toString(16)];
+						return HttpFoxNsResultErrorStrings[request.Status.toString(16).toUpperCase()];
 					}
 					
-					if (!request.HasReceivedResponseHeaders && !request.IsFromCache && !request.IsFinal)
+					if (!request.HasReceivedResponseHeaders && !request.IsFromCache && !request.IsComplete)
 					{
 						return "*";
 					}
@@ -197,7 +162,6 @@ HttpFoxTree.prototype =
 	{ 
 		this.treebox = treebox; 
 	},
-
 	isContainer: function(row) 
 	{
 		return false; 
@@ -221,13 +185,11 @@ HttpFoxTree.prototype =
 	
 	getRowProperties: function(row, props) 
 	{
+		//return;
+		// apply different styles for request rows
+
 		var aserv = Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
 		var request = this.HttpFox.FilteredRequests[row];
-		
-		if (this.TreeElement.currentIndex == row) 
-		{
-			props.AppendElement(aserv.getAtom("hf_currentRow"));
-		}
 		
 		if (this.TreeElement.view.selection.isSelected(row)) 
 		{
@@ -238,14 +200,18 @@ HttpFoxTree.prototype =
 		{
 			return;
 		}
-		
+
+		if (this.TreeElement.currentIndex == row)
+		{
+			props.AppendElement(aserv.getAtom("hf_currentRow"));
+		}
+				
 		if (request.isHTTPS()) 
 		{
 			props.AppendElement(aserv.getAtom("hf_HTTPS"));
-			//return;
 		}
 		
-		if (request.IsFromCache || request.ResponseStatus == 304) 
+		if (request.IsFromCache || request.ResponseStatus == 304)
 		{
 			props.AppendElement(aserv.getAtom("hf_fromCache"));
 			return;
@@ -257,7 +223,7 @@ HttpFoxTree.prototype =
 			return;
 		}
 		
-		if (request.isError()) 
+		if (request.isError())
 		{
 			props.AppendElement(aserv.getAtom("hf_isError"));
 			return;
@@ -272,13 +238,14 @@ HttpFoxTree.prototype =
 		if (request.IsFinished && request.ResponseStatus == 200) 
 		{
 			props.AppendElement(aserv.getAtom("hf_OK"));
-			//return;
 		}
-		
 	},
 	
 	getCellProperties: function(row, col, props)
 	{
+		//return;
+		// apply different styles for request rows
+
 		var aserv = Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
 		var request = this.HttpFox.FilteredRequests[row];
 		
@@ -295,7 +262,6 @@ HttpFoxTree.prototype =
 		if (request.IsFromCache) 
 		{
 			props.AppendElement(aserv.getAtom("hf_fromCache"));
-			//return;
 		}
 		
 		if (request.isError()) 
@@ -307,7 +273,6 @@ HttpFoxTree.prototype =
 		if (request.isHTTPS()) 
 		{
 			props.AppendElement(aserv.getAtom("hf_HTTPS"));
-			//return;
 		}
 	},
 
@@ -317,8 +282,6 @@ HttpFoxTree.prototype =
 
 	rowCountChanged: function(index, count) 
 	{
-		//dump('\nROWCOUNT CHANGED (' + index + ', ' + count + ')\n');
-		//alert(this.treebox);
 		if (this.treebox) 
 		{
 			var lvr = this.treebox.getLastVisibleRow();
@@ -375,7 +338,27 @@ HttpFoxTree.prototype =
 	{
 		this.TreeElement.currentIndex = this.rowCount;
 		this.invalidate();
+	},
+
+	get rowCount()
+	{
+		return this.HttpFox.FilteredRequests.length;
+		//return this.HttpFox.Requests.length;
 	}
+
+	/*set data(httpdata) {
+		var oldCount = this.rowCount;
+		this.sourceData = httpdata;
+		//this.filteredData = this.sourceData.requests;
+		// hook into the push function of the array
+		this.sourceData.tree = this;
+		this.sourceData.oldPush = this.sourceData.push;
+		this.sourceData.push = myPush;
+		//this.filteredData = this.sourceData.requests;
+		this.rowCountChanged(0, -oldCount);
+		//this.gui.hasData = (this.sourceData.requests.length > 0);
+		//this.filter(this.gui.currentFilter);
+	},*/ 
 
    /*getText : function(all) {
       var text = "";
