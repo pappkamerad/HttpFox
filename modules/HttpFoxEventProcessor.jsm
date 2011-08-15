@@ -29,23 +29,23 @@ HttpFoxEventProcessor.prototype =
 		var request = null;
 		if (activityType == Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION) 
 		{
-			// only some events
-			//if (activitySubType != Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE)
-			//{
-				request = this.getMatchingRequest(httpChannel);
-				if (!request) { return; }
+			// HttpActivity
+			request = this.getMatchingRequest(httpChannel);
+			if (!request) { return; }
 			
-				this.onHttpActivity(request, activitySubType, timestamp, extraSizeData, extraStringData);
-			//}
+			// process
+			this.onHttpActivity(request, activitySubType, timestamp, extraSizeData, extraStringData);
 		}
 		else 
 		{
-			// only some events
+			// SocketActivity
+			// care only for some events
 			if (activitySubType == Ci.nsISocketTransport.STATUS_SENDING_TO) 
 			{
 				request = this.getMatchingRequest(httpChannel);
 				if (!request) { return; }
 
+				// process
 				this.onSocketActivity(request, activitySubType, timestamp, extraSizeData, extraStringData);
 			}
 		}
@@ -54,47 +54,62 @@ HttpFoxEventProcessor.prototype =
 	onHttpActivity: function (request, activitySubType, timestamp, extraSizeData, extraStringData)
 	{
 		var nsIHttpActivityObserver = Ci.nsIHttpActivityObserver;
+		
+		// milliseconds are enough (convert from micro)
 		timestamp /= 1000;
+		
+		// network is involved
+		request.IsNetwork = true;
+		
 		switch (activitySubType)
 		{
 			case nsIHttpActivityObserver.ACTIVITY_SUBTYPE_REQUEST_HEADER:
 				// The HTTP request is about to be queued for sending. Observers can look at request headers in aExtraStringData
 				request.Timestamp_StartNet = timestamp;
-				request.AddLog("ACTIVITY_SUBTYPE_REQUEST_HEADER" + " (timestamp: " + timestamp + ")");
+				request.RequestHeaderSize = extraStringData.length;
+				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_REQUEST_HEADER" 
+					+ " (timestamp: " + timestamp + ") + (extraSizeData: " + extraSizeData + ")");
 				break;
+				
 			case nsIHttpActivityObserver.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT:
 				// The HTTP request's body has been sent.
 				request.Timestamp_PostSent = timestamp;
-				request.AddLog("ACTIVITY_SUBTYPE_REQUEST_BODY_SENT" + " (timestamp: " + timestamp + ")");
+				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_REQUEST_BODY_SENT" 
+					+ " (timestamp: " + timestamp + ") + (extraSizeData: " + extraSizeData + ")");
 				break;
+				
 			case nsIHttpActivityObserver.ACTIVITY_SUBTYPE_RESPONSE_START:
 				// The HTTP response has started to arrive.
-				request.Timestamp_ResponseStartedNet = timestamp;
-				request.AddLog("ACTIVITY_SUBTYPE_RESPONSE_START" + " (timestamp: " + timestamp + ")");
+				request.Timestamp_ResponseStarted = timestamp;
+				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_RESPONSE_START" 
+					+ " (timestamp: " + timestamp + ") + (extraSizeData: " + extraSizeData + ")");
 				break;
+				
 			case nsIHttpActivityObserver.ACTIVITY_SUBTYPE_RESPONSE_HEADER:
 				// The HTTP response header has arrived.
-				request.AddLog("ACTIVITY_SUBTYPE_RESPONSE_HEADER" + " (timestamp: " + timestamp + ")");
+				request.Timestamp_ResponseHeadersComplete = timestamp;
+				request.ResponseHeaderSize = extraStringData.length;
+				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_RESPONSE_HEADER" 
+					+ " (timestamp: " + timestamp + ") + (extraSizeData: " + extraSizeData + ")");
 				break;
+				
 			case nsIHttpActivityObserver.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE:
 				// The complete HTTP response has been received.
-				request.AddLog("ACTIVITY_SUBTYPE_RESPONSE_COMPLETE" + " (timestamp: " + timestamp + ")" + " (extraSizeData: " + extraSizeData + ")");
+				request.ContentSizeFromNet = extraSizeData;
+				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_RESPONSE_COMPLETE" 
+					+ " (timestamp: " + timestamp + "" + " (extraSizeData: " + extraSizeData 
+					+ ")");
 				break;
+				
 			case nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE:
 				// 	The HTTP transaction has been closed.
 				request.Timestamp_EndNet = timestamp;
-				request.AddLog("ACTIVITY_SUBTYPE_TRANSACTION_CLOSE" + " (timestamp: " + timestamp + ")" + " (httpChannelStatus: " + request.HttpChannel.status + ")");
+				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_TRANSACTION_CLOSE" 
+					+ " (timestamp: " + timestamp + ")" + " (httpChannelStatus: " + request.HttpChannel.status 
+					+ ") + (extraSizeData: " + extraSizeData + ")");
 
-				if (request.isHttpChannelAborted())
-				{
-					// aborted
-					request.setAborted(timestamp);
-				}
-				else if (request.isHttpChannelRedirected())
-				{
-					// redirected
-					request.setRedirected(timestamp);
-				}
+				// check for special http channel status
+				request.checkHttpChannelStatus(timestamp);
 
 				// check if complete
 				request.completeIfReady();
@@ -163,7 +178,7 @@ HttpFoxEventProcessor.prototype =
 
 		// response headers arrived
 		request.HasReceivedResponseHeaders = true;
-		request.Timestamp_ResponseStartedJs = HFU.now();
+		//request.Timestamp_ResponseStartedJs = HFU.now();
 		
 		// get response & request infos		
 		this.getResponseInfos(request);
@@ -181,7 +196,7 @@ HttpFoxEventProcessor.prototype =
 		}
 
 		// update GUI (event...)
-		this.Service.requestUpdated();
+		this.Service.requestUpdated(request);
 	},
 
 	onExamineCachedResponse: function (httpChannel)
@@ -194,7 +209,7 @@ HttpFoxEventProcessor.prototype =
 
 		// response headers arrived
 		request.HasReceivedResponseHeaders = true;
-		request.Timestamp_ResponseStartedJs = HFU.now();
+		//request.Timestamp_ResponseStartedJs = HFU.now();
 		
 		// request is served from cache
 		request.IsFromCache = true;
@@ -214,30 +229,30 @@ HttpFoxEventProcessor.prototype =
 		}
 
 		// update GUI (event...)
-		this.Service.requestUpdated();
+		this.Service.requestUpdated(request);
 	},
 	/************************************************************************************/
 	
 	// response streamlistener event
 	onResponseStart: function (request, context)
 	{
-		request.AddLog("onResponseStart");
+		request.AddLog("onResponseStart (context: " + context);
+		// update content infos. could be different when dealing with 304
+		this.getResponseContentInfos(request);
 		
 		// update GUI (event...)
-		this.Service.requestUpdated();
+		//this.Service.requestUpdated(request);
 	},
 
 	// response streamlistener event
 	onResponseStop: function (request, context, statusCode)
 	{
 		request.AddLog("onResponseStop (" + statusCode + ") " + " (status: " + request.HttpChannel.status + ")");
-
 		request.Timestamp_EndJs = HFU.now();
-
 		request.completeIfReady();
 		
 		// update GUI (event...)
-		this.Service.requestUpdated();
+		this.Service.requestUpdated(request);
 	},
 
 	// response streamlistener event
@@ -254,15 +269,15 @@ HttpFoxEventProcessor.prototype =
 
 		// Copy received data and write to new stream.
 		var data = binaryInputStream.readBytes(count);
-		request.ResponseData.push(data);
+		request.ContentData.push(data);
 		binaryOutputStream.writeBytes(data, count);
-		request.ResponseText += data;
+		request.ContentText += data;
 
 		// size
-		request.ResponseSize += count;
+		request.ContentSize += count;
 
 		// update GUI (event...)
-		this.Service.requestUpdated();
+		this.Service.requestUpdated(request);
 		
 		// return stream to be forwarded to other listeners
 		return storageStream;
@@ -275,10 +290,20 @@ HttpFoxEventProcessor.prototype =
 		var request = this.getMatchingRequest(httpChannel);
 		if (!request) { return; }
 
-		request.AddLog("onEventSinkProgress (progres: " + progress + ") (progressMax: " + progressMax + ")");
+		// update size values
+		if ((progressMax != null && progressMax != -1) &&
+			((request.ContentSizeFromNetMax == null) ||
+			(request.ContentSizeFromNetMax != progressMax)))
+		{
+			request.ContentSizeFromNetMax = progressMax;
+		}
+
+		request.ContentSizeFromNet = progress;
+		
+		request.AddLog("onEventSinkProgress (progress: " + progress + ") (progressMax: " + progressMax + ")");
 		
 		// update GUI (event...)
-		//this.Service.requestUpdated();
+		this.Service.requestUpdated(request);
 	},
 
 	// eventsink event
@@ -290,7 +315,19 @@ HttpFoxEventProcessor.prototype =
 		request.AddLog("onEventSinkStatus (status: " + status + ") (statusArg: " + statusArg + ")");
 		
 		// update GUI (event...)
-		//this.Service.requestUpdated();
+		//this.Service.requestUpdated(request);
+	},
+	
+	onAsyncChannelRedirect: function(oldChannel, newChannel, flags, callback)
+	{
+		var request = this.getMatchingRequest(oldChannel);
+		if (!request) { return; }
+
+		request.AddLog("onAsyncChannelRedirect (oldChannel: " + oldChannel.URI.asciiSpec 
+			+ ") (newChannel: " + newChannel.URI.asciiSpec + ") (flags: " + flags + ")");
+		
+		// update GUI (event...)
+		//this.Service.requestUpdated(request);
 	},
 	/************************************************************************************/
 
@@ -312,7 +349,13 @@ HttpFoxEventProcessor.prototype =
 	{
 		// TODO: setting with list of codes to stop further processing (listening to response content) 303?
 		// TODO: OR listen to channelredirect events
-		if (request.ResponseStatus == 302 || request.ResponseStatus == 301 || request.ResponseStatus == 303)
+		// TODO: define which mimetypes to capture here as well? per config option?
+		// TODO: body size?
+		if (request.ResponseStatus == 302 || 
+			request.ResponseStatus == 301 || 
+			request.ResponseStatus == 303 ||
+			request.ResponseStatus == 305 ||
+			request.ResponseStatus == 307)
 		{
 			return false;
 		}
@@ -368,23 +411,23 @@ HttpFoxEventProcessor.prototype =
 
 	getResponseInfos: function (request)
 	{
-		try { request.ContentType = request.HttpChannel.contentType; } catch (ex) { }
-		try { request.ContentCharset = request.HttpChannel.ContentCharset; } catch (ex) { }
-		try { request.ContentLength = request.HttpChannel.contentLength; } catch (ex) { }
+		this.getResponseContentInfos(request);
+		
 		try { request.RequestSucceeded = request.HttpChannel.requestSucceeded; } catch (ex) { }
 		try { request.ResponseStatus = request.HttpChannel.responseStatus; } catch (ex) { }
 		try { request.ResponseStatusText = request.HttpChannel.responseStatusText; } catch (ex) { }
-		try { request.EntityId = request.HttpChannel.EntityId; } catch (ex) { }
+		try { request.EntityId = request.HttpChannel.entityId; } catch (ex) { }
 		try { request.IsFromCache = request.HttpChannel.isFromCache(); } catch (ex) { }
 
 		// ok. received a server response.
 		// Get Request Headers again. maybe be changed after us. (e.g. cache-control)
-		var dummyHeaderInfo = new HttpFoxHeaderInfo();
+		var dummyHeaderInfo;
+		dummyHeaderInfo = new HttpFoxHeaderInfo();
 		request.HttpChannel.visitRequestHeaders(dummyHeaderInfo);
 		request.RequestHeaders = dummyHeaderInfo.Headers;
 
 		// Get Response Headers
-		var dummyHeaderInfo = new HttpFoxHeaderInfo();
+		dummyHeaderInfo = new HttpFoxHeaderInfo();
 		request.HttpChannel.visitResponseHeaders(dummyHeaderInfo);
 		request.ResponseHeaders = dummyHeaderInfo.Headers;
 					
@@ -395,6 +438,17 @@ HttpFoxEventProcessor.prototype =
 		this.getResponseProtocolVersion(request);
 	},
 
+	getResponseContentInfos: function (request)
+	{
+		try { request.ContentType = request.HttpChannel.contentType; } catch (ex) { }
+		try { request.ContentCharset = request.HttpChannel.contentCharset; } catch (ex) { }
+		try { request.ContentLength = request.HttpChannel.contentLength; } catch (ex) { }
+		if (request.ContentLength != null)
+		{
+			request.ContentSizeFromNetMax = request.ContentLength;
+		}
+	},
+	
 	getRequestProtocolVersion: function (request)
 	{
 		try

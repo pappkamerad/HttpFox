@@ -12,9 +12,13 @@ function HttpFoxRequest(requestStore, service)
 {
 	Cu["import"]("resource://httpfox/Utils.jsm");
 	Cu["import"]("resource://httpfox/HttpFoxDataHelper.jsm");
-	this.ReceivedData = [];
+	
 	this.RequestStore = requestStore;
 	this.Service = service;
+	
+	// init arrays
+	this.TreeIndex = [];
+	this.ContentData = [];
 };
 
 HttpFoxRequest.prototype =
@@ -29,6 +33,7 @@ HttpFoxRequest.prototype =
 	IsAborted: false,
 	IsFromCache: false,
 	IsRedirected: false,
+	IsNetwork: false,
 	HasReceivedResponseHeaders: null,
 
 	// request info types
@@ -67,21 +72,32 @@ HttpFoxRequest.prototype =
 	RequestProtocolVersion: null,
 	ResponseProtocolVersion: null,
 
+	// timing
 	Duration: null,
-
 	Timestamp_StartNet: null,
 	Timestamp_StartJs: null,
 	Timestamp_EndNet: null,
 	Timestamp_EndJs: null,
 	Timestamp_PostSent: null,
-	Timestamp_ResponseStartedNet: null,
-	Timestamp_ResponseStartedJs: null,
+	Timestamp_ResponseStarted: null,
+	Timestamp_ResponseHeadersComplete: null,
 	
-	ResponseText: "",
-	ResponseData: [],
-	ResponseSize: 0,
+	// size
+	RequestHeaderSize: null,
+	ResponseHeaderSize: null,
+	ContentSize: null,
+	ResponseSize: null,
+	ContentSizeFromNet: null,
+	ContentSizeFromNetMax: null,
+	
+	// response
+	ContentText: "",
+	ContentData: null,
 
 	Log: "",
+	
+	TreeIndex: null,
+	//TreeIndex: null,
 
 	AddLog: function(text)
 	{
@@ -147,7 +163,9 @@ HttpFoxRequest.prototype =
 		}
 		
 		// update GUI (event...)
-		this.Service.requestUpdated();
+		this.Service.requestUpdated(this);
+//		this.AddLog("TREE UPDATED: " + this.TreeIndex[1] + " url: " + this.Url);
+//		dump("\nTREE UPDATED: " + this.TreeIndex[1] + " url: " + this.Url);
 	},
 	
 	freeResources: function () 
@@ -169,6 +187,24 @@ HttpFoxRequest.prototype =
 		this.HttpChannel = null;
 	},
 
+	checkHttpChannelStatus: function (timestamp)
+	{
+		if (this.isHttpChannelAborted())
+		{
+			// aborted
+			this.setAborted(timestamp);
+			return true;
+		}
+		else if (this.isHttpChannelRedirected())
+		{
+			// redirected
+			this.setRedirected(timestamp);
+			return true;
+		}
+
+		return false;
+	},
+	
 	isHttpChannelAborted: function () 
 	{
 		if (this.HttpChannel.status == HttpFoxNsResultErrors.NS_BINDING_ABORTED)
@@ -199,34 +235,33 @@ HttpFoxRequest.prototype =
 		this.AddLog("SetRedirected");
 	},
 
-	getBytesLoaded: function()
+	getBytesReceived: function ()
 	{
-		if (this.RequestMethod == "HEAD")
+		if (this.IsNetwork && this.HasReceivedResponseHeaders)
 		{
-			return this.ResponseHeadersSize;
+			return this.ResponseHeaderSize + ((this.ContentSizeFromNet != null) ? this.ContentSizeFromNet : 0);
 		}
-		
-		return this.ResponseHeadersSize + this.BytesLoaded;
+		return 0;
 	},
 	
-	getBytesLoadedTotal: function()
+	getBytesReceivedMax: function ()
 	{
-		if (this.RequestMethod == "HEAD")
-		{
-			return this.ResponseHeadersSize;
-		}
-		
-		return this.ResponseHeadersSize + this.BytesLoadedTotal;
+		return (this.ContentSizeFromNetMax != null) ? (this.ResponseHeaderSize + this.ContentSizeFromNetMax) : null;
+	},
+	
+	getResponseSize: function ()
+	{
+		return this.ResponseHeaderSize + this.ContentSize;
 	},
 	
 	getBytesSent: function()
 	{
-		return this.RequestHeadersSize + this.BytesSent;
+		return this.RequestHeaderSize + this.BytesSent;
 	},
 	
 	getBytesSentTotal: function()
 	{
-		return this.RequestHeadersSize + this.PostDataContentLength;
+		return this.RequestHeaderSize + this.PostDataContentLength;
 	},
 	
 	////////////////
@@ -276,5 +311,96 @@ HttpFoxRequest.prototype =
 		}
 		
 		return false;
+	},
+	
+	isCompressed: function ()
+	{
+		if (!this.IsNetwork)
+		{
+			return false;
+		}
+		
+		if (!this.IsComplete)
+		{
+			// TODO: other ways to get compressing. content-encoding
+			return false;
+		}
+		
+		return (this.getResponseSize() != this.getBytesReceived());
+	},
+	
+	getReceivedColumnString: function ()
+	{
+		if (this.IsAborted)
+		{
+			return "";
+		}
+
+		if (!this.HasReceivedResponseHeaders)
+		{
+			return "*";
+		}
+		
+//		if (this.IsFromCache && this.IsNetwork)
+//		{
+//			return "(0)";
+//		}
+//		
+//		if (request.ResponseStatus == 304)
+//		{
+//			return "(0)";
+//		}
+					
+		if (!this.IsComplete)
+		{
+			// show loading body progress
+			var bytesMax = this.getBytesReceivedMax();
+			return HFU.humanizeSize(this.getBytesReceived(), 6) + "/" + ((bytesMax != null) ? HFU.humanizeSize(bytesMax, 6) : "*");
+		}
+		else
+		{
+			var bytesReceived = HFU.humanizeSize(this.getBytesReceived(), 6);
+			if (this.isCompressed())
+			{
+				//bytesReceived = this.ResponseHeaderSize + ":" + this.ContentSizeFromNet + ":" + this.ContentSize + "*" + this.getResponseSize() + "*" + this.getBytesReceived();
+				bytesReceived += " (" + HFU.humanizeSize(this.getResponseSize()) + ")";
+			}
+			return bytesReceived;
+		}
 	}
+	
+//	calculateRequestHeadersSize: function()
+//	{
+//		var byteString = "";
+//		byteString += this.RequestMethod + " " + this.URIPath + " HTTP/" + this.RequestProtocolVersion + "\r\n";
+//		
+//		for (var i in this.RequestHeaders)
+//		{
+//			byteString += i + ": " + this.RequestHeaders[i] + "\r\n";
+//		}
+//		
+//		for (var i in this.PostDataHeaders)
+//		{
+//			byteString += i + ": " + this.PostDataHeaders[i] + "\r\n";
+//		}
+//		
+//		byteString += "\r\n";
+//		
+//		return byteString.length;
+//	},
+//	
+//	calculateResponseHeadersSize: function()
+//	{
+//		var byteString = "";
+//		byteString += "HTTP/" + this.ResponseProtocolVersion + " " + this.ResponseStatus + " " + this.ResponseStatusText + "\r\n";
+//		
+//		for (var i in this.ResponseHeaders)
+//		{
+//			byteString += i + ": " + this.RequestHeaders[i] + "\r\n";
+//		}
+//		
+//		byteString += "\r\n";
+//		
+//		return byteString.length;
+//	},
 };

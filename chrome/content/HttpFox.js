@@ -41,6 +41,7 @@ function HttpFoxController()
 HttpFoxController.prototype =
 {
 	HttpFoxService: null,
+	ControllerIndex: null,
 	StringBundleService: null,
 	StringBundle: null,
 	RequestTree: null,
@@ -93,7 +94,6 @@ HttpFoxController.prototype =
 	/* COMMANDS *******************************************/
 	cmd_hf_showAbout: function ()
 	{
-		dump("\nABOUT\n");
 		alert("HttpFox");
 	},
 
@@ -228,7 +228,10 @@ HttpFoxController.prototype =
 		if (request.Url.indexOf(this.QuickFilterText) != -1)
 		{
 			this.FilteredRequests.push(request);
-			this.redrawRequestTreePlusOne();
+			request.TreeIndex[this.ControllerIndex] = this.redrawRequestTreePlusOne();
+			//request.TreeIndex = this.redrawRequestTreePlusOne();
+			dump("\nreq index: " + request.TreeIndex[this.ControllerIndex] + " url: " + request.Url);
+			//dump("\nreq index: " + request.TreeIndex + " url: " + request.Url);
 		}
 	},
 
@@ -398,9 +401,13 @@ HttpFoxController.prototype =
 	//G
 	redrawRequestTreePlusOne: function ()
 	{
-		this.RequestTree.invalidate();
-		var count = this.RequestTree.rowCount;
-		this.RequestTree.rowCountChanged(count, 1);
+		//dump("\ntreeplusone before: " + this.RequestTree.rowCount);
+		//this.RequestTree.invalidate();
+		var rowCount = this.RequestTree.rowCount;
+		var index = rowCount - 1;
+		this.RequestTree.rowCountChanged(index, 1);
+		//dump("\ntreeplusonecount after: " + this.RequestTree.rowCount);
+		return index;
 	},
 
 	//G
@@ -410,20 +417,25 @@ HttpFoxController.prototype =
 	},
 
 	//G
-	//	redrawRequestTreeRow: function (index)
-	//	{
-	//		if (typeof (index) == "object")
-	//		{
-	//			index = index["p1"];
-	//		}
+	redrawRequestTreeRow: function (request)
+	{
+		if (typeof (request) == "object")
+		{
+			request = request["p1"];
+			//dump("\nredraw index: " + request.TreeIndex[this.ControllerIndex] + " cidx: " + this.ControllerIndex);
+		}
 
-	//		if (this.RequestTree.TreeElement.currentIndex == index)
-	//		{
-	//			this.redrawRequestDetails();
-	//		}
+		// get index for this controller
+		var index = request.TreeIndex[this.ControllerIndex];
+		//var index = request.TreeIndex;
+		
+		if (this.RequestTree.TreeElement.currentIndex == index)
+		{
+			this.redrawRequestDetails();
+		}
 
-	//		this.RequestTree.invalidateRow(index);
-	//	},
+		this.RequestTree.invalidateRow(index);
+	},
 
 	redrawRequestDetails: function ()
 	{
@@ -540,7 +552,8 @@ HttpFoxController.prototype =
 			var currentRequest = this.RequestTree.getCurrent();
 			if (currentRequest && this.isSelectedTab_Content())
 			{
-				contentPanel.value = currentRequest.ResponseText;
+				//contentPanel.value = currentRequest.ContentText;
+				contentPanel.value = currentRequest.ContentData;
 				//				if (currentRequest.isContentAvailable())
 				//				{
 				//					// async
@@ -621,7 +634,8 @@ HttpFoxController.prototype =
 		var contentPanel = document.getElementById("hf_RawContentOutput");
 		if (this.isSelectedTab_Content())
 		{
-			contentPanel.value = currentRequest.ResponseText;
+			contentPanel.value = currentRequest.ContentText;
+			contentPanel.value = currentRequest.ContentData;
 			//dumpall("curr-request", currentRequest);
 			//alert("avail.? ");
 			//			if (currentRequest.isContentAvailable())
@@ -701,8 +715,8 @@ HttpFoxController.prototype =
 		}
 
 		// fill raw content display
-		//contentPanelRaw.value = currentRequest.Content;
-		contentPanelRaw.value = currentRequest.ResponseText;
+		//contentPanelRaw.value = currentRequest.ContentText;
+		contentPanelRaw.value = currentRequest.ContentData;
 
 		// try to fill pretty print content
 		if (HFU.isContentTypeXml(currentRequest.ContentType))

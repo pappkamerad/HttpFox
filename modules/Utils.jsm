@@ -128,14 +128,15 @@ var HFU = {
 		var string = "";
 		string += diff / 1000;
 		var dummy = string.split(".");
+		var after;
 		if (dummy.length > 1) 
 		{
 			while (dummy[1].length < 3) dummy[1] += "0";
-			var after = (dummy[1]) ? dummy[1] : "000";
+			after = (dummy[1]) ? dummy[1] : "000";
 		}
 		else 
 		{
-			var after = "000";
+			after = "000";
 		}
 		return dummy[0] + "." + after;
 	},
@@ -182,6 +183,10 @@ var HFU = {
 
 	humanizeSize: function (size, displayUntil)
 	{
+		if (isNaN(size))
+		{
+			return size;
+		}
 		var hsize = size;
 		var hchar = "";
 		var dotPos = -1;

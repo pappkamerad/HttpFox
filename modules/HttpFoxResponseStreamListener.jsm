@@ -30,7 +30,14 @@ HttpFoxResponseStreamListener.prototype =
 		//dump("Data: " + data + "\n");
 
 		// forward to original listener
-        this.OriginalListener.onDataAvailable(request, context, outStream.newInputStream(0), offset, count);
+    	try
+    	{
+    		this.OriginalListener.onDataAvailable(request, context, outStream.newInputStream(0), offset, count);	
+    	}
+        catch(e)
+    	{
+    		// problem forwarding. originallistener maybe gone already
+    	}
 	},
 
 	onStartRequest: function(request, context)
@@ -47,8 +54,7 @@ HttpFoxResponseStreamListener.prototype =
 		}
 		catch(e) 
 		{
-			//dump("startRequest forward to OriginalListener failed (" + e + ")\n");
-			//dump("request status: (" + request.status + ")\n");
+			// problem forwarding. originallistener maybe gone already
 		}
 		
 	},
@@ -56,12 +62,19 @@ HttpFoxResponseStreamListener.prototype =
     onStopRequest: function(request, context, statusCode) 
     {
 		// forward to original listener
-		this.OriginalListener.onStopRequest(request, context, statusCode);
+    	try 
+    	{
+			this.OriginalListener.onStopRequest(request, context, statusCode);
+    	}
+		catch(e) 
+		{
+			// problem forwarding. originallistener maybe gone already
+		}
 
 		this.EventProcessor.onResponseStop(this.Request, context, statusCode);
 		
 		//dump("*** onStopRequest (" + statusCode + ") " + request.URI.asciiSpec + "\n");
-		//dump("\ncontent:\n" + this.HttpFoxRequest.ResponseData);
+		//dump("\ncontent:\n" + this.HttpFoxRequest.ContentData);
 		
 		
 		//this.OriginalListener = null;

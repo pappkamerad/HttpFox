@@ -58,35 +58,8 @@ HttpFoxTree.prototype =
 					return rString;
 					
 				case "hf_Column_Received":
+					return request.getReceivedColumnString();
 					return request.ResponseSize;
-					var rString = "";
-					
-					/*if (request.IsAborted)
-					{
-						return rString;
-					}*/
-					
-					if (request.IsSending)
-					{
-						return "*";
-					}
-					
-					if (!request.IsFinished)
-					{
-						// show loading body progress
-						rString = humanizeSize(request.getBytesLoaded(), 6) + "/" + humanizeSize(request.getBytesLoadedTotal(), 6);
-					}
-					else
-					{
-						rString = humanizeSize(request.getBytesLoaded(), 6);	
-					}
-					
-					if (request.IsFromCache || request.ResponseStatus == 304)
-					{
-						rString = "(" + rString + ")";
-					}
-					
-					return rString;
 					
 				case "hf_Column_Method":
 					return request.RequestMethod;
@@ -284,9 +257,9 @@ HttpFoxTree.prototype =
 	{
 		if (this.treebox) 
 		{
-			var lvr = this.treebox.getLastVisibleRow();
 			this.treebox.rowCountChanged(index, count);
 			// If the last line of the tree is visible on screen, we will autoscroll
+			//var lvr = this.treebox.getLastVisibleRow();
 			//if ((lvr + 1) >= index || this.HttpFox.isAutoScroll())
 			if (this.HttpFox.isAutoScroll())
 			{

@@ -109,10 +109,10 @@ HttpFoxService.prototype =
 	},
 
 	//requestUpdated: function(index)
-	requestUpdated: function()
+	requestUpdated: function(request)
 	{
-		//this.callControllerMethod("redrawRequestTree", {"p1": index});
-		this.callControllerMethod("redrawRequestTree");
+		this.callControllerMethod("redrawRequestTreeRow", {"p1": request});
+		//this.callControllerMethod("redrawRequestTree");
 	},
 
 	addController: function(httpFoxControllerReference)

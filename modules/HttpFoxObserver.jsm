@@ -77,15 +77,12 @@ HttpFoxObserver.prototype =
 			// check if this is a http request
 			if (!HFU.isHttpChannel(subject)) { return; }
 
-			//dump("* MODIFY REQUEST: " + subject.loadGroup + "; CB: " + subject.notificationCallbacks + "; group: " + (subject.loadGroup ? subject.loadGroup.groupObserver : "nada") + " [" + subject.URI.asciiSpec + "]\n");
-			//dump("-* group CB: " + (subject.loadGroup ? subject.loadGroup.notificationCallbacks : "nada") + "\n");
-
-			if (subject.loadGroup && 
-				subject.loadGroup.notificationCallbacks && 
-				subject.loadGroup.notificationCallbacks.OriginalListener)
-			{
-				dump(".:*:. loadGroup OriginalListener\n");
-			}
+//			if (subject.loadGroup && 
+//				subject.loadGroup.notificationCallbacks && 
+//				subject.loadGroup.notificationCallbacks.OriginalListener)
+//			{
+//				dump(".:*:. loadGroup OriginalListener\n");
+//			}
 
 //			if (subject.loadGroup && subject.loadGroup.notificationCallbacks)
 //			{
@@ -107,7 +104,7 @@ HttpFoxObserver.prototype =
 //				subject.notificationCallbacks = myListener;
 //			}
 			
-			// just everything
+			// register notification callbacks for everything
 			var myListener = new HttpFoxEventSink(subject.notificationCallbacks, this.EventProcessor);
 			subject.notificationCallbacks = myListener;
 
@@ -123,43 +120,22 @@ HttpFoxObserver.prototype =
 
 			// process
 			this.EventProcessor.onModifyRequest(subject);
-			//this.RequestStore.addNewRequest(request);
-			//this.Service.requestAdded(request);
 		}
 		else if (topic == 'http-on-examine-response')
 		{
 			// check if this is a http request
 			if (!HFU.isHttpChannel(subject)) { return; }
 
-			//var request = this.getMatchingRequest(subject);
-			//if (!request) { return; }
-
-			//this.EventProcessor.onExamineResponse(request);
+			// process
 			this.EventProcessor.onExamineResponse(subject);
-					
-//			if (this.isStreamListenerNeeded(request))
-//			{
-//				this.attachStreamListener(request, subject);
-//			}
-//			else
-//			{
-//				this.RequestStore.setObserverFinished(request);
-//			}
-//			this.Service.requestUpdated();
 		}
 		else if (topic == 'http-on-examine-cached-response')
 		{
 			// check if this is a http request
 			if (!HFU.isHttpChannel(subject)) { return; }
 
-			//var request = this.getMatchingRequest(subject);
-			//if (!request) { return; }
-		
+			// process
 			this.EventProcessor.onExamineCachedResponse(subject);
-
-			//this.attachStreamListener(request, subject);
-		
-			//this.Service.requestUpdated();
 		}
 	},
 
@@ -169,55 +145,10 @@ HttpFoxObserver.prototype =
 		// get request
 		if (!HFU.isHttpChannel(httpChannel)) { return; }
 
-//		var request = this.getMatchingRequest(httpChannel);
-//		if (!request) { return; }
-
+		// process
 		this.EventProcessor.onActivity(httpChannel, activityType, activitySubType, timestamp, extraSizeData, extraStringData);
-
-//		if (activityType == Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION) 
-//		{
-//			this.EventProcessor.onHttpActivity(request, activitySubType, timestamp, extraSizeData, extraStringData);
-//		}
-//		else 
-//		{
-//			this.EventProcessor.onSocketActivity(request, activitySubType, timestamp, extraSizeData, extraStringData);
-//		}
     },
 	
-//	getMatchingRequest: function(httpChannel)
-//	{
-//		var request = this.RequestStore.getMatchingRequest(httpChannel);
-//		if (request == null) 
-//		{
-//			dump("no matching request found (" + httpChannel.URI.asciiSpec + ")\n");
-//			if (arguments.length > 1) {dump("--: " + httpChannel + "\n"); }
-//			return null;
-//		}
-//		if (arguments.length > 1) { dump("! matching request found (" + httpChannel.URI.asciiSpec + ") " + httpChannel + "\n"); }
-//		return request;
-//	},
-//	
-//	isStreamListenerNeeded: function(request)
-//	{
-//		// TODO: setting with list of codes to stop further processing (listening to response content)
-//		// OR listen to channelredirect events
-//		if (request.ResponseStatus == 302 || request.ResponseStatus == 301) 
-//		{
-//			return false;
-//		}
-
-//		return true;
-//	},
-
-//	attachStreamListener: function(request, httpChannel)
-//	{
-//		// attach response stream listener if wanted
-//		var streamListener = new HttpFoxResponseStreamListener(this.EventProcessor);
-//		httpChannel.QueryInterface(Ci.nsITraceableChannel);
-//		streamListener.OriginalListener = httpChannel.setNewListener(streamListener);
-//		streamListener.Request = request;
-//	},
-
 	// nsISupportsString
 	data: "HttpFoxObserver",
 
@@ -232,8 +163,6 @@ HttpFoxObserver.prototype =
 		if (!iid.equals(Ci.nsISupports) &&
 			!iid.equals(Ci.nsISupportsWeakReference) &&
 			!iid.equals(Ci.nsIObserver) &&
-			//!iid.equals(Ci.nsIWebProgressListener) &&
-			//!iid.equals(Ci.nsIURIContentListener) &&
 			!iid.equals(Ci.nsIStreamListener) &&
 			!iid.equals(Ci.nsIRequestObserver) &&
 			!iid.equals(Ci.nsISupportsString))
@@ -260,28 +189,16 @@ HttpFoxEventSink.prototype =
 	asyncOnChannelRedirect: function(aOldChannel, aNewChannel, aFlags, callback)
 	{
 		dump("-> asyncOnChannelRedirect (flags: " + aFlags + ")\n");
-		//try 
-		//{
-			//this.OriginalListener.QueryInterface(Ci.nsIProgressEventSink).onStatus(aRequest, aContext, aStatus, aStatusArg, "jo"); 
-
-	//		if (HFU.isHttpChannel(aRequest)) 
-	//		{ 
-	//			//var pr = this.Observer.getMatchingRequest(aRequest.QueryInterface(Ci.nsIHttpChannel));
-	//			//if (pr) 
-	//			//{
-	//				this.EventProcessor.onChannelRedirect(aRequest, aProgress, aProgressMax); 
-	//			//}
-	//		}
-
+		
+		if (HFU.isHttpChannel(aOldChannel)) 
+		{ 
+			// process
+			this.EventProcessor.onAsyncChannelRedirect(aOldChannel, aNewChannel, aFlags, callback);
+		}
+		
 		if (this.OriginalListener)
 		{
-			try 
-			{
-				this.OriginalListener.QueryInterface(Ci.nsIInterfaceRequestor)
-			}
-			catch(e) {dump("\n<--->EXC onStatus QueryI: " + e + "\n");}
-
-			var x = null;
+			// forward
 			try 
 			{
 				this.OriginalListener
@@ -289,147 +206,96 @@ HttpFoxEventSink.prototype =
 					.getInterface(Ci.nsIChannelEventSink)
 					.asyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags, callback);
 			}
-			catch(e) { /* OriginalListener does not support this interface */ }
-
-//			if (x) 
-//			{
-//				
-//			}
-//			else
-//			{
-//				dump("interface n/a on originallistener\n");
-//			}
+			catch(e)
+			{
+				 /* OriginalListener does not support this interface */
+			}
 		}
 	},
 
 	onChannelRedirect: function (aOldChannel, aNewChannel, aFlags) 
 	{
 		dump("-> onChannelRedirect (flags: " + aFlags + ")\n");
-		//try 
-		//{
-			//this.OriginalListener.QueryInterface(Ci.nsIProgressEventSink).onStatus(aRequest, aContext, aStatus, aStatusArg, "jo"); 
 
-			if (this.OriginalListener)
+		if (this.OriginalListener)
+		{
+			try 
 			{
-				try 
-				{
-					this.OriginalListener.QueryInterface(Ci.nsIInterfaceRequestor)
-				}
-				catch(e) 
-				{
-					dump("\n<--->EXC onStatus QueryI: " + e + "\n");
-				}
-
-				var x = null;
-				try 
-				{
-					this.OriginalListener
-						.QueryInterface(Ci.nsIInterfaceRequestor)
-						.getInterface(Ci.nsIChannelEventSink)
-						.onChannelRedirect(aOldChannel, aNewChannel, aFlags);
-				}
-				catch(e) { /* OriginalListener does not support this interface */ }
-
-	//			if (x) 
-	//			{
-	//				
-	//			}
-	//			else
-	//			{
-	//				dump("interface n/a on originallistener\n");
-	//			}
+				// forward
+				this.OriginalListener
+					.QueryInterface(Ci.nsIInterfaceRequestor)
+					.getInterface(Ci.nsIChannelEventSink)
+					.onChannelRedirect(aOldChannel, aNewChannel, aFlags);
 			}
+			catch(e)
+			{
+				 /* OriginalListener does not support this interface */
+			}
+		}
 	},
  
-	// nsIProgressEventSink (not implementing will cause annoying exceptions)
 	onProgress: function (aRequest, aContext, aProgress, aProgressMax) 
 	{ 
-		//dump("-> onProgress: " + aRequest.URI.asciiSpec + " \n");
-		//try 
-		//{
-			//this.OriginalListener.QueryInterface(Ci.nsIProgressEventSink).onStatus(aRequest, aContext, aStatus, aStatusArg, "jo"); 
-			if (HFU.isHttpChannel(aRequest)) 
-			{ 
-				//var pr = this.Observer.getMatchingRequest(aRequest.QueryInterface(Ci.nsIHttpChannel));
-				//if (pr) 
-				//{
-					this.EventProcessor.onEventSinkProgress(aRequest, aProgress, aProgressMax); 
-				//}
-			}
+		if (HFU.isHttpChannel(aRequest)) 
+		{ 
+			// process
+			this.EventProcessor.onEventSinkProgress(aRequest, aProgress, aProgressMax); 
+		}
 
-			if (this.OriginalListener)
+		if (this.OriginalListener)
+		{
+			try 
 			{
-				try 
-				{
-					this.OriginalListener.QueryInterface(Ci.nsIInterfaceRequestor);
-				}
-				catch(e) 
-				{
-					dump("\n<--->EXC onStatus QueryI: " + e + "\n");
-				}
-
-				try 
-				{
-					this.OriginalListener
-						.QueryInterface(Ci.nsIInterfaceRequestor)
-						.getInterface(Ci.nsIProgressEventSink)
-						.onProgress(aRequest, aContext, aProgress, aProgressMax);
-				}
-				catch(e) 
-				{
-					/* OriginalListener does not support this interface */
-				}
+				// forward
+				this.OriginalListener
+					.QueryInterface(Ci.nsIInterfaceRequestor)
+					.getInterface(Ci.nsIProgressEventSink)
+					.onProgress(aRequest, aContext, aProgress, aProgressMax);
 			}
-		//}
-		//catch(e) {dump("EXC onStatus: " + e + "\n");}
+			catch(e) 
+			{
+				/* OriginalListener does not support this interface */
+			}
+		}
 	},
 	
-	onStatus : function (aRequest, aContext, aStatus, aStatusArg) { 
-		//dump("-> onStatus: " + aStatus + " ;Args: " + aStatusArg + "\n");
-		//try 
-		//{
-			//this.OriginalListener.QueryInterface(Ci.nsIProgressEventSink).onStatus(aRequest, aContext, aStatus, aStatusArg, "jo"); 
-			if (HFU.isHttpChannel(aRequest)) 
-			{ 
-				this.EventProcessor.onEventSinkStatus(aRequest, aStatus, aStatusArg); 
-			}
+	onStatus : function (aRequest, aContext, aStatus, aStatusArg) 
+	{
+		if (HFU.isHttpChannel(aRequest)) 
+		{ 
+			this.EventProcessor.onEventSinkStatus(aRequest, aStatus, aStatusArg); 
+		}
 
-			if (this.OriginalListener)
+		if (this.OriginalListener)
+		{
+			try 
 			{
-				try 
-				{
-					this.OriginalListener.QueryInterface(Ci.nsIInterfaceRequestor)
-				}
-				catch(e) 
-				{
-					dump("\n<--->EXC onStatus QueryI: " + e + "\n");
-				}
-
-				var x = null;
-				try {
-					this.OriginalListener
-						.QueryInterface(Ci.nsIInterfaceRequestor)
-						.getInterface(Ci.nsIProgressEventSink)
-						.onStatus(aRequest, aContext, aStatus, aStatusArg);
-				}
-				catch(e) { /* OriginalListener does not support this interface */ }
+				// forward
+				this.OriginalListener
+					.QueryInterface(Ci.nsIInterfaceRequestor)
+					.getInterface(Ci.nsIProgressEventSink)
+					.onStatus(aRequest, aContext, aStatus, aStatusArg);
 			}
-		//}
-		//catch(e) {dump("EXC onStatus: " + e + "\n");}
+			catch(e)
+			{
+				 /* OriginalListener does not support this interface */
+			}
+		}
 	},
  
 	getInterface: function(iid) 
 	{
-		//dump("getInterface, iid requested: " + iid.number + "\n");
-		if (iid.equals(Ci.nsIProgressEventSink)
-			|| iid.equals(Ci.nsIChannelEventSink)
-		)
+		if (iid.equals(Ci.nsIProgressEventSink) || 
+			iid.equals(Ci.nsIChannelEventSink))
 		{
 			return this;
 		}
+		
 		if (this.OriginalListener)
 		{
-			return this.OriginalListener.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(iid);
+			return this.OriginalListener
+				.QueryInterface(Ci.nsIInterfaceRequestor)
+				.getInterface(iid);
 		}
 		else 
 		{

@@ -63,7 +63,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="chrome.manifest" />
-    <None Include="chrome.manifest.xpi" />
     <None Include="chrome\content\browserOverlay.xul">
       <SubType>Designer</SubType>
     </None>
