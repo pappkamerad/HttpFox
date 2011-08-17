@@ -6,23 +6,15 @@
 
 	<binding id="startup">
 		<implementation>
-			<constructor><![CDATA[
-				HttpFox.initGraphics(false);
-			]]></constructor>
-			<destructor><![CDATA[
-				shutdownHttpFox();
-			]]></destructor>
+			<constructor><![CDATA[HttpFox.initGraphics(false);]]></constructor>
+			<destructor><![CDATA[shutdownHttpFox();]]></destructor>
 		</implementation>
 	</binding>
 
 	<binding id="windowStartup">
 		<implementation>
-			<constructor><![CDATA[
-				HttpFox.initGraphics(true);
-			]]></constructor>
-			<destructor><![CDATA[
-				shutdownHttpFox();
-			]]></destructor>
+			<constructor><![CDATA[HttpFox.initGraphics(true);]]></constructor>
+			<destructor><![CDATA[shutdownHttpFox();]]></destructor>
 		</implementation>
 	</binding>
 

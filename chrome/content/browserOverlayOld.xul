@@ -56,15 +56,14 @@
 			label="&browseroverlay.menutools.httpfox.label;" />
 	</menupopup>
 	
-	<!-- tools menu -> web developer menu (firefox v6+) -->
-	<menupopup id="menuWebDeveloperPopup">
-		<menu id="hf_menu_webDeveloper_HttpFox" 
-			class="menu-iconic"
+	<!-- tools menu (firefox) -->
+	<menupopup id="menu_ToolsPopup">
+		<menu id="hf_menu_HttpFox" 
+			class="menu-iconic" 
 			label="&browseroverlay.menutools.httpfox.label;" 
-			insertbefore="webConsole" />
-		<menuseparator insertbefore="webConsole" />
+			insertbefore="javascriptConsole" />
 	</menupopup>
-
+	
 	<!-- web developer menu (firefox v4+) -->
 	<menupopup id="appmenu_webDeveloper_popup">
 		<splitmenu id="hf_appmenu_HttpFox" 

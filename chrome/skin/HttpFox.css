@@ -37,7 +37,7 @@
 	padding: 0;
 }
 
-#hf_appmenu_HttpFox, #hf_menu_HttpFox {
+#hf_appmenu_HttpFox, #hf_menu_HttpFox, #hf_menu_webDeveloper_HttpFox {
     list-style-image: url(chrome://httpfox/skin/globe16.png);
 } 
 

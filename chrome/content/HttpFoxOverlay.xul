@@ -58,6 +58,24 @@
 		</menupopup>
 	</menu>
 	
+	<menu id="hf_menu_webDeveloper_HttpFox">
+		<menupopup>
+			<menuitem id="hf_menu_viewToggleHttpFox" 
+				insertbefore="toggle_taskbar"
+				label="&overlay.requestlist.menu.menupop.toggle.label;" 
+				type="checkbox"
+				key="hf_key_1" 
+				command="cmd_hf_togglePanel" />
+			<menuitem 
+				label="&overlay.requestlist.menu.menupop.detach.label;" 
+				command="cmd_hf_detach" />
+			<menuseparator/>
+			<menuitem 
+				label="&overlay.requestlist.menu.menupop.options.label;" 
+				oncommand="HttpFox.OpenOptions();" />
+		</menupopup>
+	</menu>
+	
 	<!--<vbox id="hf_Panel" collapsed="true" persist="height" flex="1">-->
 		<vbox id="hf_RequestList" persist="height" flex="1">
 			<toolbox>
