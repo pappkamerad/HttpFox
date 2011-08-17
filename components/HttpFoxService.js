@@ -2736,54 +2736,54 @@ HttpFoxPostDataHandler.prototype =
 				{
 					try 
 					{
-							
+						var re;
 						var mimePartData = new Object();
 						var rawMimePartParts = new Array();
 						rawMimePartParts = rawMimeParts[i].split(ws + ws);	
 						
 						var varname = null;
-						RegExp.lastIndex = 0;
-						if (rawMimePartParts[0].match(/\bname="([^"]+)"/i)) 
+						re = new RegExp('\bname="([^"]+)"', "i");
+						if (rawMimePartParts[0].match(re)) 
 						{
-							varname = RegExp.$1;
+							varname = re.$1;
 						}
 						if (!varname) 
 						{
-							RegExp.lastIndex = 0;
-							if(rawMimePartParts[0].match(/\bname=([^\s:;]+)/i)) 
+							re = new RegExp('\bname=([^\s:;]+)', "i");
+							if(rawMimePartParts[0].match(re)) 
 							{
-								varname = RegExp.$1;
+								varname = re.$1;
 							}
 						}
 						
 						if (varname != null)
 						{
 							var filename = null;
-							RegExp.lastIndex = 0;
-							if (rawMimePartParts[0].match(/\b(filename="[^"]*")/i)) 
+							re = new RegExp('\b(filename="[^"]*")', "i");
+							if (rawMimePartParts[0].match(re)) 
 							{
-								filename = RegExp.$1;
+								filename = re.$1;
 							}
 							if (!filename) 
 							{
-								RegExp.lastIndex = 0;
-								if(rawMimePartParts[0].match(/\b(filename=[^\s:;]+)/i)) 
+								re = new RegExp('\b(filename=[^\s:;]+)', "i");
+								if(rawMimePartParts[0].match(re)) 
 								{
-									filename = RegExp.$1;
+									filename = re.$1;
 								}
 							}
 			
 							var ctype = null;
-							RegExp.lastIndex = 0;
-							if (rawMimePartParts[0].match(/\b(Content-type:\s*"[^"]+)"/i)) 
+							re = new RegExp('\b(Content-type:\s*"[^"]+)"', "i");
+							if (rawMimePartParts[0].match(re)) 
 							{
-								ctype = RegExp.$1;
+								ctype = re.$1;
 							}
 							if (!ctype) 
 							{
-								RegExp.lastIndex = 0;
-								if (rawMimePartParts[0].match(/\b(Content-Type:\s*[^\s:;]+)/i)) {
-									ctype = RegExp.$1;
+								re = new RegExp('\b(Content-Type:\s*[^\s:;]+)', "i");
+								if (rawMimePartParts[0].match(re)) {
+									ctype = re.$1;
 								}
 							}
 							
