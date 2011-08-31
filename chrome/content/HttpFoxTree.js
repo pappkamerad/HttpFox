@@ -92,8 +92,6 @@ HttpFoxTree.prototype =
 					return request.ResponseStatus;
 					
 				case "hf_Column_Type":
-					//return request.ContentType;
-
 					if (request.hasErrorCode())
 					{
 						if (request.ContentType)
@@ -109,11 +107,11 @@ HttpFoxTree.prototype =
 						return "*";
 					}
 					
-					if (request.isRedirect())
+					if (request.IsRedirected)
 					{
 						if (request.ResponseHeaders && request.ResponseHeaders["Location"])
 						{
-							return "Redirect to: " + request.ResponseHeaders["Location"];	
+							return "Redirect to: " + request.ResponseHeaders["Location"];
 						}
 						return "Redirect (cached)";
 					}
@@ -192,7 +190,7 @@ HttpFoxTree.prototype =
 			return;
 		}
 		
-		if (request.isRedirect()) 
+		if (request.IsRedirected) 
 		{
 			props.AppendElement(aserv.getAtom("hf_isRedirect"));
 			return;

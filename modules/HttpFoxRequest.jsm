@@ -304,21 +304,7 @@ HttpFoxRequest.prototype =
 	////////////////
 	hasErrorCode: function() 
 	{
-		if (this.Status && !this.isRedirect())
-		{
-			return true;
-		}
-		
-		return false;
-	},
-	
-	isRedirect : function()
-	{
-		//return this.IsRedirected;
-		
-		if (this.IsRedirected)
-		
-		if (this.Status && this.Status == HttpFoxNsResultErrors.NS_BINDING_REDIRECTED)
+		if (this.Status && !this.IsRedirected)
 		{
 			return true;
 		}

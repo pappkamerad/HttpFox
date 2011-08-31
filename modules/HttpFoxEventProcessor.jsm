@@ -98,7 +98,7 @@ HttpFoxEventProcessor.prototype =
 				request.ContentSizeFromNet = extraSizeData;
 				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_RESPONSE_COMPLETE" 
 					+ " (timestamp: " + timestamp + ") (extraSizeData: " + extraSizeData 
-					+ ")");
+					+ ") (httpChannelStatus: " + request.HttpChannel.status + ")");
 				break;
 				
 			case nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE:
@@ -368,17 +368,28 @@ HttpFoxEventProcessor.prototype =
 			return false;
 		}
 		
-		if (request.ResponseStatus == 302 || 
-			request.ResponseStatus == 301 || 
-			request.ResponseStatus == 303 ||
-			request.ResponseStatus == 305 ||
-			request.ResponseStatus == 307)
+		if (this.isRedirectResponse(request)) 
 		{
 			request.HasContent = false;
 			return false;
 		}
 
 		return true;
+	},
+	
+	isRedirectResponse: function (request)
+	{
+		if (request.ResponseStatus == 302 || 
+			request.ResponseStatus == 301 || 
+			request.ResponseStatus == 303 ||
+			request.ResponseStatus == 305 ||
+			request.ResponseStatus == 307)
+		{
+			request.IsRedirected = true;
+			return true;
+		}
+
+		return false;
 	},
 
 	attachStreamListener: function(request, httpChannel)
@@ -446,7 +457,10 @@ HttpFoxEventProcessor.prototype =
 		dummyHeaderInfo = new HttpFoxHeaderInfo();
 		request.HttpChannel.visitResponseHeaders(dummyHeaderInfo);
 		request.ResponseHeaders = dummyHeaderInfo.Headers;
-					
+
+		// check if redirect
+		this.isRedirectResponse(request);
+		
 		// Get Cookies Received Infos
 		this.getCookiesReceived(request);
 					

@@ -36,6 +36,9 @@ function HttpFoxController()
 	if (!this.stringBundle || !this.stringBundle.getSimpleEnumeration().hasMoreElements()) throw "Could not load localized strings!";
 
 	this.loadXMLPrettyPrintXSL();
+	
+	Cu["import"]("resource://httpfox/Utils.jsm");
+	Cu["import"]("resource://httpfox/HttpFoxDataHelper.jsm");
 }
 
 HttpFoxController.prototype =
@@ -549,7 +552,9 @@ HttpFoxController.prototype =
 			if (currentRequest && this.isSelectedTab_Content())
 			{
 				//contentPanel.value = currentRequest.ContentText;
-				contentPanel.value = currentRequest.ContentData;
+				//contentPanel.value = currentRequest.ContentData;
+				this.showContent(currentRequest);
+				
 				//				if (currentRequest.isContentAvailable())
 				//				{
 				//					// async
@@ -630,8 +635,10 @@ HttpFoxController.prototype =
 		var contentPanel = document.getElementById("hf_RawContentOutput");
 		if (this.isSelectedTab_Content())
 		{
-			contentPanel.value = currentRequest.ContentText;
-			contentPanel.value = currentRequest.ContentData;
+			//contentPanel.value = currentRequest.ContentText;
+			//contentPanel.value = currentRequest.ContentData;
+			this.showContent(currentRequest);
+			
 			//dumpall("curr-request", currentRequest);
 			//alert("avail.? ");
 			//			if (currentRequest.isContentAvailable())
@@ -682,9 +689,9 @@ HttpFoxController.prototype =
 	},
 
 	//G
-	showRawContent: function (status)
+	showContent: function (currentRequest)
 	{
-		var currentRequest = this.RequestTree.getCurrent();
+		//var currentRequest = this.RequestTree.getCurrent();
 		var contentPanelRaw = document.getElementById("hf_RawContentOutput");
 		var contentPanelPretty = document.getElementById("hf_PrettyContentOutput");
 
@@ -692,21 +699,23 @@ HttpFoxController.prototype =
 		this.clearContentDisplay();
 
 		// display content-type
-		document.getElementById("hf_ContentTypeLabel").value = this.stringBundle.GetStringFromName("overlay.requestdetails.contenttab.raw.type.label") + " " + (currentRequest.ContentType ? currentRequest.ContentType : "");
+		document.getElementById("hf_ContentTypeLabel").value 
+			= this.stringBundle.GetStringFromName("overlay.requestdetails.contenttab.raw.type.label") + " " 
+				+ (currentRequest.ContentType ? currentRequest.ContentType : "");
 
 		// not finished
-		if (status == -1)
+		if (!currentRequest.IsFinished)
 		{
 			// not finished
 			this.showRawContentNotFinished();
 			return;
 		}
 
-		// error at getting content
-		if (status > 0)
+		// has no content
+		if (!currentRequest.HasContent)
 		{
 			// error
-			this.showRawContentError(status);
+			this.showRawContentNotAvailable();
 			return;
 		}
 
@@ -721,7 +730,7 @@ HttpFoxController.prototype =
 			this.enableContentDisplayTypePrettyRadio();
 
 			// xml (by mimetype definition)
-			this.getPrettyPrintXML(currentRequest.Content, "hf_PrettyContentOutput");
+			this.getPrettyPrintXML(currentRequest.ContentData, "hf_PrettyContentOutput");
 
 			// display if selected view
 			if (this.ContentViewMode == 0)

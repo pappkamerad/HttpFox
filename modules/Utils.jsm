@@ -59,6 +59,11 @@ var HFU = {
 
 	isContentTypeXml: function(typestring)
 	{
+		if (typestring == null)
+		{
+			return false;
+		}
+		
 		if (typestring.indexOf("xml") != -1) 
 		{
 			return true;
