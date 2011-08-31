@@ -105,6 +105,7 @@ HttpFoxObserver.prototype =
 //			}
 			
 			// register notification callbacks for everything
+			var originalCallback = subject.notificationCallbacks;
 			var myListener = new HttpFoxEventSink(subject.notificationCallbacks, this.EventProcessor);
 			subject.notificationCallbacks = myListener;
 
@@ -119,7 +120,7 @@ HttpFoxObserver.prototype =
 			//}
 
 			// process
-			this.EventProcessor.onModifyRequest(subject);
+			this.EventProcessor.onModifyRequest(subject, originalCallback);
 		}
 		else if (topic == 'http-on-examine-response')
 		{

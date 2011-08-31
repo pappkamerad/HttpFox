@@ -28,13 +28,20 @@ HttpFoxRequest.prototype =
 	HttpChannel: null,
 	ResponseStreamListener: null,
 	RequestStore: null,
+	OriginalCallback: null,
 
-	IsComplete: false,
+	IsFinished: false,
+	IsComplete: true,
+	HasContent: true,
 	IsAborted: false,
 	IsFromCache: false,
 	IsRedirected: false,
 	IsNetwork: false,
 	HasReceivedResponseHeaders: null,
+	
+	// helpers
+	IsResponseStopped: false,
+	IsHttpTransactionClosed: false,
 
 	// request info types
 	RequestHeaders: null,
@@ -115,7 +122,7 @@ HttpFoxRequest.prototype =
 		this.Duration = HFU.formatTimeDifference(this.Timestamp_StartJs, this.Timestamp_EndJs);
 	},
 
-	isReadyToComplete: function()
+	isReadyToFinish: function()
 	{
 		if (this.Timestamp_EndJs != null) 
 		{
@@ -138,22 +145,60 @@ HttpFoxRequest.prototype =
 		return false;
 	},
 
-	completeIfReady: function () 
+	isReadyToComplete: function ()
 	{
-		if (this.isReadyToComplete())
+		if (!this.HasContent)
 		{
-			this.complete();
-			this.RequestStore.removeRequestFromPendingRequests(this);
-			this.freeResources();
+			return true;
+		}
+		
+		if (this.IsAborted)
+		{
+			return true;
+		}
+				
+		if (this.IsFromCache && this.IsResponseStopped)
+		{
+			return true;
+		}
+					
+		if (this.IsHttpTransactionClosed && this.IsResponseStopped)
+		{
+			return true;
+		}
+
+		return false;
+	},
+	
+	finishIfReady: function ()
+	{
+		if (this.isReadyToFinish())
+		{
+			// mark request as finshed. processing not yet stopped though.
+			this.finish();
+			
+			// check if request processing is complete. stop listening to events.
+			if (this.isReadyToComplete())
+			{
+				this.complete();
+			}
 		}
 	},
 	
-	complete: function()
+	complete: function ()
+	{
+		this.IsComplete = true;
+		this.AddLog("complete");
+		this.RequestStore.removeRequestFromPendingRequests(this);
+		this.freeResources();
+	},
+	
+	finish: function ()
 	{
 		this.calculateRequestDuration();
-		this.IsComplete = true;
+		this.IsFinished = true;
 		this.Status = this.HttpChannel.status;
-		this.AddLog("complete");
+		this.AddLog("finished");
 
 		//TODO: check for aborted httpchannel status. here?
 		// check redirect
@@ -164,24 +209,16 @@ HttpFoxRequest.prototype =
 		
 		// update GUI (event...)
 		this.Service.requestUpdated(this);
-//		this.AddLog("TREE UPDATED: " + this.TreeIndex[1] + " url: " + this.Url);
-//		dump("\nTREE UPDATED: " + this.TreeIndex[1] + " url: " + this.Url);
 	},
 	
 	freeResources: function () 
 	{
-		if (this.HttpChannel.loadGroup && 
-			this.HttpChannel.loadGroup.notificationCallbacks && 
-			this.HttpChannel.loadGroup.notificationCallbacks.OriginalListener)
+		// free notificationcallbacks. put back to original callback
+		if (this.HttpChannel.notificationCallbacks && 
+			this.OriginalCallback)
 		{
-			dump("loadGroup clearing\n");
-			this.HttpChannel.loadGroup.notificationCallbacks = this.HttpChannel.loadGroup.notificationCallbacks.OriginalListener;
-		}
-		else if (this.HttpChannel.notificationCallbacks && 
-			this.HttpChannel.notificationCallbacks.OriginalListener)
-		{
-			dump("root clearing\n");
-			this.HttpChannel.notificationCallbacks = this.HttpChannel.notificationCallbacks.OriginalListener;
+			this.HttpChannel.notificationCallbacks = this.OriginalCallback;
+			this.OriginalCallback = null;
 		}
 		
 		this.HttpChannel = null;
@@ -294,7 +331,7 @@ HttpFoxRequest.prototype =
 //		if (this.IsComplete && 
 //			this.hasErrorCode() && 
 //			!this.ResponseStatus)
-		if (this.IsComplete && 
+		if (this.IsFinished && 
 			this.hasErrorCode())
 		{
 			return true;
@@ -320,7 +357,7 @@ HttpFoxRequest.prototype =
 			return false;
 		}
 		
-		if (!this.IsComplete)
+		if (!this.IsFinished)
 		{
 			// TODO: other ways to get compressing. content-encoding
 			return false;
@@ -351,7 +388,7 @@ HttpFoxRequest.prototype =
 //			return "(0)";
 //		}
 					
-		if (!this.IsComplete)
+		if (!this.IsFinished)
 		{
 			// show loading body progress
 			var bytesMax = this.getBytesReceivedMax();

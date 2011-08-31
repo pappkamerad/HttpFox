@@ -30,11 +30,13 @@ HttpFoxTree.prototype =
 	     	switch(column)
 	     	{
 	     		case "hf_Column_Started":
-					return HFU.formatDateTime(request.StartTimestamp);
-	        		return formatTime(new Date(request.StartTimestamp - this.HttpFox.HttpFoxService.StartTime.getTime()));
+	     			//return HFU.formatDateTime((new Date()).now());
+					//return HFU.formatTime(request.Timestamp_StartJs - this.HttpFox.HttpFoxService.Timestamp_StartService);
+	     			
+	        		return HFU.formatTime(new Date(request.Timestamp_StartJs - this.HttpFox.HttpFoxService.Timestamp_StartService));
 	        		
 				case "hf_Column_Time":
-					if (!request.IsComplete)
+					if (!request.IsFinished)
 					{
 						return "*";
 					}
@@ -102,7 +104,7 @@ HttpFoxTree.prototype =
 						return HttpFoxNsResultErrorStrings[request.Status.toString(16).toUpperCase()];
 					}
 					
-					if (!request.HasReceivedResponseHeaders && !request.IsFromCache && !request.IsComplete)
+					if (!request.HasReceivedResponseHeaders && !request.IsFromCache && !request.IsFinished)
 					{
 						return "*";
 					}

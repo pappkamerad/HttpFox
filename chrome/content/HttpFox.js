@@ -222,16 +222,12 @@ HttpFoxController.prototype =
 
 	filterRequest: function (parameterArray)
 	{
-		//dump("filterRequest\n");
 		var request = parameterArray["p1"];
 
 		if (request.Url.indexOf(this.QuickFilterText) != -1)
 		{
 			this.FilteredRequests.push(request);
 			request.TreeIndex[this.ControllerIndex] = this.redrawRequestTreePlusOne();
-			//request.TreeIndex = this.redrawRequestTreePlusOne();
-			dump("\nreq index: " + request.TreeIndex[this.ControllerIndex] + " url: " + request.Url);
-			//dump("\nreq index: " + request.TreeIndex + " url: " + request.Url);
 		}
 	},
 
@@ -242,7 +238,7 @@ HttpFoxController.prototype =
 			if (requests[r].Url.indexOf(this.QuickFilterText) != -1)
 			{
 				this.FilteredRequests.push(requests[r]);
-				this.redrawRequestTreePlusOne();
+				requests[r].TreeIndex[this.ControllerIndex] = this.redrawRequestTreePlusOne();
 			}
 		}
 	},

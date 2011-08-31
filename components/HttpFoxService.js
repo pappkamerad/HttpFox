@@ -45,7 +45,7 @@ class definition
 ***********************************************************/
 function HttpFoxService() 
 {
-	dump("service constructor\n");
+	//dump("service constructor\n");
 	try 
 	{
 		// import modules
@@ -68,7 +68,8 @@ function HttpFoxService()
 	this.Controllers = new Array();
 	//this.Requests = new Array();
 	//this.PendingRequests = new Array();
-	this.StartTime = new Date();
+	//this.StartTime = new Date();
+	this.Timestamp_StartService = HFU.now();
 	this.Preferences = new HttpFoxPreferences();
 	if (this.Preferences.StartAtBrowserStart)
 	{
@@ -108,7 +109,6 @@ HttpFoxService.prototype =
 		//this.callControllerMethod("redrawRequestTreePlusOne");
 	},
 
-	//requestUpdated: function(index)
 	requestUpdated: function(request)
 	{
 		this.callControllerMethod("redrawRequestTreeRow", {"p1": request});
@@ -157,8 +157,8 @@ HttpFoxService.prototype =
 	clearRequests: function()
 	{
 		this.RequestStore.clearRequests();
-		
-		this.StartTime = new Date();
+
+		this.Timestamp_StartService = HFU.now();
 	},
 	
 	windowIsClosed: function()

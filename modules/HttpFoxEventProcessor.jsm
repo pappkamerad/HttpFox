@@ -97,13 +97,15 @@ HttpFoxEventProcessor.prototype =
 				// The complete HTTP response has been received.
 				request.ContentSizeFromNet = extraSizeData;
 				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_RESPONSE_COMPLETE" 
-					+ " (timestamp: " + timestamp + "" + " (extraSizeData: " + extraSizeData 
+					+ " (timestamp: " + timestamp + ") (extraSizeData: " + extraSizeData 
 					+ ")");
 				break;
 				
 			case nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE:
 				// 	The HTTP transaction has been closed.
 				request.Timestamp_EndNet = timestamp;
+				request.Timestamp_EndJs = HFU.now();
+				request.IsHttpTransactionClosed = true;
 				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_TRANSACTION_CLOSE" 
 					+ " (timestamp: " + timestamp + ")" + " (httpChannelStatus: " + request.HttpChannel.status 
 					+ ") + (extraSizeData: " + extraSizeData + ")");
@@ -112,7 +114,7 @@ HttpFoxEventProcessor.prototype =
 				request.checkHttpChannelStatus(timestamp);
 
 				// check if complete
-				request.completeIfReady();
+				request.finishIfReady();
 				break;
 		}
 	},
@@ -144,7 +146,7 @@ HttpFoxEventProcessor.prototype =
 		}
 	},
 
-	onModifyRequest: function (httpChannel)
+	onModifyRequest: function (httpChannel, originalCallback)
 	{
 		// new request
 		var request = new HttpFoxRequest(this.RequestStore, this.Service);
@@ -154,6 +156,7 @@ HttpFoxEventProcessor.prototype =
 				
 		// assign HttpChannel to request
 		request.HttpChannel = httpChannel;
+		request.OriginalCallback = originalCallback;
 		
 		// get request infos
 		this.getRequestInfos(request);
@@ -192,7 +195,7 @@ HttpFoxEventProcessor.prototype =
 		{
 			request.Timestamp_EndJs = HFU.now();
 			// if from cache > complete
-			request.completeIfReady();
+			request.finishIfReady();
 		}
 
 		// update GUI (event...)
@@ -209,10 +212,15 @@ HttpFoxEventProcessor.prototype =
 
 		// response headers arrived
 		request.HasReceivedResponseHeaders = true;
-		//request.Timestamp_ResponseStartedJs = HFU.now();
 		
 		// request is served from cache
 		request.IsFromCache = true;
+
+		// enough for cached request
+		request.Timestamp_EndJs = HFU.now();
+		
+		// if from cache > complete
+		request.finishIfReady();
 		
 		// get response & request infos
 		this.getResponseInfos(request);
@@ -223,9 +231,8 @@ HttpFoxEventProcessor.prototype =
 		}
 		else
 		{
-			request.Timestamp_EndJs = HFU.now();
 			// if from cache > complete
-			request.completeIfReady();
+			request.finishIfReady();
 		}
 
 		// update GUI (event...)
@@ -248,8 +255,12 @@ HttpFoxEventProcessor.prototype =
 	onResponseStop: function (request, context, statusCode)
 	{
 		request.AddLog("onResponseStop (" + statusCode + ") " + " (status: " + request.HttpChannel.status + ")");
-		request.Timestamp_EndJs = HFU.now();
-		request.completeIfReady();
+		if (request.Timestamp_EndJs == null)
+		{
+			request.Timestamp_EndJs = HFU.now();
+		} 
+		request.IsResponseStopped = true;
+		request.finishIfReady();
 		
 		// update GUI (event...)
 		this.Service.requestUpdated(request);
@@ -351,12 +362,19 @@ HttpFoxEventProcessor.prototype =
 		// TODO: OR listen to channelredirect events
 		// TODO: define which mimetypes to capture here as well? per config option?
 		// TODO: body size?
+		if (request.RequestMethod == "HEAD")
+		{
+			request.HasContent = false;
+			return false;
+		}
+		
 		if (request.ResponseStatus == 302 || 
 			request.ResponseStatus == 301 || 
 			request.ResponseStatus == 303 ||
 			request.ResponseStatus == 305 ||
 			request.ResponseStatus == 307)
 		{
+			request.HasContent = false;
 			return false;
 		}
 
@@ -383,8 +401,6 @@ HttpFoxEventProcessor.prototype =
 		request.RequestMethod = request.HttpChannel.requestMethod;
 		request.IsBackground = request.HttpChannel.loadFlags ? (request.HttpChannel.loadFlags & Ci.nsIRequest.LOAD_BACKGROUND ? true : false) : false;
 		request.AddLog("IsBackground: " + request.IsBackground);
-
-		request.StartTimestamp = (new Date()).getTime();
 
 		// Get Request Headers
 		var dummyHeaderInfo = new HttpFoxHeaderInfo();

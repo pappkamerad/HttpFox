@@ -108,7 +108,7 @@ HttpFoxRequestStore.prototype =
 					pendingRequest.setAborted(HFU.now());
 					
 					// check if complete
-					pendingRequest.completeIfReady();
+					pendingRequest.finishIfReady();
 
 					// adapt array
 					i--;
