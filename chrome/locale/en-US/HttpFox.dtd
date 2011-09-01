@@ -2,7 +2,6 @@
 <!ENTITY  options.startAtBrowserStart.checkbox                                        "Automatically start watching when browser starts">
 <!ENTITY  options.alwaysOpenDetached.checkbox                                         "Open HttpFox always in own window">
 <!ENTITY  options.colorRequests.checkbox                                              "Color the requests based on status">
-<!ENTITY  options.forceCaching.checkbox                                               "Remove the INHIBIT_CACHING request-channel flag (helps to get the responsecontent from cache)">
 
 <!ENTITY  overlay.requestlist.menu.menupop.toggle.label                               "Toggle HttpFox">
 <!ENTITY  overlay.requestlist.menu.menupop.detach.label                               "Open In Own Window">

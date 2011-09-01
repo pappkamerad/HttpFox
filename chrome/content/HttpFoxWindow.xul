@@ -17,7 +17,6 @@
 	<!-- scripts start -->
 	<script type="application/x-javascript" src="chrome://httpfox/content/HttpFox.js"/>
 	<script type="application/x-javascript" src="chrome://httpfox/content/HttpFoxTree.js"/>
-	<script type="application/x-javascript" src="chrome://httpfox/content/Utils.js"/>
 	<!-- scripts end -->
 
 	<vbox id="appcontent" flex="1"> <!-- overlay firefox content window -->

@@ -20,10 +20,8 @@ function HttpFoxPreferences()
 	// init values
 	this._StartAtBrowserStart = this.prefs.getBoolPref("StartAtBrowserStart");
 	this._AlwaysOpenDetached = this.prefs.getBoolPref("AlwaysOpenDetached");
-	this._ShowHttpFoxHelperRequests = this.prefs.getBoolPref("ShowHttpFoxHelperRequests");
 	this._ColorRequests = this.prefs.getBoolPref("ColorRequests");
 	this._ShowDebugTab = this.prefs.getBoolPref("ShowDebugTab");
-	this._ForceCaching = this.prefs.getBoolPref("ForceCaching");
 };
 
 HttpFoxPreferences.prototype = 
@@ -32,10 +30,8 @@ HttpFoxPreferences.prototype =
 	// Options
 	_StartAtBrowserStart: null,
 	_AlwaysOpenDetached: null,
-	_ShowHttpFoxHelperRequests: null,
 	_ColorRequests: null,
 	_ShowDebugTab: null,
-	_ForceCaching: null,
 		
 	shutdown: function()
 	{
@@ -59,20 +55,12 @@ HttpFoxPreferences.prototype =
 				this._AlwaysOpenDetached = this.prefs.getBoolPref("AlwaysOpenDetached");
 				break;
 				
-			case "ShowHttpFoxHelperRequests":
-				this._ShowHttpFoxHelperRequests = this.prefs.getBoolPref("ShowHttpFoxHelperRequests");
-				break;
-				
 			case "ColorRequests":
 				this._ColorRequests = this.prefs.getBoolPref("ColorRequests");
 				break;
 				
 			case "ShowDebugTab":
 				this._ShowDebugTab = this.prefs.getBoolPref("ShowDebugTab");
-				break;
-				
-			case "ForceCaching":
-				this._ForceCaching = this.prefs.getBoolPref("ForceCaching");
 				break;
 		}
 	},
@@ -97,16 +85,6 @@ HttpFoxPreferences.prototype =
 		this.prefs.setIntPref("AlwaysOpenDetached", value);
 	},
 	
-	get ShowHttpFoxHelperRequests() 
-	{ 
-		return this._ShowHttpFoxHelperRequests;
-	},
-	set ShowHttpFoxHelperRequests(value) 
-	{
-		this._ShowHttpFoxHelperRequests = value;
-		this.prefs.setBoolPref("ShowHttpFoxHelperRequests", value);
-	},
-	
 	get ColorRequests() 
 	{ 
 		return this._ColorRequests;
@@ -125,15 +103,5 @@ HttpFoxPreferences.prototype =
 	{
 		this._ShowDebugTab = value;
 		this.prefs.setBoolPref("ShowDebugTab", value);
-	},
-	
-	get ForceCaching() 
-	{ 
-		return this._ForceCaching;
-	},
-	set ForceCaching(value) 
-	{
-		this._ForceCaching = value;
-		this.prefs.setBoolPref("ForceCaching", value);
 	}
 };

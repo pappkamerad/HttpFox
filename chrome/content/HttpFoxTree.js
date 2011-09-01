@@ -42,7 +42,6 @@ HttpFoxTree.prototype =
 					}
 
 					return request.Duration;
-					return formatTimeDifference(request.StartTimestamp, request.EndTimestamp);
 					
 				case "hf_Column_Sent":
 					return "";
@@ -50,11 +49,11 @@ HttpFoxTree.prototype =
 					
 					if (request.IsSending)
 					{
-						rString = humanizeSize(request.getBytesSent(), 6) + "/" + humanizeSize(request.getBytesSentTotal(), 6);
+						rString = HFU.humanizeSize(request.getBytesSent(), 6) + "/" + HFU.humanizeSize(request.getBytesSentTotal(), 6);
 					}
 					else
 					{
-						rString = humanizeSize(request.getBytesSentTotal(), 6);	
+						rString = HFU.humanizeSize(request.getBytesSentTotal(), 6);	
 					}
 					
 					return rString;

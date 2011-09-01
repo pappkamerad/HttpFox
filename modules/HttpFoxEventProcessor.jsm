@@ -67,21 +67,21 @@ HttpFoxEventProcessor.prototype =
 				// The HTTP request is about to be queued for sending. Observers can look at request headers in aExtraStringData
 				request.Timestamp_StartNet = timestamp;
 				request.RequestHeaderSize = extraStringData.length;
-				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_REQUEST_HEADER" 
+				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_REQUEST_HEADER)" 
 					+ " (timestamp: " + timestamp + ") + (extraSizeData: " + extraSizeData + ")");
 				break;
 				
 			case nsIHttpActivityObserver.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT:
 				// The HTTP request's body has been sent.
 				request.Timestamp_PostSent = timestamp;
-				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_REQUEST_BODY_SENT" 
+				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_REQUEST_BODY_SENT)" 
 					+ " (timestamp: " + timestamp + ") + (extraSizeData: " + extraSizeData + ")");
 				break;
 				
 			case nsIHttpActivityObserver.ACTIVITY_SUBTYPE_RESPONSE_START:
 				// The HTTP response has started to arrive.
 				request.Timestamp_ResponseStarted = timestamp;
-				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_RESPONSE_START" 
+				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_RESPONSE_START)" 
 					+ " (timestamp: " + timestamp + ") + (extraSizeData: " + extraSizeData + ")");
 				break;
 				
@@ -89,14 +89,14 @@ HttpFoxEventProcessor.prototype =
 				// The HTTP response header has arrived.
 				request.Timestamp_ResponseHeadersComplete = timestamp;
 				request.ResponseHeaderSize = extraStringData.length;
-				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_RESPONSE_HEADER" 
+				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_RESPONSE_HEADER)" 
 					+ " (timestamp: " + timestamp + ") + (extraSizeData: " + extraSizeData + ")");
 				break;
 				
 			case nsIHttpActivityObserver.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE:
 				// The complete HTTP response has been received.
 				request.ContentSizeFromNet = extraSizeData;
-				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_RESPONSE_COMPLETE" 
+				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_RESPONSE_COMPLETE)" 
 					+ " (timestamp: " + timestamp + ") (extraSizeData: " + extraSizeData 
 					+ ") (httpChannelStatus: " + request.HttpChannel.status + ")");
 				break;
@@ -106,7 +106,7 @@ HttpFoxEventProcessor.prototype =
 				request.Timestamp_EndNet = timestamp;
 				request.Timestamp_EndJs = HFU.now();
 				request.IsHttpTransactionClosed = true;
-				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_TRANSACTION_CLOSE" 
+				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_TRANSACTION_CLOSE)" 
 					+ " (timestamp: " + timestamp + ")" + " (httpChannelStatus: " + request.HttpChannel.status 
 					+ ") + (extraSizeData: " + extraSizeData + ")");
 
@@ -126,22 +126,22 @@ HttpFoxEventProcessor.prototype =
 		{
 			case nsISocketTransport.STATUS_RESOLVING:
 				// Transport is resolving the host. Usually a DNS lookup.
-				request.AddLog("STATUS_RESOLVING" + " (timestamp: " + timestamp + ")");
+				request.AddLog("onSocketActivity (subType: STATUS_RESOLVING)" + " (timestamp: " + timestamp + ")");
 				break;
 			case nsISocketTransport.STATUS_CONNECTING_TO:
-				request.AddLog("STATUS_CONNECTING_TO" + " (timestamp: " + timestamp + ")");
+				request.AddLog("onSocketActivity (subType: STATUS_CONNECTING_TO)" + " (timestamp: " + timestamp + ")");
 				break;
 			case nsISocketTransport.STATUS_CONNECTED_TO:
-				request.AddLog("STATUS_CONNECTED_TO" + " (timestamp: " + timestamp + ")");
+				request.AddLog("onSocketActivity (subType: STATUS_CONNECTED_TO)" + " (timestamp: " + timestamp + ")");
 				break;
 			case nsISocketTransport.STATUS_SENDING_TO:
-				request.AddLog("STATUS_SENDING_TO" + " (timestamp: " + timestamp + ")" + " (extraSizeData: " + extraSizeData + ")");
+				request.AddLog("onSocketActivity (subType: STATUS_SENDING_TO)" + " (timestamp: " + timestamp + ")" + " (extraSizeData: " + extraSizeData + ")");
 				break;
 			case nsISocketTransport.STATUS_WAITING_FOR:
-				request.AddLog("STATUS_WAITING_FOR" + " (timestamp: " + timestamp + ")");
+				request.AddLog("onSocketActivity (subType: STATUS_WAITING_FOR)" + " (timestamp: " + timestamp + ")");
 				break;
 			case nsISocketTransport.STATUS_RECEIVING_FROM:
-				request.AddLog("STATUS_RECEIVING_FROM" + " (timestamp: " + timestamp + ")" + " (extraSizeData" + extraSizeData + ")");
+				request.AddLog("onSocketActivity (subType: STATUS_RECEIVING_FROM)" + " (timestamp: " + timestamp + ")" + " (extraSizeData" + extraSizeData + ")");
 				break;
 		}
 	},
@@ -545,7 +545,7 @@ HttpFoxEventProcessor.prototype =
 
 		request.QueryStringParameters = new Array();
 		var queryStringParts = request.QueryString.split("&");
-		for (i in queryStringParts)
+		for (var i in queryStringParts)
 		{
 			var nvName = queryStringParts[i].slice(0, queryStringParts[i].indexOf("=") != -1 ? queryStringParts[i].indexOf("=") : queryStringParts[i].length);
 			var nvValue = (queryStringParts[i].indexOf("=") != -1) ? queryStringParts[i].slice(queryStringParts[i].indexOf("=") + 1, queryStringParts[i].length) : "";
@@ -562,7 +562,7 @@ HttpFoxEventProcessor.prototype =
 		if (request.RequestHeaders["Cookie"])
 		{
 			var requestCookies = request.RequestHeaders["Cookie"].split("; ");
-			for (i in requestCookies)
+			for (var i in requestCookies)
 			{
 				var cName = requestCookies[i].slice(0, requestCookies[i].indexOf("="));
 				var cValue = requestCookies[i].slice(cName.length + 1);
@@ -571,14 +571,14 @@ HttpFoxEventProcessor.prototype =
 				cookieData["name"] = cName;
 				cookieData["value"] = cValue;
 
-				for (var i = 0; i < cookiesStored.length; i++)
+				for (var j = 0; j < cookiesStored.length; j++)
 				{
-					if (cookiesStored[i].name == cName && cookiesStored[i].value == cValue)
+					if (cookiesStored[j].name == cName && cookiesStored[j].value == cValue)
 					{
-						cookieData["domain"] = cookiesStored[i].host;
-						cookieData["expires"] = cookiesStored[i].expires;
-						cookieData["path"] = cookiesStored[i].path;
-						cookiesStored.splice(i, 1);
+						cookieData["domain"] = cookiesStored[j].host;
+						cookieData["expires"] = cookiesStored[j].expires;
+						cookieData["path"] = cookiesStored[j].path;
+						cookiesStored.splice(j, 1);
 						break;
 					}
 				}
@@ -595,7 +595,7 @@ HttpFoxEventProcessor.prototype =
 		if (request.ResponseHeaders["Set-Cookie"])
 		{
 			var responseCookies = request.ResponseHeaders["Set-Cookie"].split("\n");
-			for (i in responseCookies)
+			for (var i in responseCookies)
 			{
 				var dataSections = responseCookies[i].split(";");
 				var cName = dataSections[0].slice(0, dataSections[0].indexOf("="));
@@ -624,16 +624,16 @@ HttpFoxEventProcessor.prototype =
 
 				// check against stored one
 				var cookiesStored = HFU.getStoredCookies(cookieData["domain"], cookieData["path"]);
-				for (var i = 0; i < cookiesStored.length; i++)
+				for (var j = 0; j < cookiesStored.length; j++)
 				{
-					if (cookiesStored[i].name == cName && cookiesStored[i].value == cValue && cookiesStored[i].path == cookieData["path"])
+					if (cookiesStored[j].name == cName && cookiesStored[j].value == cValue && cookiesStored[j].path == cookieData["path"])
 					{
 						/*if (cookieData["expires"])
 						{
 						cookieData["expires"] = cookiesStored[i].expires;	
 						}*/
 
-						cookiesStored.splice(i, 1);
+						cookiesStored.splice(j, 1);
 						break;
 					}
 				}

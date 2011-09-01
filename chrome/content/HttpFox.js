@@ -859,7 +859,7 @@ HttpFoxController.prototype =
 			{
 				// split into original multiple header values
 				var setCookieHeaders = request.ResponseHeaders[i].split("\n");
-				for (u in setCookieHeaders)
+				for (var u in setCookieHeaders)
 				{
 					this.addHeaderRow("hf_ResponseHeadersChildren", i, setCookieHeaders[u]);
 				}
@@ -987,7 +987,7 @@ HttpFoxController.prototype =
 		}
 
 		mimeLabel.value = this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.mimetype") + " " + ctypedisplay;
-
+		var i;
 		if (request.IsPostDataMIME)
 		{
 			// mime post data
@@ -1113,7 +1113,7 @@ HttpFoxController.prototype =
 			var tree;
 			var boxobject;
 			var menu = document.getElementById("hf_RequestDetailsContextMenu");
-			for (i in infoTreeIds)
+			for (var i in infoTreeIds)
 			{
 				row = {};
 				column = {};
