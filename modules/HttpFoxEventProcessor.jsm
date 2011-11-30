@@ -68,11 +68,13 @@ HttpFoxEventProcessor.prototype =
 				request.Timestamp_StartNet = timestamp;
 				request.RequestHeaderSize = extraStringData.length;
 				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_REQUEST_HEADER)" 
-					+ " (timestamp: " + timestamp + ") + (extraSizeData: " + extraSizeData + ")");
+					+ " (timestamp: " + timestamp + ") + (extraSizeData: " + extraSizeData + ")" + "(extraStringData: " + extraStringData.length + ")");
 				break;
 				
 			case nsIHttpActivityObserver.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT:
 				// The HTTP request's body has been sent.
+				// Only for Post requests.
+				request.HasPostBodyBeenSent = true;
 				request.Timestamp_PostSent = timestamp;
 				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_REQUEST_BODY_SENT)" 
 					+ " (timestamp: " + timestamp + ") + (extraSizeData: " + extraSizeData + ")");
@@ -90,7 +92,7 @@ HttpFoxEventProcessor.prototype =
 				request.Timestamp_ResponseHeadersComplete = timestamp;
 				request.ResponseHeaderSize = extraStringData.length;
 				request.AddLog("onHttpActivity (subType: ACTIVITY_SUBTYPE_RESPONSE_HEADER)" 
-					+ " (timestamp: " + timestamp + ") + (extraSizeData: " + extraSizeData + ")");
+					+ " (timestamp: " + timestamp + ") + (extraSizeData: " + extraSizeData + ")" + "(extraStringData: " + extraStringData.length + ")");
 				break;
 				
 			case nsIHttpActivityObserver.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE:
@@ -301,17 +303,29 @@ HttpFoxEventProcessor.prototype =
 		var request = this.getMatchingRequest(httpChannel);
 		if (!request) { return; }
 
-		// update size values
-		if ((progressMax != null && progressMax != -1) &&
-			((request.ContentSizeFromNetMax == null) ||
-			(request.ContentSizeFromNetMax != progressMax)))
+		// check if sending or receiving
+		if (!request.HasReceivedResponseHeaders)
 		{
-			request.ContentSizeFromNetMax = progressMax;
+			// sending
+			request.BytesSent = progress;
+			request.BytesSentMax = progressMax;
+			
+			request.AddLog("onEventSinkProgress (sending) progress: " + progress + ") (progressMax: " + progressMax + ")");
 		}
+		else
+		{
+			// received
+			if ((progressMax != null && progressMax != -1) &&
+				((request.ContentSizeFromNetMax == null) ||
+				(request.ContentSizeFromNetMax != progressMax)))
+			{
+				request.ContentSizeFromNetMax = progressMax;
+			}
 
-		request.ContentSizeFromNet = progress;
-		
-		request.AddLog("onEventSinkProgress (progress: " + progress + ") (progressMax: " + progressMax + ")");
+			request.ContentSizeFromNet = progress;	
+			
+			request.AddLog("onEventSinkProgress (receiving) (progress: " + progress + ") (progressMax: " + progressMax + ")");
+		}
 		
 		// update GUI (event...)
 		this.Service.requestUpdated(request);
@@ -429,6 +443,9 @@ HttpFoxEventProcessor.prototype =
 
 		// Get request protocol version
 		this.getRequestProtocolVersion(request);
+		
+		// Get content length for request body
+		this.getRequestContentLength(request);
 	},
 
 	getFinalUrl: function(channelUri)
@@ -530,6 +547,28 @@ HttpFoxEventProcessor.prototype =
 		catch (ex)
 		{
 			dump("Getting POST data exception: " + ex);
+		}
+	},
+	
+	getRequestContentLength: function(request)
+	{
+		var i;
+		for (i in request.PostDataHeaders)
+		{
+			if (i.toLowerCase() == "content-length")
+			{
+				request.PostDataContentLength = parseInt(request.PostDataHeaders[i]);
+				return;
+			}
+		}
+		
+		for (i in request.RequestHeaders)
+		{
+			if (i.toLowerCase() == "content-length")
+			{
+				request.PostDataContentLength = parseInt(request.RequestHeaders[i]);
+				return;
+			}
 		}
 	},
 

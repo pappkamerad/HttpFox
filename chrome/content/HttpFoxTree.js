@@ -44,6 +44,7 @@ HttpFoxTree.prototype =
 					return request.Duration;
 					
 				case "hf_Column_Sent":
+					return request.getSentColumnString();
 					return "";
 					var rString = "";
 					

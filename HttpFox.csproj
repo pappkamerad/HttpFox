@@ -13,6 +13,7 @@
     <RootNamespace>HttpFox</RootNamespace>
     <AssemblyName>HttpFox</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <UseIISExpress>false</UseIISExpress>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -69,7 +70,9 @@
     <None Include="chrome\content\HttpFoxOverlay.xul" />
     <None Include="chrome\content\HttpFoxWindow.xul" />
     <None Include="chrome\locale\en-US\HttpFox.dtd" />
-    <None Include="install.rdf" />
+    <None Include="install.rdf">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="modules\HttpFoxDataHelper.jsm" />
     <None Include="modules\HttpFoxEventProcessor.jsm" />
     <None Include="modules\HttpFoxObserver.jsm" />

@@ -37,7 +37,8 @@ HttpFoxRequest.prototype =
 	IsFromCache: false,
 	IsRedirected: false,
 	IsNetwork: false,
-	HasReceivedResponseHeaders: null,
+	HasReceivedResponseHeaders: false,
+	HasPostBodyBeenSent: false,
 	
 	// helpers
 	IsResponseStopped: false,
@@ -96,6 +97,8 @@ HttpFoxRequest.prototype =
 	ResponseSize: null,
 	ContentSizeFromNet: null,
 	ContentSizeFromNetMax: null,
+	BytesSent: null,
+	BytesSentMax: null,
 	
 	// response
 	ContentText: "",
@@ -288,6 +291,11 @@ HttpFoxRequest.prototype =
 	
 	getResponseSize: function ()
 	{
+		if (this.IsRedirected)
+		{
+			return this.ResponseHeaderSize + this.ContentSizeFromNet;
+		}
+		
 		return this.ResponseHeaderSize + this.ContentSize;
 	},
 	
@@ -296,7 +304,7 @@ HttpFoxRequest.prototype =
 		return this.RequestHeaderSize + this.BytesSent;
 	},
 	
-	getBytesSentTotal: function()
+	getBytesSentMax: function()
 	{
 		return this.RequestHeaderSize + this.PostDataContentLength;
 	},
@@ -352,6 +360,16 @@ HttpFoxRequest.prototype =
 		return (this.getResponseSize() != this.getBytesReceived());
 	},
 	
+	isPostRequest: function()
+	{
+		if (this.RequestMethod == "POST")
+		{
+			return true;
+		}
+
+		return false;
+	},
+	
 	getReceivedColumnString: function ()
 	{
 		if (this.IsAborted)
@@ -390,6 +408,18 @@ HttpFoxRequest.prototype =
 			}
 			return bytesReceived;
 		}
+	},
+	
+	getSentColumnString: function ()
+	{
+		if (this.HasPostBodyBeenSent || !this.isPostRequest())
+		{
+			// finished sending
+			return HFU.humanizeSize(this.getBytesSentMax(), 6);
+		}
+		
+		// not finished
+		return HFU.humanizeSize(this.getBytesSent(), 6) + "/" + HFU.humanizeSize(this.getBytesSentMax(), 6);
 	}
 	
 //	calculateRequestHeadersSize: function()
