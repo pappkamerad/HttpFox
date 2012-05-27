@@ -1567,7 +1567,7 @@ HttpFoxRequest.prototype =
 		try {
 			// release httpchannel, listeners and context
 			if (this.HttpChannel.loadGroup && this.HttpChannel.loadGroup.groupObserver) {
-				var go = HttpChannel.loadGroup.groupObserver;
+				var go = this.HttpChannel.loadGroup.groupObserver;
 				go.QueryInterface(Components.interfaces.nsIWebProgress);
 				try 
 				{
@@ -1577,7 +1577,7 @@ HttpFoxRequest.prototype =
 				{}
 			}
 			
-			this.HttpFoxRequestEventSink.HttpChannel.notificationCallbacks = this.HttpFoxRequestEventSink.OriginalNotificationCallbacks;
+			this.HttpChannel.notificationCallbacks = this.HttpFoxRequestEventSink.OriginalNotificationCallbacks;
 			this.HttpFoxRequestEventSink = null;
 			this.HttpChannel = null;
 			
