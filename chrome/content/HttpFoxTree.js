@@ -223,96 +223,239 @@ HttpFoxTree.prototype =
 	{
 		var aserv = Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
 		var request = this.HttpFox.FilteredRequests[row];
+		var returnProps = "";
 		
 		if (this.TreeElement.currentIndex == row) 
 		{
-			props.AppendElement(aserv.getAtom("hf_currentRow"));
+			if (props) 
+			{
+				props.AppendElement(aserv.getAtom("hf_currentRow"));	
+			}
+			else 
+			{
+				// gecko 22+
+				returnProps += "hf_currentRow" + " ";
+			}
 		}
 		
 		if (this.TreeElement.view.selection.isSelected(row)) 
 		{
-			return;
+			if (props) 
+			{
+				return;
+			}
+			else 
+			{
+				// gecko 22+
+				return returnProps;
+			}
 		}
 		
 		if (!this.HttpFox.HttpFoxService.Preferences.ColorRequests)
 		{
-			return;
+			if (props) 
+			{
+				return;
+			}
+			else 
+			{
+				// gecko 22+
+				return returnProps;
+			}
 		}
 		
 		if (request.isHTTPS()) 
 		{
-			props.AppendElement(aserv.getAtom("hf_HTTPS"));
-			//return;
+			if (props) 
+			{
+				props.AppendElement(aserv.getAtom("hf_HTTPS"));	
+			}
+			else 
+			{
+				// gecko 22+
+				returnProps += "hf_HTTPS" + " ";
+			}
 		}
 		
 		if (request.IsFromCache || request.ResponseStatus == 304) 
 		{
-			props.AppendElement(aserv.getAtom("hf_fromCache"));
-			return;
+			if (props) 
+			{
+				props.AppendElement(aserv.getAtom("hf_fromCache"));	
+				return;
+			}
+			else 
+			{
+				// gecko 22+
+				returnProps += "hf_fromCache" + " ";
+				return returnProps;
+			}
 		}
 		
 		if (request.isRedirect()) 
 		{
-			props.AppendElement(aserv.getAtom("hf_isRedirect"));
-			return;
+			if (props) 
+			{
+				props.AppendElement(aserv.getAtom("hf_isRedirect"));	
+				return;
+			}
+			else 
+			{
+				// gecko 22+
+				returnProps += "hf_isRedirect" + " ";
+				return returnProps;
+			}
 		}
 		
 		if (request.isError()) 
 		{
-			props.AppendElement(aserv.getAtom("hf_isError"));
-			return;
+			if (props) 
+			{
+				props.AppendElement(aserv.getAtom("hf_isError"));	
+				return;
+			}
+			else 
+			{
+				// gecko 22+
+				returnProps += "hf_isError" + " ";
+				return returnProps;
+			}
 		}
 		
 		if (request.hasErrorCode() || request.ResponseStatus >= 400) 
 		{
-			props.AppendElement(aserv.getAtom("hf_hasError"));
-			return;
+			if (props) 
+			{
+				props.AppendElement(aserv.getAtom("hf_hasError"));	
+				return;
+			}
+			else 
+			{
+				// gecko 22+
+				returnProps += "hf_hasError" + " ";
+				return returnProps;
+			}
 		}
 		
 		if (request.IsFinished && request.ResponseStatus == 200) 
 		{
-			props.AppendElement(aserv.getAtom("hf_OK"));
-			//return;
+			if (props) 
+			{
+				props.AppendElement(aserv.getAtom("hf_OK"));	
+			}
+			else 
+			{
+				// gecko 22+
+				returnProps += "hf_OK" + " ";
+			}
 		}
 		
+		if (props) 
+		{
+			return;			
+		}
+		else 
+		{
+			// gecko 22+
+			return returnProps;
+		}
 	},
 	
 	getCellProperties: function(row, col, props)
 	{
 		var aserv = Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
 		var request = this.HttpFox.FilteredRequests[row];
+		var returnProps = "";
 		
 		if (this.TreeElement.view.selection.isSelected(row)) 
 		{
-			return;
+			if (props) 
+			{ 
+				return; 
+			}
+			else 
+			{
+				// Gecko 22+
+				return returnProps;
+			}
 		}
 		
 		if (!this.HttpFox.HttpFoxService.Preferences.ColorRequests)
 		{
-			return;
+			if (props) 
+			{ 
+				return; 
+			}
+			else 
+			{
+				// Gecko 22+
+				return returnProps;
+			}
 		}
 		
 		if (request.IsFromCache) 
 		{
-			props.AppendElement(aserv.getAtom("hf_fromCache"));
-			//return;
+			if (props) 
+			{
+				props.AppendElement(aserv.getAtom("hf_fromCache"));
+			}
+			else 
+			{
+				// Gecko 22+
+				returnProps += "hf_fromCache" + " ";
+			}
 		}
 		
 		if (request.isError()) 
 		{
-			props.AppendElement(aserv.getAtom("hf_isError"));
-			return;
+			if (props) 
+			{
+				props.AppendElement(aserv.getAtom("hf_isError"));
+				return;
+			}
+			else 
+			{
+				// Gecko 22+
+				returnProps += "hf_isError" + " ";
+				return returnProps;
+			}
 		}
 		
 		if (request.isHTTPS()) 
 		{
-			props.AppendElement(aserv.getAtom("hf_HTTPS"));
-			//return;
+			if (props) 
+			{
+				props.AppendElement(aserv.getAtom("hf_HTTPS"));
+			}
+			else 
+			{
+				// Gecko 22+
+				returnProps += "hf_HTTPS" + " ";
+			}
+		}
+		
+		if (props) 
+		{
+			return;			
+		}
+		else 
+		{
+			// gecko 22+
+			return returnProps;
 		}
 	},
 
 	getColumnProperties: function(colid, col, props)
 	{
+		if (props) 
+		{
+			return;			
+		}
+		else 
+		{
+			// gecko 22+
+			return "";
+		}
 	},
 
 	rowCountChanged: function(index, count) 
