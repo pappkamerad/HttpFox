@@ -16,8 +16,8 @@
 	</commandset>
 
 	<keyset id="mainKeyset">
-		<key id="hf_key_1" keycode="VK_F2" modifiers="shift" command="cmd_hf_togglePanel"/>
-		<key id="hf_key_2" keycode="VK_F3" modifiers="shift" command="cmd_hf_toggleWatching"/>
+		<key id="hf_key_1" keycode="VK_F2" modifiers="accel,shift" command="cmd_hf_togglePanel"/>
+		<key id="hf_key_2" keycode="VK_F3" modifiers="accel,shift" command="cmd_hf_toggleWatching"/>
 		<!--<key id="hf_key_3" keycode="VK_F2" modifiers="control" command="cmd_hf_startWatching"/>
 		<key id="hf_key_4" keycode="VK_F3" modifiers="control" command="cmd_hf_stopWatching"/>-->
 	</keyset>

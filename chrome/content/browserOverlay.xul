@@ -60,8 +60,7 @@
 	<menupopup id="menuWebDeveloperPopup">
 		<menu id="hf_menu_webDeveloper_HttpFox" 
 			class="menu-iconic"
-			label="&browseroverlay.menutools.httpfox.label;" 
-			insertbefore="webConsole" />
+			label="&browseroverlay.menutools.httpfox.label;" />
 		<menuseparator insertbefore="webConsole" />
 	</menupopup>
 
@@ -76,6 +75,31 @@
 		<menuseparator insertbefore="appmenu_webConsole" />
 	</menupopup>
 	
+	<toolbox id="navigator-toolbox">
+		<toolbarpalette id="BrowserToolbarPalette">
+			<toolbarbutton 	id="hf_toolbarButton_HttpFox" 
+							class="toolbarbutton-1 chromeclass-toolbar-additional"
+							label="&browseroverlay.menutools.httpfox.label;"
+							type="menu">
+				<menupopup>
+					<menuitem id="hf_menu_viewToggleHttpFox" 
+						insertbefore="toggle_taskbar"
+						label="&overlay.requestlist.menu.menupop.toggle.label;" 
+						type="checkbox"
+						key="hf_key_1" 
+						command="cmd_hf_togglePanel" />
+					<menuitem 
+						label="&overlay.requestlist.menu.menupop.detach.label;" 
+						command="cmd_hf_detach" />
+					<menuseparator/>
+					<menuitem 
+						label="&overlay.requestlist.menu.menupop.options.label;" 
+						oncommand="HttpFox.OpenOptions();" />
+				</menupopup>
+			</toolbarbutton>
+		</toolbarpalette>
+	</toolbox>
+
 	<vbox id="appcontent"> <!-- overlay firefox content window -->
 		<splitter id="hf_PanelSplitter" collapsed="true" persist="height" />
 		<vbox id="hf_PanelNormal" collapsed="true" persist="height" >
