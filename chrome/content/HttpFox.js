@@ -51,7 +51,7 @@ HttpFoxController.prototype =
 	// constructor
 	init: function ()
 	{
-		this.FilteredRequests = new Array();
+		this.FilteredRequests = [];
 
 		this.HttpFoxService = Components.classes["@decoded.net/httpfox;1"].getService().wrappedJSObject;
 
@@ -116,7 +116,7 @@ HttpFoxController.prototype =
 	//C BUTTON
 	onClickStatusIcon: function (event)
 	{
-		if (event.button != 0)
+		if (event.button !== 0)
 		{
 			return;
 		}
@@ -178,7 +178,7 @@ HttpFoxController.prototype =
 	//CG
 	applyFilter: function ()
 	{
-		this.FilteredRequests = new Array();
+		this.FilteredRequests = [];
 		for (var i = 0; i < this.HttpFoxService.Requests.length; i++)
 		{
 			if (this.HttpFoxService.Requests[i].Url.indexOf(this.QuickFilterText) != -1)
@@ -199,7 +199,7 @@ HttpFoxController.prototype =
 
 	filterRequest: function (parameterArray)
 	{
-		var request = parameterArray["p1"];
+		var request = parameterArray.p1;
 
 		if (request.Url.indexOf(this.QuickFilterText) != -1)
 		{
@@ -346,7 +346,7 @@ HttpFoxController.prototype =
 
 	clear: function ()
 	{
-		this.FilteredRequests = new Array();
+		this.FilteredRequests = [];
 
 		this.clearRequestTree();
 		this.clearRequestInfoTabs();
@@ -412,7 +412,7 @@ HttpFoxController.prototype =
 	{
 		if (typeof (index) == "object")
 		{
-			index = index["p1"];
+			index = index.p1;
 		}
 
 		if (this.RequestTree.TreeElement.currentIndex == index)
@@ -490,7 +490,7 @@ HttpFoxController.prototype =
 		document.getElementById("hf_ContentRadioGroup").selectedIndex = this.ContentViewMode;
 		document.getElementById("hf_ContentRadioPretty").disabled = false;
 		document.getElementById("hf_ContentRadioGroup").disabled = false;
-		if (this.ContentViewMode == 0)
+		if (this.ContentViewMode === 0)
 		{
 			this.selectionChange_ContentDisplayTypePretty();
 		}
@@ -514,7 +514,7 @@ HttpFoxController.prototype =
 		document.getElementById("hf_PostDataRadioGroup").selectedIndex = this.PostDataViewMode;
 		document.getElementById("hf_PostDataRadioPretty").disabled = false;
 		document.getElementById("hf_PostDataRadioGroup").disabled = false;
-		if (this.PostDataViewMode == 0)
+		if (this.PostDataViewMode === 0)
 		{
 			this.selectionChange_PostDataDisplayTypePretty();
 		}
@@ -659,7 +659,7 @@ HttpFoxController.prototype =
 		}
 		catch (e)
 		{
-			alert('error:' + e)
+			alert('error:' + e);
 		}
 		this.disableContentDisplayTypePrettyRadio();
 	},
@@ -706,7 +706,7 @@ HttpFoxController.prototype =
 			this.getPrettyPrintXML(currentRequest.Content, "hf_PrettyContentOutput");
 
 			// display if selected view
-			if (this.ContentViewMode == 0)
+			if (this.ContentViewMode === 0)
 			{
 				this.selectionChange_ContentDisplayTypePretty();
 			}
@@ -799,6 +799,8 @@ HttpFoxController.prototype =
 	//G
 	showRequestHeaders: function (request)
 	{
+		var i, u;
+
 		this.clearTreeEntries("hf_RequestHeadersChildren");
 
 		// request line
@@ -806,40 +808,50 @@ HttpFoxController.prototype =
 
 		for (i in request.RequestHeaders)
 		{
-			this.addHeaderRow("hf_RequestHeadersChildren", i, request.RequestHeaders[i]);
+			if (request.RequestHeaders.hasOwnProperty(i)) {
+				this.addHeaderRow("hf_RequestHeadersChildren", i, request.RequestHeaders[i]);	
+			}
 		}
 
-		for (i in request.PostDataHeaders)
+		for (u in request.PostDataHeaders)
 		{
-			this.addHeaderRow("hf_RequestHeadersChildren", i, request.PostDataHeaders[i]);
+			if (request.PostDataHeaders.hasOwnProperty(u)) {
+				this.addHeaderRow("hf_RequestHeadersChildren", u, request.PostDataHeaders[u]);	
+			}
 		}
 	},
 
 	//G
 	showResponseHeaders: function (request)
 	{
+		var i, u;
+
 		this.clearTreeEntries("hf_ResponseHeadersChildren");
 
 		// response status and text
-		if (request.ResponseHeaders != null)
+		if (request.ResponseHeaders !== null)
 		{
 			this.addHeaderRow("hf_ResponseHeadersChildren", this.stringBundle.GetStringFromName("overlay.requestdetails.headerstab.response.headerrow.col.line"), "HTTP/" + request.ResponseProtocolVersion + " " + request.ResponseStatus + " " + request.ResponseStatusText);
 		}
 
 		for (i in request.ResponseHeaders)
 		{
-			if (i == "Set-Cookie")
-			{
-				// split into original multiple header values
-				var setCookieHeaders = request.ResponseHeaders[i].split("\n");
-				for (u in setCookieHeaders)
+			if (request.ResponseHeaders.hasOwnProperty(i)) {
+				if (i == "Set-Cookie")
 				{
-					this.addHeaderRow("hf_ResponseHeadersChildren", i, setCookieHeaders[u]);
+					// split into original multiple header values
+					var setCookieHeaders = request.ResponseHeaders[i].split("\n");
+					for (u in setCookieHeaders)
+					{
+						if (setCookieHeaders.hasOwnProperty(u)) {
+							this.addHeaderRow("hf_ResponseHeadersChildren", i, setCookieHeaders[u]);	
+						}
+					}
 				}
-			}
-			else
-			{
-				this.addHeaderRow("hf_ResponseHeadersChildren", i, request.ResponseHeaders[i]);
+				else
+				{
+					this.addHeaderRow("hf_ResponseHeadersChildren", i, request.ResponseHeaders[i]);
+				}	
 			}
 		}
 	},
@@ -847,9 +859,11 @@ HttpFoxController.prototype =
 	//G
 	showQueryStringParameters: function (request)
 	{
+		var i;
+
 		this.clearTreeEntries("hf_QueryStringChildren");
 
-		if (request.QueryString == null)
+		if (request.QueryString === null)
 		{
 			this.addHeaderRow("hf_QueryStringChildren", this.stringBundle.GetStringFromName("overlay.requestdetails.querytab.headerrow.col.param"),
 				this.stringBundle.GetStringFromName("overlay.requestdetails.querytab.headerrow.col.value"));
@@ -858,32 +872,38 @@ HttpFoxController.prototype =
 
 		for (i in request.QueryStringParameters)
 		{
-			this.addHeaderRow("hf_QueryStringChildren", net.decoded.utils.urlDecode(request.QueryStringParameters[i][0]), net.decoded.utils.urlDecode(request.QueryStringParameters[i][1]));
+			if (request.QueryStringParameters.hasOwnProperty(i)) {
+				this.addHeaderRow("hf_QueryStringChildren", net.decoded.utils.urlDecode(request.QueryStringParameters[i][0]), net.decoded.utils.urlDecode(request.QueryStringParameters[i][1]));	
+			}
 		}
 	},
 
 	//G
 	showCookieInfo: function (request)
 	{
+		var i;
+
 		this.clearTreeEntries("hf_CookiesSentChildren");
 		this.clearTreeEntries("hf_CookiesReceivedChildren");
 
-		if (request.CookiesSent == null && request.CookiesReceived == null)
+		if (request.CookiesSent === null && request.CookiesReceived === null)
 		{
 			// no cookies
 			return;
 		}
 
-		var i;
-
 		for (i in request.CookiesSent)
 		{
-			this.addCookieRow("hf_CookiesSentChildren", request.CookiesSent[i]["name"], request.CookiesSent[i]["value"], (request.CookiesSent[i]["path"]) ? request.CookiesSent[i]["path"] : "", (request.CookiesSent[i]["domain"]) ? request.CookiesSent[i]["domain"] : "", (request.CookiesSent[i]["expires"]) ? net.decoded.utils.formatDateTime(request.CookiesSent[i]["expires"]) : "End Of Session");
+			if (request.CookiesSent.hasOwnProperty(i)) {
+				this.addCookieRow("hf_CookiesSentChildren", request.CookiesSent[i].name, request.CookiesSent[i].value, (request.CookiesSent[i].path) ? request.CookiesSent[i].path : "", (request.CookiesSent[i].domain) ? request.CookiesSent[i].domain : "", (request.CookiesSent[i].expires) ? net.decoded.utils.formatDateTime(request.CookiesSent[i].expires) : "End Of Session");				
+			}
 		}
 
 		for (i in request.CookiesReceived)
 		{
-			this.addCookieRow("hf_CookiesReceivedChildren", request.CookiesReceived[i]["name"], request.CookiesReceived[i]["value"], request.CookiesReceived[i]["path"], (request.CookiesReceived[i]["domain"]) ? request.CookiesReceived[i]["domain"] : "", (request.CookiesReceived[i]["expires"]) ? request.CookiesReceived[i]["expires"] : "End Of Session");
+			if (request.CookiesReceived.hasOwnProperty(i)) {
+				this.addCookieRow("hf_CookiesReceivedChildren", request.CookiesReceived[i].name, request.CookiesReceived[i].value, request.CookiesReceived[i].path, (request.CookiesReceived[i].domain) ? request.CookiesReceived[i].domain : "", (request.CookiesReceived[i].expires) ? request.CookiesReceived[i].expires : "End Of Session");				
+			}
 		}
 	},
 
@@ -899,7 +919,9 @@ HttpFoxController.prototype =
 	//G
 	showPostData: function (request)
 	{
-		if (this.PostDataViewMode == 0)
+		var i, y;
+
+		if (this.PostDataViewMode === 0)
 		{
 			this.selectionChange_PostDataDisplayTypePretty();
 		}
@@ -930,7 +952,7 @@ HttpFoxController.prototype =
 		mimeLabel.value = this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.pretty.type");
 		this.clearTreeEntries("hf_PostDataChildren");
 
-		if (request.PostData == null)
+		if (request.PostData === null)
 		{
 			this.addHeaderRow("hf_PostDataChildren",
 				this.stringBundle.GetStringFromName("overlay.requestdetails.posttab.headerrow.col.param"),
@@ -942,20 +964,24 @@ HttpFoxController.prototype =
 		}
 
 		var ctypedisplay = "";
-		for (var y in request.PostDataHeaders)
+		for (y in request.PostDataHeaders)
 		{
-			if (y.toLowerCase() == "content-type")
-			{
-				ctypedisplay = request.PostDataHeaders[y];
-			}
-		}
-		if (ctypedisplay == "")
-		{
-			for (var y in request.RequestHeaders)
-			{
+			if (request.PostDataHeaders.hasOwnProperty(y)) {
 				if (y.toLowerCase() == "content-type")
 				{
-					ctypedisplay = request.RequestHeaders[y];
+					ctypedisplay = request.PostDataHeaders[y];
+				}	
+			}
+		}
+		if (ctypedisplay === "")
+		{
+			for (y in request.RequestHeaders)
+			{
+				if (request.ResponseHeaders.hasOwnProperty(y)) {
+					if (y.toLowerCase() == "content-type")
+					{
+						ctypedisplay = request.RequestHeaders[y];
+					}	
 				}
 			}
 		}
@@ -968,28 +994,30 @@ HttpFoxController.prototype =
 
 			for (i in request.PostDataMIMEParts)
 			{
-				if (request.PostDataMIMEParts[i]["filename"] != null)
-				{
-					this.addHeaderRow("hf_PostDataChildren",
-						request.PostDataMIMEParts[i]["varname"],
-						request.PostDataMIMEParts[i]["filename"] + " " + request.PostDataMIMEParts[i]["ctype"]);
+				if (request.PostDataMIMEParts.hasOwnProperty(i)) {
+					if (request.PostDataMIMEParts[i].filename !== null)
+					{
+						this.addHeaderRow("hf_PostDataChildren",
+							request.PostDataMIMEParts[i].varname,
+							request.PostDataMIMEParts[i].filename + " " + request.PostDataMIMEParts[i].ctype);
+					}
+					else
+					{
+						this.addHeaderRow("hf_PostDataChildren", request.PostDataMIMEParts[i].varname, request.PostDataMIMEParts[i].value);
+					}	
 				}
-				else
-				{
-					this.addHeaderRow("hf_PostDataChildren", request.PostDataMIMEParts[i]["varname"], request.PostDataMIMEParts[i]["value"]);
-				}
-
 			}
 		}
 		else if (request.PostDataParameters)
 		{
 			// standard url encoded post data
-
 			for (i in request.PostDataParameters)
 			{
-				if (request.PostDataParameters[i][0] != null && request.PostDataParameters[i][0] != "")
-				{
-					this.addHeaderRow("hf_PostDataChildren", net.decoded.utils.urlDecode(request.PostDataParameters[i][0]), net.decoded.utils.urlDecode(request.PostDataParameters[i][1] != null ? request.PostDataParameters[i][1] : ""));
+				if (request.PostDataParameters.hasOwnProperty(i)) {
+					if (request.PostDataParameters[i][0] !== null && request.PostDataParameters[i][0] !== "")
+					{
+						this.addHeaderRow("hf_PostDataChildren", net.decoded.utils.urlDecode(request.PostDataParameters[i][0]), net.decoded.utils.urlDecode(request.PostDataParameters[i][1] !== null ? request.PostDataParameters[i][1] : ""));
+					}	
 				}
 			}
 		}
@@ -1035,6 +1063,7 @@ HttpFoxController.prototype =
 
 	getDebugInfoContent: function (request)
 	{
+		var i, u;
 		var content = "";
 		content = "<div style=\"font-family:Tahoma,Verdana,Arial,sans-serif; font-size:11px;\">";
 		content += "<b>Url:</b> " + request.Url + "<br/>";
@@ -1065,68 +1094,74 @@ HttpFoxController.prototype =
 		// headers
 		for (i in request.RequestHeaders)
 		{
-			content += "<br/>";
-			content += "<b>Request header:</b> " + i + " : " + request.RequestHeaders[i];
+			if (request.RequestHeaders.hasOwnProperty(i)) {
+				content += "<br/>";
+				content += "<b>Request header:</b> " + i + " : " + request.RequestHeaders[i];	
+			}
 		}
 		for (i in request.ResponseHeaders)
 		{
-			content += "<br/>";
-			content += "<b>Response header:</b> " + i + " : " + request.ResponseHeaders[i];
+			if (request.ResponseHeaders.hasOwnProperty(i)) {
+				content += "<br/>";
+				content += "<b>Response header:</b> " + i + " : " + request.ResponseHeaders[i];
+			}
 		}
 
 		content += "<br/>";
 
 		for (i in request.RequestLog)
 		{
-			content += "<br/>";
-			content += "-> <b>EventLog " + i + ":</b> <br/>";
-			content += "-------------------------------------------------------------------------<br/>";
-			content += "<b> - Url: </b>" + request.RequestLog[i].Url + "<br/>";
-			content += "<b> - ChannelStatus: </b>" + request.RequestLog[i].Status + "<br/>";
-			content += "<b> - Statuscode: </b>" + request.RequestLog[i].ResponseStatus + "<br/>";
-			content += "<b> - Timestamp: </b>" + request.RequestLog[i].Timestamp + "<br/>";
-			content += "<b> - HttpFox starttime: </b>" + request.HttpFox.StartTime + "<br/>";
-			//content += "- relative timestamp: " + net.decoded.utils.formatTime(new Date(this.RequestLog[i].Timestamp.getTime() - this.HttpFox.StartTime.getTime())) + "<br/>";
-			content += "<b> - IsFromCache: </b>" + request.RequestLog[i].IsFromCache + "<br/>";
-			content += "<b> - IsPending: </b>" + request.RequestLog[i].IsPending + "<br/>";
-			content += "<b> - BytesLoaded: </b>" + request.RequestLog[i].BytesLoaded + "<br/>";
-			content += "<b> - BytesLoadedTotal: </b>" + request.RequestLog[i].BytesLoadedTotal + "<br/>";
-			content += "<b> - ContentLength: </b>" + request.RequestLog[i].ContentLength + "<br/>";
-			content += "<b> - ContentType: </b>" + request.RequestLog[i].ContentType + "<br/>";
-			content += "<b> - ContentCharset: </b>" + request.RequestLog[i].ContentCharset + "<br/>";
-			content += "<b> - EventSource: </b>" + this.HttpFoxService.getEventSourceName(request.RequestLog[i].EventSource) + "<br/>";
-			content += "<b> - EventSourceData: </b><br/>";
-			for (u in request.RequestLog[i].EventSourceData)
-			{
-				if ((request.RequestLog[i].EventSource == this.HttpFoxService.HttpFoxEventSourceType.EVENTSINK_ON_STATUS ||
-					request.RequestLog[i].EventSource == this.HttpFoxService.HttpFoxEventSourceType.WEBPROGRESS_ON_STATUS_CHANGED)
-					&& u == "status")
+			if (request.RequestLog.hasOwnProperty(i)) {
+				content += "<br/>";
+				content += "-> <b>EventLog " + i + ":</b> <br/>";
+				content += "-------------------------------------------------------------------------<br/>";
+				content += "<b> - Url: </b>" + request.RequestLog[i].Url + "<br/>";
+				content += "<b> - ChannelStatus: </b>" + request.RequestLog[i].Status + "<br/>";
+				content += "<b> - Statuscode: </b>" + request.RequestLog[i].ResponseStatus + "<br/>";
+				content += "<b> - Timestamp: </b>" + request.RequestLog[i].Timestamp + "<br/>";
+				content += "<b> - HttpFox starttime: </b>" + request.HttpFox.StartTime + "<br/>";
+				//content += "- relative timestamp: " + net.decoded.utils.formatTime(new Date(this.RequestLog[i].Timestamp.getTime() - this.HttpFox.StartTime.getTime())) + "<br/>";
+				content += "<b> - IsFromCache: </b>" + request.RequestLog[i].IsFromCache + "<br/>";
+				content += "<b> - IsPending: </b>" + request.RequestLog[i].IsPending + "<br/>";
+				content += "<b> - BytesLoaded: </b>" + request.RequestLog[i].BytesLoaded + "<br/>";
+				content += "<b> - BytesLoadedTotal: </b>" + request.RequestLog[i].BytesLoadedTotal + "<br/>";
+				content += "<b> - ContentLength: </b>" + request.RequestLog[i].ContentLength + "<br/>";
+				content += "<b> - ContentType: </b>" + request.RequestLog[i].ContentType + "<br/>";
+				content += "<b> - ContentCharset: </b>" + request.RequestLog[i].ContentCharset + "<br/>";
+				content += "<b> - EventSource: </b>" + this.HttpFoxService.getEventSourceName(request.RequestLog[i].EventSource) + "<br/>";
+				content += "<b> - EventSourceData: </b><br/>";
+				for (u in request.RequestLog[i].EventSourceData)
 				{
-					content += "<b> -- " + u + ": </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.SOCKETTRANSPORT, request.RequestLog[i].EventSourceData[u]) + "<br/>";
+					if ((request.RequestLog[i].EventSource == this.HttpFoxService.HttpFoxEventSourceType.EVENTSINK_ON_STATUS ||
+						request.RequestLog[i].EventSource == this.HttpFoxService.HttpFoxEventSourceType.WEBPROGRESS_ON_STATUS_CHANGED) &&
+						u == "status")
+					{
+						content += "<b> -- " + u + ": </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.SOCKETTRANSPORT, request.RequestLog[i].EventSourceData[u]) + "<br/>";
+					}
+					else if (request.RequestLog[i].EventSource == this.HttpFoxService.HttpFoxEventSourceType.WEBPROGRESS_ON_SECURITY_CHANGED && u == "state")
+					{
+						content += "<b> -- " + u + " - security: </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.WEBPROGRESS_SECURITY, request.RequestLog[i].EventSourceData[u]) + "<br/>";
+						content += "<b> -- " + u + " - strength: </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.WEBPROGRESS_SECURITY_STRENGTH, request.RequestLog[i].EventSourceData[u]) + "<br/>";
+					}
+					else if (request.RequestLog[i].EventSource == this.HttpFoxService.HttpFoxEventSourceType.WEBPROGRESS_ON_STATE_CHANGED && u == "flags")
+					{
+						content += "<b> -- " + u + " - transition: </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.WEBPROGRESS_TRANSITION, request.RequestLog[i].EventSourceData[u]) + "<br/>";
+						content += "<b> -- " + u + " - type: </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.WEBPROGRESS_TYPE, request.RequestLog[i].EventSourceData[u]) + "<br/>";
+						content += "<b> -- " + u + " - modifier: </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.WEBPROGRESS_MODIFIER, request.RequestLog[i].EventSourceData[u]) + "<br/>";
+						content += "<b> -- " + u + " - security: </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.WEBPROGRESS_SECURITY, request.RequestLog[i].EventSourceData[u]) + "<br/>";
+						content += "<b> -- " + u + " - strength: </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.WEBPROGRESS_SECURITY_STRENGTH, request.RequestLog[i].EventSourceData[u]) + "<br/>";
+					}
+					else if (request.RequestLog[i].EventSource == this.HttpFoxService.HttpFoxEventSourceType.WEBPROGRESS_ON_LOCATION_CHANGED && u == "uri")
+					{
+						content += "<b> -- " + u + ": </b>" + request.RequestLog[i].EventSourceData[u].asciiSpec + "<br/>";
+					}
+					else
+					{
+						content += "<b> -- " + u + ": </b>" + request.RequestLog[i].EventSourceData[u] + "<br/>";
+					}
 				}
-				else if (request.RequestLog[i].EventSource == this.HttpFoxService.HttpFoxEventSourceType.WEBPROGRESS_ON_SECURITY_CHANGED && u == "state")
-				{
-					content += "<b> -- " + u + " - security: </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.WEBPROGRESS_SECURITY, request.RequestLog[i].EventSourceData[u]) + "<br/>";
-					content += "<b> -- " + u + " - strength: </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.WEBPROGRESS_SECURITY_STRENGTH, request.RequestLog[i].EventSourceData[u]) + "<br/>";
-				}
-				else if (request.RequestLog[i].EventSource == this.HttpFoxService.HttpFoxEventSourceType.WEBPROGRESS_ON_STATE_CHANGED && u == "flags")
-				{
-					content += "<b> -- " + u + " - transition: </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.WEBPROGRESS_TRANSITION, request.RequestLog[i].EventSourceData[u]) + "<br/>";
-					content += "<b> -- " + u + " - type: </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.WEBPROGRESS_TYPE, request.RequestLog[i].EventSourceData[u]) + "<br/>";
-					content += "<b> -- " + u + " - modifier: </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.WEBPROGRESS_MODIFIER, request.RequestLog[i].EventSourceData[u]) + "<br/>";
-					content += "<b> -- " + u + " - security: </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.WEBPROGRESS_SECURITY, request.RequestLog[i].EventSourceData[u]) + "<br/>";
-					content += "<b> -- " + u + " - strength: </b>" + this.HttpFoxService.getStatusTextFromCode(this.HttpFoxService.HttpFoxStatusCodeType.WEBPROGRESS_SECURITY_STRENGTH, request.RequestLog[i].EventSourceData[u]) + "<br/>";
-				}
-				else if (request.RequestLog[i].EventSource == this.HttpFoxService.HttpFoxEventSourceType.WEBPROGRESS_ON_LOCATION_CHANGED && u == "uri")
-				{
-					content += "<b> -- " + u + ": </b>" + request.RequestLog[i].EventSourceData[u].asciiSpec + "<br/>";
-				}
-				else
-				{
-					content += "<b> -- " + u + ": </b>" + request.RequestLog[i].EventSourceData[u] + "<br/>";
-				}
+				content += "<br/>";
 			}
-			content += "<br/>";
 		}
 
 		content += "</div>";
@@ -1165,11 +1200,14 @@ HttpFoxController.prototype =
 		var row = {};
 		var column = {};
 		var part = {};
+		var tree, boxobject, menu;
+		var i;
+
 		if (event.currentTarget.id == "hf_RequestTreeContextMenu")
 		{
-			var tree = this.RequestTree.TreeElement;
-			var boxobject = tree.boxObject;
-			var menu = document.getElementById("hf_RequestTreeContextMenu");
+			tree = this.RequestTree.TreeElement;
+			boxobject = tree.boxObject;
+			menu = document.getElementById("hf_RequestTreeContextMenu");
 
 			boxobject.QueryInterface(Components.interfaces.nsITreeBoxObject);
 			boxobject.getCellAt(event.clientX, event.clientY, row, column, part);
@@ -1177,21 +1215,21 @@ HttpFoxController.prototype =
 		else
 		{
 			var infoTreeIds = this.getCurrentInfoTreeElement().split(";");
-			var tree;
-			var boxobject;
-			var menu = document.getElementById("hf_RequestDetailsContextMenu");
+			menu = document.getElementById("hf_RequestDetailsContextMenu");
 			for (i in infoTreeIds)
 			{
-				row = {};
-				column = {};
-				tree = document.getElementById(infoTreeIds[i]);
-				boxobject = tree.boxObject;
-				boxobject.QueryInterface(Components.interfaces.nsITreeBoxObject);
-				boxobject.getCellAt(event.clientX, event.clientY, row, column, part);
-				if (column.value != null)
-				{
-					// tree found
-					break;
+				if (infoTreeIds.hasOwnProperty(i)) {
+					row = {};
+					column = {};
+					tree = document.getElementById(infoTreeIds[i]);
+					boxobject = tree.boxObject;
+					boxobject.QueryInterface(Components.interfaces.nsITreeBoxObject);
+					boxobject.getCellAt(event.clientX, event.clientY, row, column, part);
+					if (column.value !== null)
+					{
+						// tree found
+						break;
+					}	
 				}
 			}
 		}
@@ -1199,7 +1237,7 @@ HttpFoxController.prototype =
 		// set current tree
 		this.currentContextTree = tree;
 
-		if (column.value != null)
+		if (column.value !== null)
 		{
 			// column and row found. show those two entries
 			var celltext = tree.view.getCellText(row.value, tree.columns.getColumnAt(column.value.index));
@@ -1232,7 +1270,7 @@ HttpFoxController.prototype =
 	//G
 	Clipboard_CopyTreeRowCell: function ()
 	{
-		if (this.currentCellText != null)
+		if (this.currentCellText !== null)
 		{
 			net.decoded.utils.toClipboard(this.currentCellText);
 		}
@@ -1241,7 +1279,7 @@ HttpFoxController.prototype =
 	//G
 	Clipboard_CopyTreeRow: function ()
 	{
-		if (this.currentContextTree != null)
+		if (this.currentContextTree !== null)
 		{
 			var copyString = "";
 			for (var i = 0; i < this.currentContextTree.columns.count; i++)
@@ -1259,7 +1297,7 @@ HttpFoxController.prototype =
 	//G
 	Clipboard_CopyTreeAllRows: function ()
 	{
-		if (this.currentContextTree != null)
+		if (this.currentContextTree !== null)
 		{
 			var copyString = "";
 			var rowCount = this.currentContextTree.view.rowCount;
@@ -1292,8 +1330,7 @@ HttpFoxController.prototype =
 	{
 		openDialog("chrome://httpfox/content/HttpFoxOptions.xul", "HttpFox Options", "", null);
 	}
-
-}
+};
 
 var HttpFox = new HttpFoxController();
 

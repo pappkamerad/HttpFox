@@ -26,7 +26,7 @@ net.decoded.utils = {
 	// Date and Time stuff
 	formatTimeDifference: function(startTime, endTime)
 	{
-		if (startTime == null || endTime == null)
+		if (startTime === null || endTime === null)
 		{
 			return "*";
 		}
@@ -141,7 +141,7 @@ net.decoded.utils = {
 		if (!niv) {
 			niv=1;
 		}
-		var dumpdict = new Object();
+		var dumpdict = {};
 	
 		dump ("\n\n-------------------------------------------------------\n");
 		dump ("Dump of the object: " + name + " (" + niv + " levels)\n");
@@ -150,13 +150,15 @@ net.decoded.utils = {
 		
 		for (var i in Components.interfaces) 
 		{
-			try 
-			{
-				obj.QueryInterface(Components.interfaces[i]);
-				dump("" + Components.interfaces[i] + ", ");
-			} 
-			catch(ex) 
-			{}
+			if (Components.interfaces.hasOwnProperty(i)) {
+				try 
+				{
+					obj.QueryInterface(Components.interfaces[i]);
+					dump("" + Components.interfaces[i] + ", ");
+				} 
+				catch(ex) 
+				{}	
+			}
 		}
 		dump("\n");
 		this._dumpall(dumpdict,obj,niv,"","");
@@ -164,7 +166,9 @@ net.decoded.utils = {
 	
 		for (i in dumpdict) 
 		{
-			delete dumpdict[i];
+			if (dumpdict.hasOwnProperty(i)) {
+				delete dumpdict[i];	
+			}
 		}
 	},
 	
@@ -181,26 +185,28 @@ net.decoded.utils = {
 			var i, r, str, typ;
 			for (i in obj) 
 			{
-				try 
-				{
-					str = String(obj[i]).replace(/\n/g, "\n" + tab);
-				} 
-				catch(ex) 
-				{
-					str = String(ex);
-				}
-				try 
-				{
-					typ = "" + typeof(obj[i]);
-				} 
-				catch(ex) 
-				{
-					typ = "unknown";
-				}
-				dump ("\n" + tab + i + " (" + typ + (path ? ", " + path : "") + "): " + str);
-				if ((niv > 1) && (typ == "object")) 
-				{
-					this._dumpall(dumpdict, obj[i], niv-1, tab + "\t", (path ? path + "->" + i : i));
+				if (obj.hasOwnProperty(i)) {
+					try 
+					{
+						str = String(obj[i]).replace(/\n/g, "\n" + tab);
+					} 
+					catch(ex) 
+					{
+						str = String(ex);
+					}
+					try 
+					{
+						typ = "" + typeof(obj[i]);
+					} 
+					catch(ex) 
+					{
+						typ = "unknown";
+					}
+					dump ("\n" + tab + i + " (" + typ + (path ? ", " + path : "") + "): " + str);
+					if ((niv > 1) && (typ == "object")) 
+					{
+						this._dumpall(dumpdict, obj[i], niv-1, tab + "\t", (path ? path + "->" + i : i));
+					}	
 				}
 			}
 		}
@@ -257,10 +263,10 @@ net.decoded.utils = {
 			} 
 			catch(ex) 
 			{
-	      		// do nothing, later code will handle the error
-			    dump("Unable to get the clipboard helper\n");
-	    	}
-	  	}
+				// do nothing, later code will handle the error
+				dump("Unable to get the clipboard helper\n");
+			}
+		}
 	},
 	
 	// Utility function to save data to a file
@@ -297,20 +303,20 @@ net.decoded.utils = {
 	
 	openWindow: function(windowType, url, features, params)
 	{
-	    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
+		var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
 	
-	    var win = windowType ? wm.getMostRecentWindow(windowType) : null;
-	    if (win) 
+		var win = windowType ? wm.getMostRecentWindow(windowType) : null;
+		if (win) 
 		{
 			if ("initWithParams" in win)
 			{
 				win.initWithParams(aParams);
 			}
 			win.focus();
-	    }
-	    else 
-	    {
-			var winFeatures = "resizable,dialog=no,centerscreen" + (features != "" ? ("," + features) : "");
+		}
+		else 
+		{
+			var winFeatures = "resizable,dialog=no,centerscreen" + (features !== "" ? ("," + features) : "");
 			var parentWindow = (!window.opener || window.opener.closed) ? window : window.opener;
 			win = parentWindow.openDialog(url, "_blank", winFeatures, params);
 		}
@@ -453,23 +459,14 @@ net.decoded.utils = {
 		"804e03fa": "NS_ERROR_HTMLPARSER_FAKE_ENDTAG",
 		"804e03fb": "NS_ERROR_HTMLPARSER_INVALID_COMMENT",
 		"80500001": "NS_ERROR_UCONV_NOCONV",
-		"8050000e": "NS_ERROR_UDEC_ILLEGALINPUT",
 		"8050000e": "NS_ERROR_ILLEGAL_INPUT",
 		"80510001": "NS_ERROR_REG_BADTYPE",
-		"80510001": "NS_ERROR_REG_BADTYPE",
-		"80510003": "NS_ERROR_REG_NOT_FOUND",
 		"80510003": "NS_ERROR_REG_NOT_FOUND",
 		"80510004": "NS_ERROR_REG_NOFILE",
-		"80510004": "NS_ERROR_REG_NOFILE",
-		"80510005": "NS_ERROR_REG_BUFFER_TOO_SMALL",
 		"80510005": "NS_ERROR_REG_BUFFER_TOO_SMALL",
 		"80510006": "NS_ERROR_REG_NAME_TOO_LONG",
-		"80510006": "NS_ERROR_REG_NAME_TOO_LONG",
-		"80510007": "NS_ERROR_REG_NO_PATH",
 		"80510007": "NS_ERROR_REG_NO_PATH",
 		"80510008": "NS_ERROR_REG_READ_ONLY",
-		"80510008": "NS_ERROR_REG_READ_ONLY",
-		"80510009": "NS_ERROR_REG_BAD_UTF8",
 		"80510009": "NS_ERROR_REG_BAD_UTF8",
 		"80520001": "NS_ERROR_FILE_UNRECOGNIZED_PATH",
 		"80520002": "NS_ERROR_FILE_UNRESOLVABLE_SYMLINK",
@@ -622,16 +619,11 @@ net.decoded.utils = {
 		"805e000a": "NS_ERROR_CONTENT_BLOCKED",
 		"805e000b": "NS_ERROR_CONTENT_BLOCKED_SHOW_ALT",
 		"805e000e": "NS_PROPTABLE_PROP_NOT_THERE",
-		"80600001": "TM_ERROR",
 		"80600001": "NS_ERROR_XSLT_PARSE_FAILURE",
-		"80600002": "TM_ERROR_WRONG_QUEUE",
 		"80600002": "NS_ERROR_XPATH_PARSE_FAILURE",
-		"80600003": "TM_ERROR_NOT_POSTED",
 		"80600003": "NS_ERROR_XSLT_ALREADY_SET",
-		"80600004": "TM_ERROR_QUEUE_EXISTS",
 		"80600004": "NS_ERROR_XSLT_EXECUTION_FAILURE",
 		"80600005": "NS_ERROR_XPATH_UNKNOWN_FUNCTION",
-		"80600006": "TM_SUCCESS_DELETE_QUEUE",
 		"80600006": "NS_ERROR_XSLT_BAD_RECURSION",
 		"80600007": "NS_ERROR_XSLT_BAD_VALUE",
 		"80600008": "NS_ERROR_XSLT_NODESET_EXPECTED",
@@ -668,41 +660,21 @@ net.decoded.utils = {
 		"80640004": "NS_ERROR_SCHEMAVALIDATOR_TYPE_NOT_FOUND",
 		"80650000": "NS_ERROR_DOM_FILE_NOT_FOUND_ERR",
 		"80650001": "NS_ERROR_DOM_FILE_NOT_READABLE_ERR",
-		"80780001": "NS_ERROR_WSDL_NOT_WSDL_ELEMENT",
 		"80780001": "NS_ERROR_SCHEMA_NOT_SCHEMA_ELEMENT",
-		"80780001": "NS_ERROR_SCHEMA_NOT_SCHEMA_ELEMENT",
-		"80780001": "NS_ERROR_DOWNLOAD_COMPLETE",
-		"80780002": "NS_ERROR_WSDL_SCHEMA_PROCESSING_ERROR",
 		"80780002": "NS_ERROR_SCHEMA_UNKNOWN_TARGET_NAMESPACE",
-		"80780002": "NS_ERROR_SCHEMA_UNKNOWN_TARGET_NAMESPACE",
-		"80780002": "NS_ERROR_DOWNLOAD_NOT_PARTIAL",
-		"80780003": "NS_ERROR_WSDL_BINDING_NOT_FOUND",
 		"80780003": "NS_ERROR_SCHEMA_UNKNOWN_TYPE",
-		"80780003": "NS_ERROR_SCHEMA_UNKNOWN_TYPE",
-		"80780004": "NS_ERROR_WSDL_UNKNOWN_SCHEMA_COMPONENT",
 		"80780004": "NS_ERROR_SCHEMA_UNKNOWN_PREFIX",
-		"80780004": "NS_ERROR_SCHEMA_UNKNOWN_PREFIX",
-		"80780005": "NS_ERROR_WSDL_UNKNOWN_WSDL_COMPONENT",
 		"80780005": "NS_ERROR_SCHEMA_INVALID_STRUCTURE",
-		"80780005": "NS_ERROR_SCHEMA_INVALID_STRUCTURE",
-		"80780006": "NS_ERROR_WSDL_LOADING_ERROR",
 		"80780006": "NS_ERROR_SCHEMA_INVALID_TYPE_USAGE",
-		"80780006": "NS_ERROR_SCHEMA_INVALID_TYPE_USAGE",
-		"80780007": "NS_ERROR_WSDL_RECURSIVE_IMPORT",
 		"80780007": "NS_ERROR_SCHEMA_MISSING_TYPE",
-		"80780007": "NS_ERROR_SCHEMA_MISSING_TYPE",
-		"80780008": "NS_ERROR_WSDL_NOT_ENABLED",
 		"80780008": "NS_ERROR_SCHEMA_FACET_VALUE_ERROR",
-		"80780008": "NS_ERROR_SCHEMA_FACET_VALUE_ERROR",
-		"80780009": "NS_ERROR_SCHEMA_LOADING_ERROR",
 		"80780009": "NS_ERROR_SCHEMA_LOADING_ERROR",
 		"8078000a": "IPC_WAIT_NEXT_MESSAGE",
 		"80780021": "NS_ERROR_UNORM_MOREOUTPUT",
 		"807803e9": "NS_ERROR_WEBSHELL_REQUEST_REJECTED",
 		"807807d1": "NS_ERROR_DOCUMENT_IS_PRINTMODE",
-		"80780bb9": "NS_ERROR_XFORMS_CALCUATION_EXCEPTION",
 		"80780bb9": "NS_ERROR_XFORMS_CALCULATION_EXCEPTION",
 		"80780bba": "NS_ERROR_XFORMS_UNION_TYPE"
 	}
-}
+};
 // ************************************************************************************************

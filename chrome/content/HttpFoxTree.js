@@ -20,14 +20,13 @@
 // tree implementation for request/response output on main window
 function HttpFoxTree(treeElement, HttpFoxControllerReference)
 {
-   this.init(treeElement, HttpFoxControllerReference);
+	this.init(treeElement, HttpFoxControllerReference);
 }
 
 HttpFoxTree.prototype = 
 {
 	HttpFox: null,
 	TreeElement: null,
-	//treebox: null,
 	selection: null,
 	
 	init: function(treeElement, HttpFoxControllerReference)
@@ -41,26 +40,12 @@ HttpFoxTree.prototype =
 	get rowCount() 
 	{
 		return this.HttpFox.FilteredRequests.length;
-		//return this.HttpFox.Requests.length;
 	},
-   
-	/*set data(httpdata) {
-		var oldCount = this.rowCount;
-		this.sourceData = httpdata;
-		//this.filteredData = this.sourceData.requests;
-		// hook into the push function of the array
-		this.sourceData.tree = this;
-		this.sourceData.oldPush = this.sourceData.push;
-		this.sourceData.push = myPush;
-		//this.filteredData = this.sourceData.requests;
-		this.rowCountChanged(0, -oldCount);
-		//this.gui.hasData = (this.sourceData.requests.length > 0);
-		//this.filter(this.gui.currentFilter);
-	},*/ 
-   
+
 	getCellText: function(row, column) 
 	{
 		var request = this.HttpFox.FilteredRequests[row];
+		var rString;
 		
 		if (request)
 		{
@@ -70,11 +55,11 @@ HttpFoxTree.prototype =
 				column = column.id;
 			}
 			
-	     	switch(column)
-	     	{
-	     		case "hf_Column_Started":
-	        		return net.decoded.utils.formatTime(new Date(request.StartTimestamp - this.HttpFox.HttpFoxService.StartTime.getTime()));
-	        		
+			switch(column)
+			{
+				case "hf_Column_Started":
+					return net.decoded.utils.formatTime(new Date(request.StartTimestamp - this.HttpFox.HttpFoxService.StartTime.getTime()));
+					
 				case "hf_Column_Time":
 					if (!request.IsFinished)
 					{
@@ -84,7 +69,7 @@ HttpFoxTree.prototype =
 					return net.decoded.utils.formatTimeDifference(request.StartTimestamp, request.EndTimestamp);
 					
 				case "hf_Column_Sent":
-					var rString = "";
+					rString = "";
 					
 					if (request.IsSending)
 					{
@@ -98,7 +83,7 @@ HttpFoxTree.prototype =
 					return rString;
 					
 				case "hf_Column_Received":
-					var rString = "";
+					rString = "";
 					
 					/*if (request.IsAborted)
 					{
@@ -171,9 +156,9 @@ HttpFoxTree.prototype =
 					
 					if (request.isRedirect())
 					{
-						if (request.ResponseHeaders && request.ResponseHeaders["Location"])
+						if (request.ResponseHeaders && request.ResponseHeaders.Location)
 						{
-							return "Redirect to: " + request.ResponseHeaders["Location"];	
+							return "Redirect to: " + request.ResponseHeaders.Location;
 						}
 						return "Redirect (cached)";
 					}
@@ -519,61 +504,4 @@ HttpFoxTree.prototype =
 		this.TreeElement.currentIndex = this.rowCount;
 		this.invalidate();
 	}
-
-   /*getText : function(all) {
-      var text = "";
-      var start = 0;
-      var end = 0;
-      if (all) {
-         end = this.filteredData.length;
-         for (var current = start; current < end; current++) {
-            if (current > start) {
-               text += "\n";
-            }
-            text += this.filteredData[current].toString() + "\n";
-         }
-      } else {
-         // do some tricky stuff here to retrieve all of the
-         // selected rows
-         var rangeStart = new Object();
-         var rangeEnd = new Object();
-         var numRanges = this.tree.view.selection.getRangeCount();
-         
-         for (var t = 0; t < numRanges; t++){
-            this.tree.view.selection.getRangeAt(t , rangeStart, rangeEnd);
-            for (var v = rangeStart.value; v <= rangeEnd.value; v++){
-               // now we've got the index ...
-               if (t != 0 || v != 0) {
-                  text += "\n";
-               }
-               text += this.filteredData[v].toString() + "\n";
-            }
-         }
-      }
-      return text;
-   },*/
-
-  /* filter : function(value) {
-      var oldRowCount = this.rowCount;
-      if (value == null || value == "") {
-         this.filteredData = this.sourceData.requests;
-      } else {
-         value = value.toLowerCase();
-         this.filteredData = new Array();
-         var request = null;
-         for (var i = 0; i < this.sourceData.requests.length; i++) {
-            request = this.sourceData.requests[i];
-            if (request.uri.toLowerCase().indexOf(value) >= 0) {
-            // make it a preference to filter on uri v.s. whole string
-            // if (request.toString().toLowerCase().indexOf(value) >= 0) {
-               this.filteredData.push(request);
-            }
-         }
-      }
-      if (this.treebox) {
-         this.treebox.invalidate();
-         this.rowCountChanged(0, this.rowCount - oldRowCount);
-      }
-   }*/
-     
-}
+};

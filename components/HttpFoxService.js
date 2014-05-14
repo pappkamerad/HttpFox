@@ -49,7 +49,7 @@ function HttpFoxService()
 {
 	this.wrappedJSObject = this;
 	this.init();
-};
+}
 
 // class definition
 HttpFoxService.prototype = 
@@ -67,7 +67,7 @@ HttpFoxService.prototype =
 	// All requests (holds HttpFoxRequest objects)
 	Requests: null,
 
-	// All pending requests (isPending == true)
+	// All pending requests (isPending === true)
 	PendingRequests: null,
 
 	// session start timestamp
@@ -84,10 +84,10 @@ HttpFoxService.prototype =
 	
 	init: function() 
 	{
-		this.Controllers = new Array();
+		this.Controllers = [];
 		
-		this.Requests = new Array();
-		this.PendingRequests = new Array();
+		this.Requests = [];
+		this.PendingRequests = [];
 		
 		this.StartTime = new Date();
 		
@@ -133,8 +133,8 @@ HttpFoxService.prototype =
 	
 	clearRequests: function()
 	{
-		this.Requests = new Array();
-		this.PendingRequests = new Array();
+		this.Requests = [];
+		this.PendingRequests = [];
 		
 		this.StartTime = new Date();
 	},
@@ -146,9 +146,12 @@ HttpFoxService.prototype =
 	
 	callControllerMethod: function(methodName, parameterArray)
 	{
-		for (var c in this.Controllers)
+		var c;
+		for (c in this.Controllers)
 		{
-			this.Controllers[c][methodName].call(this.Controllers[c], parameterArray);
+			if (this.Controllers.hasOwnProperty(c)) {
+				this.Controllers[c][methodName].call(this.Controllers[c], parameterArray);	
+			}
 		}
 	},
 	
@@ -159,8 +162,9 @@ HttpFoxService.prototype =
 	
 	getPendingRequestForRequestEvent: function(request)
 	{
+		var i;
 		// check for matching request
-		for (var i = 0; i < this.Requests.length; i++) 
+		for (i = 0; i < this.Requests.length; i++) 
 		{
 			if (request.HttpChannel === this.Requests[i].HttpChannel) 
 			{
@@ -198,7 +202,7 @@ HttpFoxService.prototype =
 		this.callControllerMethod("filterRequest", {"p1" : request});
 		
 		// start checking
-		if (this.IntervalChecker == null)
+		if (this.IntervalChecker === null)
 		{
 			this.IntervalChecker = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
 			var callback = 
@@ -240,9 +244,9 @@ HttpFoxService.prototype =
 				}
 			}
 			
-			if (this.PendingRequests.length == 0) 
+			if (this.PendingRequests.length === 0) 
 			{
-				if (this.IntervalChecker != null)
+				if (this.IntervalChecker !== null)
 				{
 					this.IntervalChecker.cancel();
 					this.IntervalChecker = null;
@@ -520,7 +524,7 @@ HttpFoxService.prototype =
 					statusText += "LOAD_ONLY_IF_MODIFIED ";
 				}
 				if ((Components.interfaces.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY) && 
-	          		(status & Components.interfaces.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY))
+					(status & Components.interfaces.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY))
 				{
 					statusText += "LOAD_BYPASS_LOCAL_CACHE_IF_BUSY ";
 				}
@@ -541,51 +545,39 @@ HttpFoxService.prototype =
 		{
 			case this.HttpFoxEventSourceType.ON_MODIFY_REQUEST:
 				return "ON_MODIFY_REQUEST";
-				break;
 				
 			case this.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE:
 				return "ON_EXAMINE_RESPONSE";
-				break;
 				
 			case this.HttpFoxEventSourceType.ON_EXAMINE_MERGED_RESPONSE:
 				return "ON_EXAMINE_MERGED_RESPONSE";
-				break;
 				
 			case this.HttpFoxEventSourceType.EVENTSINK_ON_PROGRESS:
 				return "EVENTSINK_ON_PROGRESS";
-				break;
 				
 			case this.HttpFoxEventSourceType.EVENTSINK_ON_STATUS:
 				return "EVENTSINK_ON_STATUS";
-				break;
 				
 			case this.HttpFoxEventSourceType.WEBPROGRESS_ON_STATUS_CHANGED:
 				return "WEBPROGRESS_ON_STATUS_CHANGED";
-				break;
 				
 			case this.HttpFoxEventSourceType.WEBPROGRESS_ON_STATE_CHANGED:
 				return "WEBPROGRESS_ON_STATE_CHANGED";
-				break;
 				
 			case this.HttpFoxEventSourceType.WEBPROGRESS_ON_SECURITY_CHANGED:
 				return "WEBPROGRESS_ON_SECURITY_CHANGED";
-				break;
 				
 			case this.HttpFoxEventSourceType.WEBPROGRESS_ON_PROGRESS_CHANGED:
 				return "WEBPROGRESS_ON_PROGRESS_CHANGED";
-				break;
 				
 			case this.HttpFoxEventSourceType.WEBPROGRESS_ON_LOCATION_CHANGED:
 				return "WEBPROGRESS_ON_LOCATION_CHANGED";
-				break;
 				
 			case this.HttpFoxEventSourceType.SCANNED_COMPLETE:
 				return "SCANNED_COMPLETE (manual)";
-				break;
 				
 			default:
 				return "UNKOWN EVENTSOURCE TYPE";
-				break;
 		}
 		
 		return null;
@@ -634,7 +626,7 @@ HttpFoxService.prototype.HttpFoxStatusCodeType =
 function HttpFoxPreferences() 
 {
 	this.init();
-};
+}
 
 HttpFoxPreferences.prototype = 
 {
@@ -784,7 +776,7 @@ function HttpFoxRequest(HttpFoxServiceReference, HttpChannelReference, HttpFoxCo
 	catch(ex) 
 	{
 		// discard that non-httpchannel thing
-		return
+		return;
 	}
 	this.HttpFox = HttpFoxServiceReference;
 	this.Context = HttpFoxContext;
@@ -825,9 +817,7 @@ HttpFoxRequest.prototype =
 	IsRedirect: false,
 	HasErrorCode: false,
 	IsError: false,
-	IsFromCache: false,
 	HasCacheInfo: false,
-	//IsContentAvailable: false,
 	HasPostData: false, 
 	HasQueryStringData: false,
 	HasCookieData: false,
@@ -882,30 +872,29 @@ HttpFoxRequest.prototype =
 		this.setStartTimestampNow();
 		
 		// a new request log
-		this.RequestLog = new Array();
+		this.RequestLog = [];
 
 		// store event sink
 		this.HttpFoxRequestEventSink = requestEvent.HttpFoxRequestEventSink;
 		
 		// update/init from first requestevent
-		this.updateFromRequestEvent(requestEvent)
+		this.updateFromRequestEvent(requestEvent);
 	},
 	
 	checkRequestState: function()
 	{
 		// aborted:		
-		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATE_CHANGED
-			//&& getStatusTextFromCode(HttpFoxStatusCodeType.WEBPROGRESS_TRANSITION, this.EventSourceData["flags"]) == "STATE_STOP"
-			&& this.EventSourceData["flags"] & Components.interfaces.nsIWebProgressListener.STATE_STOP
-			&& this.EventSourceData["status"] == utils.HttpFoxNsResultErrors.NS_BINDING_ABORTED)
+		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATE_CHANGED &&
+			this.EventSourceData.flags & Components.interfaces.nsIWebProgressListener.STATE_STOP &&
+			this.EventSourceData.status == utils.HttpFoxNsResultErrors.NS_BINDING_ABORTED)
 		{
 			// aborted
 			this.setAborted();
 			return;
 		}
 		
-		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATE_CHANGED
-			&& this.EventSourceData["flags"] & Components.interfaces.nsIWebProgressListener.STATE_STOP) 
+		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATE_CHANGED &&
+			this.EventSourceData.flags & Components.interfaces.nsIWebProgressListener.STATE_STOP) 
 		{
 			// all finished
 			this.setFinished();
@@ -927,8 +916,8 @@ HttpFoxRequest.prototype =
 			return;
 		}
 
-		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE
-			&& (this.ResponseStatus != 200))
+		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE &&
+			(this.ResponseStatus != 200))
 		{
 			this.setFinished();
 			return;
@@ -940,14 +929,14 @@ HttpFoxRequest.prototype =
 			return;
 		}
 		
-		if (this.BytesLoadedTotal == -1 && this.ContentLength != null)
+		if (this.BytesLoadedTotal == -1 && this.ContentLength !== null)
 		{
 			this.setFinished();
 			return;
 		}
 		
-		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATE_CHANGED
-			&& (this.EventSourceData["flags"] & Components.interfaces.nsIWebProgressListener.STATE_REDIRECTING)) 
+		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATE_CHANGED &&
+			(this.EventSourceData.flags & Components.interfaces.nsIWebProgressListener.STATE_REDIRECTING)) 
 		{
 			this.ResponseStatus = this.HttpChannel.responseStatus;
 			this.setFinished();
@@ -956,8 +945,8 @@ HttpFoxRequest.prototype =
 			return;
 		}
 		
-		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE
-			&& this.ContentLength != null && (this.ContentLength == 0 || this.ContentLength == -1))
+		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE &&
+			this.ContentLength !== null && (this.ContentLength === 0 || this.ContentLength == -1))
 		{
 			// 0 = no content. finished.
 			this.setFinished();
@@ -967,18 +956,18 @@ HttpFoxRequest.prototype =
 	
 	updateFromRequestEvent: function(requestEvent)
 	{
+		var progress, progressMax;
+
 		try
 		{
 		// check if just a status update
-		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_STATUS
-			|| requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATUS_CHANGED)
+		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_STATUS ||
+			requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATUS_CHANGED)
 		{
-			if ((this.IsLoadingBody || this.IsSending) 
-				&& this.RequestLog[this.RequestLog.length - 1].EventSource == this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_STATUS
-				//&& (getStatusTextFromCode(HttpFoxStatusCodeType.SOCKETTRANSPORT, requestEvent.EventSourceData["status"]) == "STATUS_RECEIVING_FROM"
-				&& (requestEvent.EventSourceData["status"] == Components.interfaces.nsISocketTransport.STATUS_RECEIVING_FROM
-					|| requestEvent.EventSourceData["status"] == Components.interfaces.nsISocketTransport.STATUS_SENDING_TO))
-					//|| getStatusTextFromCode(HttpFoxStatusCodeType.SOCKETTRANSPORT, requestEvent.EventSourceData["status"]) == "STATUS_SENDING_TO"))
+			if ((this.IsLoadingBody || this.IsSending) &&
+				this.RequestLog[this.RequestLog.length - 1].EventSource == this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_STATUS &&
+				(requestEvent.EventSourceData.status == Components.interfaces.nsISocketTransport.STATUS_RECEIVING_FROM ||
+					requestEvent.EventSourceData.status == Components.interfaces.nsISocketTransport.STATUS_SENDING_TO))
 			{
 				// no need for multiple loading status change logs. just return
 				return;
@@ -986,18 +975,18 @@ HttpFoxRequest.prototype =
 		}
 		
 		// check if just a progress update
-		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_PROGRESS
-			|| requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_PROGRESS_CHANGED)
+		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_PROGRESS ||
+			requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_PROGRESS_CHANGED)
 		{
 			if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_PROGRESS)
 			{
-				var progress = requestEvent.EventSourceData["progress"];
-				var progressMax = requestEvent.EventSourceData["progressMax"];
+				progress = requestEvent.EventSourceData.progress;
+				progressMax = requestEvent.EventSourceData.progressMax;
 			}
 			else if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_PROGRESS_CHANGED)
 			{
-				var progress = requestEvent.EventSourceData["curSelfProgress"];
-				var progressMax = requestEvent.EventSourceData["maxSelfProgress"];
+				progress = requestEvent.EventSourceData.curSelfProgress;
+				progressMax = requestEvent.EventSourceData.maxSelfProgress;
 			}
 		
 			if (this.IsLoadingBody || this.IsSending)
@@ -1061,231 +1050,231 @@ HttpFoxRequest.prototype =
 			this.ResponseStartTimestamp = (new Date()).getTime();
 		}
 		
-		if (this.Url == null)
+		if (this.Url === null)
 		{
 			this.Url = requestEvent.Url;
 		}
 		
-		if (this.URIPath == null)
+		if (this.URIPath === null)
 		{
 			this.URIPath = requestEvent.URIPath;
 		}
 		
-		if (this.URIScheme == null)
+		if (this.URIScheme === null)
 		{
 			this.URIScheme = requestEvent.URIScheme;
 		}
 
-		if (this.RequestProtocolVersion == null)
+		if (this.RequestProtocolVersion === null)
 		{
 			this.RequestProtocolVersion = requestEvent.RequestProtocolVersion;
 		}
 		
-		if (this.RequestMethod == null)
+		if (this.RequestMethod === null)
 		{
 			this.RequestMethod = requestEvent.RequestMethod;
 		}
 		
-		if (this.ResponseProtocolVersion == null)
+		if (this.ResponseProtocolVersion === null)
 		{
 			this.ResponseProtocolVersion = requestEvent.ResponseProtocolVersion;
 		}
 		
-		if (requestEvent.ResponseStatus != null 
-			&& this.ResponseStatus != requestEvent.ResponseStatus
-			&& this.ResponseStatus != 304)
+		if (requestEvent.ResponseStatus !== null &&
+			this.ResponseStatus != requestEvent.ResponseStatus &&
+			this.ResponseStatus != 304)
 		{
 			this.ResponseStatus = requestEvent.ResponseStatus;
 			this.ResponseStatusText = requestEvent.ResponseStatusText;
 		}
 		
-		if (requestEvent.Context != null) 
+		if (requestEvent.Context !== null) 
 		{
 			this.Context = requestEvent.Context;
 		}
 		
-		if (this.LoadFlags == null)
+		if (this.LoadFlags === null)
 		{
 			this.LoadFlags = requestEvent.LoadFlags;
 		}
 		
-		if (this.Status == null)
+		if (this.Status === null)
 		{
 			this.Status = requestEvent.Status;
 		}
 		
-		if (this.Name == null)
+		if (this.Name === null)
 		{
 			this.Name = requestEvent.Name;
 		}
 
-		if (this.RequestSucceeded == null)
+		if (this.RequestSucceeded === null)
 		{
 			this.RequestSucceeded = requestEvent.RequestSucceeded;
 		}
 
 		
-		if ((this.ContentType == null || this.ContentType == "application/x-unknown-content-type")
-			&& requestEvent.ContentType != null)
+		if ((this.ContentType === null || this.ContentType == "application/x-unknown-content-type") &&
+			requestEvent.ContentType !== null)
 		{
 			this.ContentType = requestEvent.ContentType;
 		}
 
-		if (this.ContentCharset == null)
+		if (this.ContentCharset === null)
 		{
 			this.ContentCharset = requestEvent.ContentCharset;
 		}
 
-		if (requestEvent.ContentLength != null && this.ContentLength != requestEvent.ContentLength)
+		if (requestEvent.ContentLength !== null && this.ContentLength != requestEvent.ContentLength)
 		{
 			this.ContentLength = requestEvent.ContentLength;
 		}
 		
-		if (this.RequestSucceeded == null)
+		if (this.RequestSucceeded === null)
 		{
 			this.RequestSucceeded = requestEvent.RequestSucceeded;
 		}
 		
-		if (this.IsNoStoreResponse == null)
+		if (this.IsNoStoreResponse === null)
 		{
 			this.IsNoStoreResponse = requestEvent.IsNoStoreResponse;
 		}
 		
-		if (this.IsNoCacheResponse == null)
+		if (this.IsNoCacheResponse === null)
 		{
 			this.IsNoCacheResponse = requestEvent.IsNoCacheResponse;
 		}
 		
-		if (this.EntityId == null)
+		if (this.EntityId === null)
 		{
 			this.EntityId = requestEvent.EntityId;
 		}
 		
-		if (this.Priority == null)
+		if (this.Priority === null)
 		{
 			this.Priority = requestEvent.Priority;
 		}
 
 		// cache info stuff
-		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.SCANNED_COMPLETE
-			&& !this.HasReceivedResponseHeaders
-			&& this.ResponseStatus == 200)
+		if (requestEvent.EventSource == this.HttpFox.HttpFoxEventSourceType.SCANNED_COMPLETE &&
+			!this.HasReceivedResponseHeaders &&
+			this.ResponseStatus == 200)
 		{
 			this.IsFromCache = true;
 		}
 		
-		if (this.IsFromCache != true && requestEvent.IsFromCache != null)
+		if (this.IsFromCache !== true && requestEvent.IsFromCache !== null)
 		{
 			this.IsFromCache = requestEvent.IsFromCache;
 		}
 	
-		if (this.HasCacheInfo != true && requestEvent.HasCacheInfo)
+		if (this.HasCacheInfo !== true && requestEvent.HasCacheInfo)
 		{
 			this.HasCacheInfo = requestEvent.HasCacheInfo;
 		}
 		if (requestEvent.HasCacheInfo)
 		{
-			if (this.CacheToken == null)
+			if (this.CacheToken === null)
 			{
 				this.CacheToken = requestEvent.CacheToken;
 			}
-			if (this.CacheKey == null)
+			if (this.CacheKey === null)
 			{
 				this.CacheKey = requestEvent.CacheKey;
 			}
-			if (this.ContentCharset == null)
+			if (this.ContentCharset === null)
 			{
 				this.ContentCharset = requestEvent.ContentCharset;
 			}
-			if (this.ContentCharset == null)
+			if (this.ContentCharset === null)
 			{
 				this.ContentCharset = requestEvent.ContentCharset;
 			}
 		}
 		
-		if (this.CacheToken_key == null && requestEvent.CacheToken_key != null)
+		if (this.CacheToken_key === null && requestEvent.CacheToken_key !== null)
 		{
 			this.CacheToken_key = requestEvent.CacheToken_key;
 		}
-		if (requestEvent.CacheToken_clientID != null)
+		if (requestEvent.CacheToken_clientID !== null)
 		{
 			this.CacheToken_clientID = requestEvent.CacheToken_clientID;
 		}
-		if (requestEvent.CacheKey != null)
+		if (requestEvent.CacheKey !== null)
 		{
 			this.CacheKey = requestEvent.CacheKey;
 			//alert('token key: ' + this.CacheKey);
 		}
 		
 		// custom properties
-		if (requestEvent.RequestHeaders != null)
+		if (requestEvent.RequestHeaders !== null)
 		{
 			this.RequestHeaders = requestEvent.RequestHeaders;
 		}
 
-		if (requestEvent.ResponseHeaders != null)
+		if (requestEvent.ResponseHeaders !== null)
 		{
 			this.ResponseHeaders = requestEvent.ResponseHeaders;
 		}
 
-		if (requestEvent.CookiesSent != null)
+		if (requestEvent.CookiesSent !== null)
 		{
 			this.CookiesSent = requestEvent.CookiesSent;
 		}
 		
-		if (requestEvent.CookiesReceived != null)
+		if (requestEvent.CookiesReceived !== null)
 		{
 			this.CookiesReceived = requestEvent.CookiesReceived;
 		}
 
 		// POST data
-		if (requestEvent.PostDataHeaders != null)
+		if (requestEvent.PostDataHeaders !== null)
 		{
 			this.PostDataHeaders = requestEvent.PostDataHeaders;
 		}
 
-		if (requestEvent.PostData != null)
+		if (requestEvent.PostData !== null)
 		{
 			this.PostData = requestEvent.PostData;
 		}
 
-		if (requestEvent.PostDataParameters != null)
+		if (requestEvent.PostDataParameters !== null)
 		{
 			this.PostDataParameters = requestEvent.PostDataParameters;
 		}
 
-		if (requestEvent.PostDataMIMEParts != null)
+		if (requestEvent.PostDataMIMEParts !== null)
 		{
 			this.PostDataMIMEParts = requestEvent.PostDataMIMEParts;
 		}
 
-		if (requestEvent.IsPostDataMIME != null)
+		if (requestEvent.IsPostDataMIME !== null)
 		{
 			this.IsPostDataMIME = requestEvent.IsPostDataMIME;
 		}
 
-		if (requestEvent.PostDataMIMEBoundary != null)
+		if (requestEvent.PostDataMIMEBoundary !== null)
 		{
 			this.PostDataMIMEBoundary = requestEvent.PostDataMIMEBoundary;
 		}
 		
-		if (requestEvent.IsPostDataTooBig != null)
+		if (requestEvent.IsPostDataTooBig !== null)
 		{
 			this.IsPostDataTooBig = requestEvent.IsPostDataTooBig;
 		}
 		
 		//QueryString: null,
-		if (requestEvent.QueryString != null)
+		if (requestEvent.QueryString !== null)
 		{
 			this.QueryString = requestEvent.QueryString;
 		}
 		//QueryStringParameters: null,
-		if (requestEvent.QueryStringParameters != null)
+		if (requestEvent.QueryStringParameters !== null)
 		{
 			this.QueryStringParameters = requestEvent.QueryStringParameters;
 		}
 		//IsBackground: false,
-		if (requestEvent.IsBackground != null)
+		if (requestEvent.IsBackground !== null)
 		{
 			this.IsBackground = requestEvent.IsBackground;
 		}
@@ -1330,9 +1319,9 @@ HttpFoxRequest.prototype =
 		}
 		
 		// if no info on bytes loaded, just use the contentLength value
-		if (this.IsFinished 
-			&& (this.BytesLoaded == 0 || this.BytesLoaded == -1) 
-			&& this.ContentLength != -1)
+		if (this.IsFinished &&
+			(this.BytesLoaded === 0 || this.BytesLoaded === -1) &&
+			this.ContentLength !== -1)
 		{
 			this.BytesLoaded = this.ContentLength;
 		}
@@ -1341,7 +1330,8 @@ HttpFoxRequest.prototype =
 	
 	getRequestContentLength: function(requestEvent)
 	{
-		for (var i in requestEvent.PostDataHeaders)
+		var i, u;
+		for (i in requestEvent.PostDataHeaders)
 		{
 			if (i.toLowerCase() == "content-length")
 			{
@@ -1350,11 +1340,11 @@ HttpFoxRequest.prototype =
 			}
 		}
 		
-		for (var i in requestEvent.RequestHeaders)
+		for (u in requestEvent.RequestHeaders)
 		{
-			if (i.toLowerCase() == "content-length")
+			if (u.toLowerCase() == "content-length")
 			{
-				this.PostDataContentLength = parseInt(requestEvent.RequestHeaders[i]);
+				this.PostDataContentLength = parseInt(requestEvent.RequestHeaders[u]);
 				return;
 			}
 		}
@@ -1362,17 +1352,22 @@ HttpFoxRequest.prototype =
 	
 	calcRequestHeadersSize: function(requestEvent)
 	{
+		var i, u;
 		var byteString = "";
 		byteString += requestEvent.RequestMethod + " " + requestEvent.URIPath + " HTTP/" + requestEvent.RequestProtocolVersion + "\r\n";
 		
-		for (var i in requestEvent.RequestHeaders)
+		for (i in requestEvent.RequestHeaders)
 		{
-			byteString += i + ": " + requestEvent.RequestHeaders[i] + "\r\n";
+			if (requestEvent.RequestHeaders.hasOwnProperty(i)) {
+				byteString += i + ": " + requestEvent.RequestHeaders[i] + "\r\n";	
+			}
 		}
 		
-		for (var i in requestEvent.PostDataHeaders)
+		for (u in requestEvent.PostDataHeaders)
 		{
-			byteString += i + ": " + requestEvent.PostDataHeaders[i] + "\r\n";
+			if (requestEvent.PostDataHeaders.hasOwnProperty(u)) {
+				byteString += u + ": " + requestEvent.PostDataHeaders[u] + "\r\n";
+			}
 		}
 		
 		byteString += "\r\n";
@@ -1382,12 +1377,15 @@ HttpFoxRequest.prototype =
 	
 	calcResponseHeadersSize: function(requestEvent)
 	{
+		var i;
 		var byteString = "";
 		byteString += "HTTP/" + requestEvent.ResponseProtocolVersion + " " + requestEvent.ResponseStatus + " " + requestEvent.ResponseStatusText + "\r\n";
 		
-		for (var i in requestEvent.ResponseHeaders)
+		for (i in requestEvent.ResponseHeaders)
 		{
-			byteString += i + ": " + requestEvent.RequestHeaders[i] + "\r\n";
+			if (requestEvent.ResponseHeaders.hasOwnProperty(i)) {
+				byteString += i + ": " + requestEvent.RequestHeaders[i] + "\r\n";
+			}
 		}
 		
 		byteString += "\r\n";
@@ -1400,13 +1398,13 @@ HttpFoxRequest.prototype =
 	{
 		this.CallbackController = callback;
 		
-		if (this.Content != null && this.ContentStatus != null) 
+		if (this.Content !== null && this.ContentStatus !== null) 
 		{
 			this.CallbackController.showRawContent(this.ContentStatus);
 			return;
 		}
 		
-		if (this.Context != null) {
+		if (this.Context !== null) {
 			//TODO: CHECK IF CACHEKEY_AFTER EXISTS
 			if (!this.CacheKey_After)
 			{
@@ -1450,7 +1448,7 @@ HttpFoxRequest.prototype =
 			this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Device ID", CacheInfo.deviceID);
 			this.HttpFox.addHeaderRow("hf_CacheInfoChildren", "Size", CacheInfo.dataSize);
 			
-			if (this.CacheFile != null) 
+			if (this.CacheFile !== null) 
 			{
 				var CacheFileInfo = this.CacheFile.QueryInterface(Components.interfaces.nsIFile);
 				
@@ -1647,7 +1645,7 @@ HttpFoxRequest.prototype =
 		return false;
 	}
 
-}
+};
 // ************************************************************************************************
 
 // HttpFoxRequestEvent
@@ -1660,7 +1658,7 @@ function HttpFoxRequestEvent(HttpFoxReference, HttpChannelReference, EventSource
 	catch(ex) 
 	{
 		// discard that non-httpchannel thing
-		return
+		return;
 	}
 	
 	this.HttpFox = HttpFoxReference;
@@ -1731,6 +1729,8 @@ HttpFoxRequestEvent.prototype =
 	
 	init: function()
 	{
+		var dummyHeaderInfo;
+
 		this.Timestamp = (new Date()).getTime();
 		
 		// get properties from httpchannel/request object
@@ -1764,7 +1764,7 @@ HttpFoxRequestEvent.prototype =
 		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_MODIFY_REQUEST)
 		{
 			// Get Request Headers
-			var dummyHeaderInfo = new HttpFoxHeaderInfo();
+			dummyHeaderInfo = new HttpFoxHeaderInfo();
 			this.HttpChannel.visitRequestHeaders(dummyHeaderInfo);
 			this.RequestHeaders = dummyHeaderInfo.Headers;
 			
@@ -1783,14 +1783,16 @@ HttpFoxRequestEvent.prototype =
 		
 		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE)
 		{
+			
+
 			// ok. received a server response.
 			// Get Request Headers again. maybe be changed after us. (e.g. cache-control)
-			var dummyHeaderInfo = new HttpFoxHeaderInfo();
+			dummyHeaderInfo = new HttpFoxHeaderInfo();
 			this.HttpChannel.visitRequestHeaders(dummyHeaderInfo);
 			this.RequestHeaders = dummyHeaderInfo.Headers;
 
 			// Get Response Headers
-			var dummyHeaderInfo = new HttpFoxHeaderInfo();
+			dummyHeaderInfo = new HttpFoxHeaderInfo();
 			this.HttpChannel.visitResponseHeaders(dummyHeaderInfo);
 			this.ResponseHeaders = dummyHeaderInfo.Headers;
 			
@@ -1804,15 +1806,15 @@ HttpFoxRequestEvent.prototype =
 		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_PROGRESS)
 		{
 			// update byte count
-			this.BytesLoaded = this.EventSourceData["progress"];
-			this.BytesLoadedTotal = this.EventSourceData["progressMax"];
+			this.BytesLoaded = this.EventSourceData.progress;
+			this.BytesLoadedTotal = this.EventSourceData.progressMax;
 		}
 		
 		if (this.EventSource == this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_PROGRESS_CHANGED)
 		{
 			// update byte count
-			this.BytesLoaded = this.EventSourceData["curSelfProgress"];
-			this.BytesLoadedTotal = this.EventSourceData["maxSelfProgress"];
+			this.BytesLoaded = this.EventSourceData.curSelfProgress;
+			this.BytesLoadedTotal = this.EventSourceData.maxSelfProgress;
 		}
 	},
 	
@@ -1826,8 +1828,8 @@ HttpFoxRequestEvent.prototype =
 		try 
 		{
 			var httpChannelInternal = this.HttpChannel.QueryInterface(Components.interfaces.nsIHttpChannelInternal);
-			var ver1 = new Object;
-			var ver2 = new Object;
+			var ver1 = {};
+			var ver2 = {};
 			httpChannelInternal.getRequestVersion(ver1, ver2);
 			this.RequestProtocolVersion = ver1.value + "." + ver2.value;
 		}
@@ -1842,8 +1844,8 @@ HttpFoxRequestEvent.prototype =
 		try 
 		{
 			var httpChannelInternal = this.HttpChannel.QueryInterface(Components.interfaces.nsIHttpChannelInternal);
-			var ver1 = new Object;
-			var ver2 = new Object;
+			var ver1 = {};
+			var ver2 = {};
 			httpChannelInternal.getResponseVersion(ver1, ver2);
 			this.ResponseProtocolVersion = ver1.value + "." + ver2.value;
 		}
@@ -1949,115 +1951,121 @@ HttpFoxRequestEvent.prototype =
 				var PostDataHandler = new HttpFoxPostDataHandler(this);
 				PostDataHandler.getPostData();
 			} 
-	    } 
-	    catch(ex) 
-	    {
-	    }
+		} 
+		catch(ex) 
+		{
+		}
 	},
 	
 	getQueryString: function() {
+		var i;
+
 		if (this.Url.indexOf("?") == -1) 
 		{
 			return;
 		}
 		this.QueryString = this.Url.slice(this.Url.indexOf("?") + 1, this.Url.length);
 		
-		this.QueryStringParameters = new Array();
+		this.QueryStringParameters = [];
 		var queryStringParts = this.QueryString.split("&");
 		for (i in queryStringParts)
 		{
-			var nvName = queryStringParts[i].slice(0, queryStringParts[i].indexOf("=") != -1 ? queryStringParts[i].indexOf("=") : queryStringParts[i].length);
-			var nvValue = (queryStringParts[i].indexOf("=") != -1) ? queryStringParts[i].slice(queryStringParts[i].indexOf("=") + 1, queryStringParts[i].length) : "";
-			this.QueryStringParameters.push([nvName, nvValue]);
+			if (queryStringParts.hasOwnProperty(i)) {
+				var nvName = queryStringParts[i].slice(0, queryStringParts[i].indexOf("=") != -1 ? queryStringParts[i].indexOf("=") : queryStringParts[i].length);
+				var nvValue = (queryStringParts[i].indexOf("=") != -1) ? queryStringParts[i].slice(queryStringParts[i].indexOf("=") + 1, queryStringParts[i].length) : "";
+				this.QueryStringParameters.push([nvName, nvValue]);	
+			}
 		}
 	},
 	
 	getCookiesSent: function() {
-		this.CookiesSent = new Array();
+		var i, u;
+
+		this.CookiesSent = [];
+		var CookiesStored = utils.getStoredCookies(this.RequestHeaders.Host, this.URIPath);
 		
-		var CookiesStored = utils.getStoredCookies(this.RequestHeaders["Host"], this.URIPath);
-		
-		if (this.RequestHeaders["Cookie"]) {
-			var requestCookies = this.RequestHeaders["Cookie"].split("; ");
+		if (this.RequestHeaders.Cookie) {
+			var requestCookies = this.RequestHeaders.Cookie.split("; ");
 			for (i in requestCookies) {
-				var cName = requestCookies[i].slice(0, requestCookies[i].indexOf("="));
-				var cValue = requestCookies[i].slice(cName.length + 1);
-				
-				var cookieData = new Array();
-				cookieData["name"] = cName;
-				cookieData["value"] = cValue;
-				
-				for (var i = 0; i < CookiesStored.length; i++)
-				{
-					if (CookiesStored[i].name == cName && CookiesStored[i].value == cValue) 
+				if (requestCookies.hasOwnProperty(i)) {
+					var cName = requestCookies[i].slice(0, requestCookies[i].indexOf("="));
+					var cValue = requestCookies[i].slice(cName.length + 1);
+					
+					var cookieData = [];
+					cookieData.name = cName;
+					cookieData.value = cValue;
+					
+					for (u = 0; u < CookiesStored.length; u++)
 					{
-						cookieData["domain"] = CookiesStored[i].host;
-						cookieData["expires"] = CookiesStored[i].expires;
-						cookieData["path"] = CookiesStored[i].path;
-						CookiesStored.splice(i, 1);
-						break;
+						if (CookiesStored[u].name == cName && CookiesStored[u].value == cValue) 
+						{
+							cookieData.domain = CookiesStored[u].host;
+							cookieData.expires = CookiesStored[u].expires;
+							cookieData.path = CookiesStored[u].path;
+							CookiesStored.splice(u, 1);
+							break;
+						}
 					}
+					
+					this.CookiesSent.push(cookieData);	
 				}
-				
-				this.CookiesSent.push(cookieData);
 			}
 		}
 	},
 	
 	getCookiesReceived: function() {
-		this.CookiesReceived = new Array();
+		var i, u, v;
+
+		this.CookiesReceived = [];
 		
 		if (this.ResponseHeaders["Set-Cookie"]) 
 		{
 			var responseCookies = this.ResponseHeaders["Set-Cookie"].split("\n");
 			for (i in responseCookies) 
 			{
-				var dataSections = responseCookies[i].split(";");
-				var cName = dataSections[0].slice(0, dataSections[0].indexOf("="));
-				var cValue = dataSections[0].slice(cName.length + 1);
-				var cookieData = new Array();
-				cookieData["name"] = utils.trim(cName, 'left');
-				cookieData["value"] = cValue;
-				
-				// other infos
-				for (var u = 1; dataSections[u] != null; u++) 
-				{
-					var cInfoName = dataSections[u].slice(1, dataSections[u].indexOf("="));
-					var cInfoValue = dataSections[u].slice(cInfoName.length + 2);
-					cookieData[cInfoName.toLowerCase()] = cInfoValue;
-				}
-				
-				if (!cookieData["domain"])
-				{
-					cookieData["domain"] = this.RequestHeaders["Host"];
-				}
-				
-				if (!cookieData["path"]) 
-				{
-					cookieData["path"] = "/";
-				}
-				
-				// check against stored one
-				var CookiesStored = utils.getStoredCookies(cookieData["domain"], cookieData["path"]);
-				for (var i = 0; i < CookiesStored.length; i++)
-				{
-					if (CookiesStored[i].name == cName && CookiesStored[i].value == cValue && CookiesStored[i].path == cookieData["path"]) 
+				if (responseCookies.hasOwnProperty(i)) {
+					var dataSections = responseCookies[i].split(";");
+					var cName = dataSections[0].slice(0, dataSections[0].indexOf("="));
+					var cValue = dataSections[0].slice(cName.length + 1);
+					var cookieData = [];
+					cookieData.name = utils.trim(cName, 'left');
+					cookieData.value = cValue;
+					
+					// other infos
+					for (u = 1; dataSections[u] !== null; u++) 
 					{
-						/*if (cookieData["expires"])
-						{
-							cookieData["expires"] = CookiesStored[i].expires;	
-						}*/
-						
-						CookiesStored.splice(i, 1);
-						break;
+						var cInfoName = dataSections[u].slice(1, dataSections[u].indexOf("="));
+						var cInfoValue = dataSections[u].slice(cInfoName.length + 2);
+						cookieData[cInfoName.toLowerCase()] = cInfoValue;
 					}
+					
+					if (!cookieData.domain)
+					{
+						cookieData.domain = this.RequestHeaders.Host;
+					}
+					
+					if (!cookieData.path) 
+					{
+						cookieData.path = "/";
+					}
+					
+					// check against stored one
+					var CookiesStored = utils.getStoredCookies(cookieData.domain, cookieData.path);
+					for (v = 0; v < CookiesStored.length; v++)
+					{
+						if (CookiesStored[v].name == cName && CookiesStored[v].value == cValue && CookiesStored[v].path == cookieData.path) 
+						{
+							CookiesStored.splice(v, 1);
+							break;
+						}
+					}
+					
+					this.CookiesReceived.push(cookieData);
 				}
-				
-				this.CookiesReceived.push(cookieData);
 			}
 		}
 	}
-}
+};
 // ************************************************************************************************
 
 // HttpFoxRequestEventSink
@@ -2075,7 +2083,7 @@ HttpFoxRequestEventSink.prototype =
 	init: function(HttpFoxReference, HttpChannel) 
 	{
 		this.HttpFox = HttpFoxReference;
-		if (HttpChannel.notificationCallbacks != null) 
+		if (HttpChannel.notificationCallbacks !== null) 
 		{
 			this.OriginalNotificationCallbacks = HttpChannel.notificationCallbacks;
 		}
@@ -2087,13 +2095,13 @@ HttpFoxRequestEventSink.prototype =
 	*/
 	onProgress: function(request, context, progress, progressMax)
 	{
-		var eventSourceData = new Object();
-		eventSourceData["progress"] = progress;
-		eventSourceData["progressMax"] = progressMax;
+		var eventSourceData = {};
+		eventSourceData.progress = progress;
+		eventSourceData.progressMax = progressMax;
 		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_PROGRESS, eventSourceData, utils.getContextFromRequest(request)));
 		// forward to possible other notificationCallbacks
 		try {
-			if (this.OriginalNotificationCallbacks != null) 
+			if (this.OriginalNotificationCallbacks !== null) 
 			{
 				var i = this.OriginalNotificationCallbacks.getInterface(Components.interfaces.nsIProgressEventSink);
 				i.onProgress(request, context, progress, progressMax);
@@ -2104,13 +2112,13 @@ HttpFoxRequestEventSink.prototype =
    
 	onStatus: function(request, context, status, statusArg)
 	{
-		var eventSourceData = new Object();
-		eventSourceData["status"] = status;
-		eventSourceData["statusArg"] = statusArg;
+		var eventSourceData = {};
+		eventSourceData.status = status;
+		eventSourceData.statusArg = statusArg;
 		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.EVENTSINK_ON_STATUS, eventSourceData, utils.getContextFromRequest(request)));
 		// forward to possible other notificationCallbacks
 		try {
-			if (this.OriginalNotificationCallbacks != null) 
+			if (this.OriginalNotificationCallbacks !== null) 
 			{
 				var i = this.OriginalNotificationCallbacks.getInterface(Components.interfaces.nsIProgressEventSink);
 				i.onStatus(request, context, status, statusArg);
@@ -2131,11 +2139,11 @@ HttpFoxRequestEventSink.prototype =
 		{
 			throw Components.results.NS_ERROR_NO_INTERFACE;
 		}
-        
-        return this;
-    },
-    /********************************************/
-    
+		
+		return this;
+	},
+	/********************************************/
+	
 	/**
 	* nsIInterfaceRequestor
 	*/
@@ -2143,11 +2151,11 @@ HttpFoxRequestEventSink.prototype =
 	{
 		if (iid.equals(Components.interfaces.nsIProgressEventSink))
 		{
-		  	return this;
+			return this;
 		}
 		
 		try {
-			if (this.OriginalNotificationCallbacks != null) 
+			if (this.OriginalNotificationCallbacks !== null) 
 			{
 				return this.OriginalNotificationCallbacks;
 			}
@@ -2161,7 +2169,7 @@ HttpFoxRequestEventSink.prototype =
 		return null;
 	}
 	/********************************************/
-}
+};
 
 
 // ************************************************************************************************
@@ -2218,7 +2226,7 @@ HttpFoxObserver.prototype =
 		// force caching
 		this.HttpFox.forceCaching(HttpChannel);
 		
-		var eventSourceData = new Object();
+		var eventSourceData = {};
 
 		// hook up more listeners
 		HttpChannel.QueryInterface(Components.interfaces.nsIRequest);
@@ -2246,23 +2254,21 @@ HttpFoxObserver.prototype =
 			event.HttpFoxRequestEventSink = new HttpFoxRequestEventSink(this.HttpFox, HttpChannel);
 				
 			this.HttpFox.handleRequestEvent(event);
-			}
-			  
-		catch(e) 
-		{
+		}
+		catch(e) {
 			dump("\n* Observer EXC: " + e + "\n");
 		}
 	},
 	
 	onExamineResponse: function(HttpChannel) 
 	{
-		var eventSourceData = new Object();
+		var eventSourceData = {};
 		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, HttpChannel, this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_RESPONSE, eventSourceData, utils.getContextFromRequest(HttpChannel)));
 	},
 	
 	onExamineMergedResponse: function(HttpChannel) 
 	{
-		var eventSourceData = new Object();
+		var eventSourceData = {};
 		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, HttpChannel, this.HttpFox.HttpFoxEventSourceType.ON_EXAMINE_MERGED_RESPONSE, eventSourceData, utils.getContextFromRequest(HttpChannel)));
 	},
 	
@@ -2272,41 +2278,41 @@ HttpFoxObserver.prototype =
 	/**/
 	onStateChange: function(progress, request, flags, status)
 	{
-		var eventSourceData = new Object();
-		eventSourceData["flags"] = flags;
-		eventSourceData["status"] = status;
+		var eventSourceData = {};
+		eventSourceData.flags = flags;
+		eventSourceData.status = status;
 		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATE_CHANGED, eventSourceData, utils.getContextFromRequest(request)));
 	},
 	
 	onProgressChange: function(progress, request, curSelfProgress, maxSelfProgress, curTotalProgress, maxTotalProgress) 
 	{
-		var eventSourceData = new Object();
-		eventSourceData["curSelfProgress"] = curSelfProgress;
-		eventSourceData["maxSelfProgress"] = maxSelfProgress;
-		eventSourceData["curTotalProgress"] = curTotalProgress;
-		eventSourceData["maxTotalProgress"] = maxTotalProgress;
+		var eventSourceData = {};
+		eventSourceData.curSelfProgress = curSelfProgress;
+		eventSourceData.maxSelfProgress = maxSelfProgress;
+		eventSourceData.curTotalProgress = curTotalProgress;
+		eventSourceData.maxTotalProgress = maxTotalProgress;
 		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_PROGRESS_CHANGED, eventSourceData, utils.getContextFromRequest(request)));
 	},
 	
 	onLocationChange: function(progress, request, uri) 
 	{
-		var eventSourceData = new Object();
-		eventSourceData["uri"] = uri;
+		var eventSourceData = {};
+		eventSourceData.uri = uri;
 		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_LOCATION_CHANGED, eventSourceData, utils.getContextFromRequest(request)));
 	},
 	
 	onStatusChange: function(progress, request, status, message) 
 	{
-		var eventSourceData = new Object();
-		eventSourceData["status"] = status;
-		eventSourceData["message"] = message;
+		var eventSourceData = {};
+		eventSourceData.status = status;
+		eventSourceData.message = message;
 		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_STATUS_CHANGED, eventSourceData, utils.getContextFromRequest(request)));
 	},
 	
 	onSecurityChange: function(progress, request, state) 
 	{
-		var eventSourceData = new Object();
-		eventSourceData["state"] = state;
+		var eventSourceData = {};
+		eventSourceData.state = state;
 		this.HttpFox.handleRequestEvent(new HttpFoxRequestEvent(this.HttpFox, request, this.HttpFox.HttpFoxEventSourceType.WEBPROGRESS_ON_SECURITY_CHANGED, eventSourceData, utils.getContextFromRequest(request)));
 	},
 	/********************************************/
@@ -2362,19 +2368,19 @@ HttpFoxObserver.prototype =
 		{
 			throw Components.results.NS_ERROR_NO_INTERFACE;
 		}
-        
-        return this;
-    }
-    /********************************************/
-}
+		
+		return this;
+	}
+	/********************************************/
+};
 // ************************************************************************************************
 
 function HttpFoxContext(win, browser, chrome, persistedState)
 {
-    this.windows = [];    
-    this.panelMap = {};
-    this.sidePanelNames = {};
-    this.sourceCache = new HttpFoxSourceCache(win);
+	this.windows = [];    
+	this.panelMap = {};
+	this.sidePanelNames = {};
+	this.sourceCache = new HttpFoxSourceCache(win);
 }
 // ************************************************************************************************
 
@@ -2382,98 +2388,98 @@ function HttpFoxContext(win, browser, chrome, persistedState)
 function HttpFoxSourceCache(win)
 {
 	this.charset = null;
-	if (win != null) {
-   		this.charset = win.document.characterSet;
+	if (win !== null) {
+		this.charset = win.document.characterSet;
 	}
-    this.cache = {};
+	this.cache = {};
 }
 
 HttpFoxSourceCache.prototype =
 {
-    loadText: function(url)
-    {
-        var lines = this.load(url);
-        return lines ? lines.join("\n") : null;
-    },
+	loadText: function(url)
+	{
+		var lines = this.load(url);
+		return lines ? lines.join("\n") : null;
+	},
 	
 	loadData: function(url, myPostData, ckey, request)
-    {
-        var data = this.load(url, myPostData, ckey, request);
+	{
+		var data = this.load(url, myPostData, ckey, request);
 		return data;
-    },
-        
-    load: function(url, myPostData, ckey, request)
-    {
+	},
+		
+	load: function(url, myPostData, ckey, request)
+	{
 		var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
 
-        var channel;
-        try
-        {
-            channel = ioService.newChannel(url, null, null);
-            channel.loadFlags |= utils.LOAD_FROM_CACHE | utils.LOAD_TARGETED | utils.VALIDATE_NEVER;
+		var channel;
+		try
+		{
+			channel = ioService.newChannel(url, null, null);
+			channel.loadFlags |= utils.LOAD_FROM_CACHE | utils.LOAD_TARGETED | utils.VALIDATE_NEVER;
 			channel.owner = new HttpFoxResponseLoaderFlagger();
-        }
-        catch(ex)
-        {
-            return;
-        }
+		}
+		catch(ex)
+		{
+			return;
+		}
 
 		if (channel instanceof Components.interfaces.nsIUploadChannel)
 		{
 			if (myPostData) 
 			{
-		    	var inputStream = Components.classes["@mozilla.org/io/string-input-stream;1"].createInstance(Components.interfaces.nsIStringInputStream);
+				var inputStream = Components.classes["@mozilla.org/io/string-input-stream;1"].createInstance(Components.interfaces.nsIStringInputStream);
 				inputStream.setData(myPostData, myPostData.length);
 
 				var postStream = inputStream.QueryInterface(Components.interfaces.nsISeekableStream);
 				postStream.seek(0, 0);
-		        
-		        var uploadChannel = channel.QueryInterface(Components.interfaces.nsIUploadChannel);
-		        uploadChannel.setUploadStream(postStream, "application/x-www-form-urlencoded", -1);
-		       	
-		        var cachingChannel = channel.QueryInterface(Components.interfaces.nsIHttpChannel);
-		        var httpChannel = channel.QueryInterface(Components.interfaces.nsIHttpChannel);
-		        httpChannel.requestMethod = "POST";
-		    }
+				
+				var uploadChannel = channel.QueryInterface(Components.interfaces.nsIUploadChannel);
+				uploadChannel.setUploadStream(postStream, "application/x-www-form-urlencoded", -1);
+				
+				var cachingChannel = channel.QueryInterface(Components.interfaces.nsIHttpChannel);
+				var httpChannel = channel.QueryInterface(Components.interfaces.nsIHttpChannel);
+				httpChannel.requestMethod = "POST";
+			}
 		}
 		
 		if (channel instanceof Components.interfaces.nsICachingChannel)
 		{
-		    var cacheChannel = channel.QueryInterface(Components.interfaces.nsICachingChannel);
-		    cacheChannel.loadFlags |= utils.LOAD_ONLY_FROM_CACHE | utils.VALIDATE_NEVER;
-		    cacheChannel.cacheKey = ckey;
+			var cacheChannel = channel.QueryInterface(Components.interfaces.nsICachingChannel);
+			cacheChannel.loadFlags |= utils.LOAD_ONLY_FROM_CACHE | utils.VALIDATE_NEVER;
+			cacheChannel.cacheKey = ckey;
 		}
-        
-        var stream;
-        try
-        {
-        	var listener = new HttpFoxSourceCacheStreamListener(url, this, request, this.charset);
-            channel.asyncOpen(listener, null);
-        }
-        catch(ex)
-        {
-            return;
-        }
-        
-    },
-    
-    loadAsync: function(url, cb)
-    {
-        if (url in this.cache)
-        {
-            cb(this.cache[url], url);
-            return;
-        }
+		
+		var stream;
+		try
+		{
+			var listener = new HttpFoxSourceCacheStreamListener(url, this, request, this.charset);
+			channel.asyncOpen(listener, null);
+		}
+		catch(ex)
+		{
+			return;
+		}
+		
+	},
+	
+	loadAsync: function(url, cb)
+	{
+		if (url in this.cache)
+		{
+			cb(this.cache[url], url);
+			return;
+		}
 
-        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+		var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
 
-        var channel = ioService.newChannel(url, null, null);
-        channel.loadFlags |= utils.LOAD_FROM_CACHE | utils.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
+		var channel = ioService.newChannel(url, null, null);
+		channel.loadFlags |= utils.LOAD_FROM_CACHE | utils.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
 
-        var listener = new HttpFoxSourceCacheStreamListener(url, this, cb);
-        channel.asyncOpen(listener, null);            
-    } 
-}
+		var listener = new HttpFoxSourceCacheStreamListener(url, this, cb);
+		channel.asyncOpen(listener, null);            
+	} 
+};
 // ************************************************************************************************
 
 // HttpFoxSourceCacheStreamListener
@@ -2481,31 +2487,31 @@ function HttpFoxSourceCacheStreamListener(url, cache, request, charset)
 {
 	this.request = request;
 	this.charset = charset;
-    this.url = url;
-    this.cache = cache;
-    this.data = "";
+	this.url = url;
+	this.cache = cache;
+	this.data = "";
 }
 
 HttpFoxSourceCacheStreamListener.prototype =
 {
-    onStartRequest: function(request, context)
-    {},
+	onStartRequest: function(request, context)
+	{},
 
-    onStopRequest: function(request, context, status)
-    {
-        this.done = true;
-        
-        if (status != utils.NS_BINDING_ABORTED)
-        {
-            context = this.data;
-            this.request.endGetRawContent(utils.convertToUnicode(this.data, this.charset), status);
-        }
-    },
+	onStopRequest: function(request, context, status)
+	{
+		this.done = true;
+		
+		if (status != utils.NS_BINDING_ABORTED)
+		{
+			context = this.data;
+			this.request.endGetRawContent(utils.convertToUnicode(this.data, this.charset), status);
+		}
+	},
 
-    onDataAvailable: function(request, context, inStr, sourceOffset, count)
-    {
-        this.data += utils.readFromStream_Binary(inStr, this.charset);
-    }
+	onDataAvailable: function(request, context, inStr, sourceOffset, count)
+	{
+		this.data += utils.readFromStream_Binary(inStr, this.charset);
+	}
 };
 // ************************************************************************************************
 
@@ -2521,14 +2527,14 @@ HttpFoxResponseLoaderFlagger.prototype =
 		return "HttpFoxResponseLoaderFlagger";
 	},
 	
-    QueryInterface: function(iid)
-    {
-        if (iid.equals(Components.interfaces.nsISupportsString) ||
+	QueryInterface: function(iid)
+	{
+		if (iid.equals(Components.interfaces.nsISupportsString) ||
 			iid.equals(Components.interfaces.nsISupports))
-            return this;
-        throw Components.results.NS_NOINTERFACE;
-    }
-}
+			return this;
+		throw Components.results.NS_NOINTERFACE;
+	}
+};
 // ************************************************************************************************
 
 
@@ -2544,14 +2550,14 @@ HttpFoxHeaderInfo.prototype =
 	
 	init: function()
 	{
-		this.Headers = new Array();
+		this.Headers = [];
 	},
 	
 	visitHeader: function(name, value)
 	{
 		this.Headers[name] = value;
 	}
-}
+};
 // ************************************************************************************************
 
 
@@ -2635,7 +2641,7 @@ HttpFoxPostDataHandler.prototype =
 						this.isBinary = true;
 						this.request.IsPostDataMIME = true;
 						this.request.PostDataMIMEBoundary = "--" + tmp[1].split("boundary=")[1];
-						if (this.request.PostDataMIMEBoundary.indexOf("\"") == 0)
+						if (this.request.PostDataMIMEBoundary.indexOf("\"") === 0)
 						{
 							this.request.PostDataMIMEBoundary = this.request.PostDataMIMEBoundary.substr(1, this.request.PostDataMIMEBoundary.length - 2);
 						}
@@ -2651,7 +2657,7 @@ HttpFoxPostDataHandler.prototype =
 	{
 		if (!this.request.PostDataHeaders) 
 		{
-			this.request.PostDataHeaders = new Array;
+			this.request.PostDataHeaders = [];
 		}
 		this.request.PostDataHeaders[name] = value;
 	},
@@ -2666,6 +2672,8 @@ HttpFoxPostDataHandler.prototype =
 	
 	getPostData: function() 
 	{
+		var i, u, v;
+
 		// Position the stream to the start of the body
 		if (this.body < 0 || this.seekablestream.tell() != this.body) 
 		{
@@ -2673,7 +2681,7 @@ HttpFoxPostDataHandler.prototype =
 		}
 	
 		var size = this.stream.available();
-		if (size == 0 && this.body != 0) 
+		if (size === 0 && this.body !== 0) 
 		{
 			// whoops, there weren't really headers..
 			this.rewind();
@@ -2690,10 +2698,15 @@ HttpFoxPostDataHandler.prototype =
 			{
 				// This is to avoid 'NS_BASE_STREAM_CLOSED' exception that may occurs
 				// See bug #188328.
-				for (var i = 0; i < size; i++) 
+				for (u = 0; u < size; u++) 
 				{
 					var c = this.stream.read(1);
-					c ? postString += c : postString += '\0';
+					if (c) {
+						postString += c;
+					} 
+					else {
+						postString += '\0';
+					}
 				}	
 			}
 			else 
@@ -2703,8 +2716,8 @@ HttpFoxPostDataHandler.prototype =
 		} 
 		catch(e)
 		{
-			dump("\nExc: " + e)
-			return "" + ex;
+			dump("\nExc: " + e);
+			return "" + e;
 		} 
 		finally 
 		{
@@ -2715,30 +2728,30 @@ HttpFoxPostDataHandler.prototype =
 		if (this.request.IsPostDataMIME) 
 		{
 			this.request.PostData = postString;
-			this.request.PostDataMIMEParts = new Array();
+			this.request.PostDataMIMEParts = [];
 			
 			if (!this.request.IsPostDataTooBig)
 			{
-				var rawMimeParts = new Array();
+				var rawMimeParts = [];
 				rawMimeParts = postString.split(this.request.PostDataMIMEBoundary);
 				
 				var ws = "\n";
-				if (rawMimeParts[1].indexOf("\r\n") == 0)
+				if (rawMimeParts[1].indexOf("\r\n") === 0)
 				{
 					ws = "\r\n";
 				}
-				else if (rawMimeParts[1].indexOf("\r") == 0)
+				else if (rawMimeParts[1].indexOf("\r") === 0)
 				{
 					ws = "\r";
 				}
 				
-				for (var i = 1; rawMimeParts[i]; i++)
+				for (i = 1; rawMimeParts[i]; i++)
 				{
 					try 
 					{
 						var re;
-						var mimePartData = new Object();
-						var rawMimePartParts = new Array();
+						var mimePartData = {};
+						var rawMimePartParts = [];
 						rawMimePartParts = rawMimeParts[i].split(ws + ws);	
 						
 						var varname = null;
@@ -2756,7 +2769,7 @@ HttpFoxPostDataHandler.prototype =
 							}
 						}
 						
-						if (varname != null)
+						if (varname !== null)
 						{
 							var filename = null;
 							re = new RegExp('\b(filename="[^"]*")', "i");
@@ -2790,10 +2803,10 @@ HttpFoxPostDataHandler.prototype =
 							// value
 							var value = utils.trim(rawMimePartParts[1]);
 							
-							mimePartData["varname"] = varname;
-							mimePartData["filename"] = filename;
-							mimePartData["ctype"] = ctype;
-							mimePartData["value"] = value;
+							mimePartData.varname = varname;
+							mimePartData.filename = filename;
+							mimePartData.ctype = ctype;
+							mimePartData.value = value;
 							
 							this.request.PostDataMIMEParts.push(mimePartData);
 						}
@@ -2819,12 +2832,14 @@ HttpFoxPostDataHandler.prototype =
 		if (this.request.PostData.match(/^&?([^=&<>]+=[^=&]*&?)+/i)) 
 		{
 			// split parameters (only non-mime bodies)
-			this.request.PostDataParameters = new Array();
+			this.request.PostDataParameters = [];
 			var postDataParts = this.request.PostData.split("&");
-			for (var i in postDataParts)
+			for (v in postDataParts)
 			{
-				var nameValuePair = postDataParts[i].split("=");
-				this.request.PostDataParameters.push([nameValuePair[0], nameValuePair[1]]);
+				if (postDataParts.hasOwnProperty(v)) {
+					var nameValuePair = postDataParts[v].split("=");
+					this.request.PostDataParameters.push([nameValuePair[0], nameValuePair[1]]);	
+				}
 			}
 			return null;		
 		}
@@ -2833,7 +2848,7 @@ HttpFoxPostDataHandler.prototype =
 		this.request.PostDataParameters = null;
 		return null;
 	}
-}
+};
 // ************************************************************************************************
 
 // HttpFoxRequestLogData
@@ -2867,11 +2882,15 @@ HttpFoxRequestLogData.prototype =
 	
 	init: function(request)
 	{
+		var i;
+
 		this.EventSource = request.EventSource;
-		this.EventSourceData = new Object();
+		this.EventSourceData = {};
 		for (i in request.EventSourceData)
 		{
-			this.EventSourceData[i] = request.EventSourceData[i];
+			if (request.EventSourceData.hasOwnProperty(i)) {
+				this.EventSourceData[i] = request.EventSourceData[i];	
+			}
 		}
 		this.Timestamp = request.Timestamp;
 		this.StateFlags = request.StateFlags;
@@ -2893,7 +2912,7 @@ HttpFoxRequestLogData.prototype =
 		this.Priority = request.Priority;
 		this.HasCacheInfo = request.HasCacheInfo;
 	}
-}
+};
 
 // ************************************************************************************************
 // UTIL FUNCTIONS
@@ -2906,54 +2925,60 @@ var utils = {
 	LOAD_ONLY_FROM_CACHE: Components.interfaces.nsICachingChannel.LOAD_ONLY_FROM_CACHE,
 	NS_BINDING_ABORTED: 0x804b0002,
 
-    trim: function(value, type)
-    {
-    	if (type == 'left') 
-        {
-            return value.replace(/^\s*/, '');
-        }
-	    if (type == 'right') 
-        {
-            return value.replace(/\s*$/, '');
-        }
-	    if (type == 'normalize') 
-        {
-            return trim(value.replace(/\s{2,}/g, ' '));
-        }
+	trim: function(value, type)
+	{
+		if (type == 'left') 
+		{
+			return value.replace(/^\s*/, '');
+		}
+		if (type == 'right') 
+		{
+			return value.replace(/\s*$/, '');
+		}
+		if (type == 'normalize') 
+		{
+			return trim(value.replace(/\s{2,}/g, ' '));
+		}
 
-	    return trim(trim(value, 'left'), 'right');
-    },
+		return trim(trim(value, 'left'), 'right');
+	},
 
 	// Utility function, dump an object by reflexion up to niv level
 	dumpall: function(name, obj, niv) 
 	{
+		var i, u;
+
 		if (!niv) {
 			niv=1;
 		}
-		var dumpdict = new Object();
+		var dumpdict = {};
 	
 		dump ("\n\n-------------------------------------------------------\n");
 		dump ("Dump of the object: " + name + " (" + niv + " levels)\n");
 		dump ("Address: " + obj + "\n");
 		dump ("Interfaces: ");
 		
-		for (var i in Components.interfaces) 
+		for (i in Components.interfaces) 
 		{
-			try 
-			{
-				obj.QueryInterface(Components.interfaces[i]);
-				dump("" + Components.interfaces[i] + ", ");
-			} 
-			catch(ex) 
-			{}
+			if (Components.interfaces.hasOwnProperty(i)) {
+				try 
+				{
+					obj.QueryInterface(Components.interfaces[i]);
+					dump("" + Components.interfaces[i] + ", ");
+				} 
+				catch(ex) 
+				{}	
+			}
 		}
 		dump("\n");
 		this._dumpall(dumpdict,obj,niv,"","");
 		dump ("\n\n-------------------------------------------------------\n\n");
 	
-		for (i in dumpdict) 
+		for (u in dumpdict)
 		{
-			delete dumpdict[i];
+			if (dumpdict.hasOwnProperty(u)) {
+				delete dumpdict[u];	
+			}
 		}
 	},
 	
@@ -2970,26 +2995,28 @@ var utils = {
 			var i, r, str, typ;
 			for (i in obj) 
 			{
-				try 
-				{
-					str = String(obj[i]).replace(/\n/g, "\n" + tab);
-				} 
-				catch(ex) 
-				{
-					str = String(ex);
-				}
-				try 
-				{
-					typ = "" + typeof(obj[i]);
-				} 
-				catch(ex) 
-				{
-					typ = "unknown";
-				}
-				dump ("\n" + tab + i + " (" + typ + (path ? ", " + path : "") + "): " + str);
-				if ((niv > 1) && (typ == "object")) 
-				{
-					this._dumpall(dumpdict, obj[i], niv-1, tab + "\t", (path ? path + "->" + i : i));
+				if (obj.hasOwnProperty(i)) {
+					try 
+					{
+						str = String(obj[i]).replace(/\n/g, "\n" + tab);
+					} 
+					catch(ex) 
+					{
+						str = String(ex);
+					}
+					try 
+					{
+						typ = "" + typeof(obj[i]);
+					} 
+					catch(ex) 
+					{
+						typ = "unknown";
+					}
+					dump ("\n" + tab + i + " (" + typ + (path ? ", " + path : "") + "): " + str);
+					if ((niv > 1) && (typ == "object")) 
+					{
+						this._dumpall(dumpdict, obj[i], niv-1, tab + "\t", (path ? path + "->" + i : i));
+					}	
 				}
 			}
 		}
@@ -3009,7 +3036,7 @@ var utils = {
 	// context helper functions
 	getContextFromWindow: function(win)
 	{
-		if (win == null) 
+		if (win === null) 
 		{
 			return new HttpFoxContext(null, null, null, false);
 		}
@@ -3035,7 +3062,7 @@ var utils = {
 			return new HttpFoxContext(null, null, null, false);
 		}
 		
-		if (request.loadGroup == null || request.loadGroup.groupObserver == null) 
+		if (request.loadGroup === null || request.loadGroup.groupObserver === null) 
 		{
 			win = null;
 			return new HttpFoxContext(null, null, null, false);
@@ -3058,60 +3085,60 @@ var utils = {
 	
 	convertToUnicode: function(text, charset)
 	{
-	    try
-	    {
-	        var conv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].getService(Components.interfaces.nsIScriptableUnicodeConverter);
-	        conv.charset = charset ? charset : "UTF-8";
-	        return conv.ConvertToUnicode(text);
-	    }
-	    catch (exc)
-	    {
-	        return text;
-	    }
+		try
+		{
+			var conv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].getService(Components.interfaces.nsIScriptableUnicodeConverter);
+			conv.charset = charset ? charset : "UTF-8";
+			return conv.ConvertToUnicode(text);
+		}
+		catch (exc)
+		{
+			return text;
+		}
 	},
 	// ************************************************************************************************
 	
 	// Get the cookies
 	getStoredCookies: function(host, path)
 	{
-	    var cookies = new Array();
-	    
-	    // If the host is set
-	    if(host)
-	    {
-	        var cookie            = null;
-	        var cookieEnumeration = Components.classes["@mozilla.org/cookiemanager;1"].getService(Components.interfaces.nsICookieManager).enumerator;
-	        var cookieHost        = null;
-	        var cookiePath        = null;
+		var cookies = [];
+		
+		// If the host is set
+		if(host)
+		{
+			var cookie            = null;
+			var cookieEnumeration = Components.classes["@mozilla.org/cookiemanager;1"].getService(Components.interfaces.nsICookieManager).enumerator;
+			var cookieHost        = null;
+			var cookiePath        = null;
 	
-	        // Loop through the cookies
-	        while(cookieEnumeration.hasMoreElements())
-	        {
-	            cookie = cookieEnumeration.getNext().QueryInterface(Components.interfaces.nsICookie);
+			// Loop through the cookies
+			while(cookieEnumeration.hasMoreElements())
+			{
+				cookie = cookieEnumeration.getNext().QueryInterface(Components.interfaces.nsICookie);
 	
-	            cookieHost = cookie.host;
-	            cookiePath = cookie.path;
+				cookieHost = cookie.host;
+				cookiePath = cookie.path;
 	
-	            // If there is a host and path for this cookie
-	            if(cookieHost && cookiePath)
-	            {
-	                // If the cookie host starts with '.'
-	                if(cookieHost.charAt(0) == ".")
-	                {
-	                    cookieHost = cookieHost.substring(1);
-	                }
+				// If there is a host and path for this cookie
+				if(cookieHost && cookiePath)
+				{
+					// If the cookie host starts with '.'
+					if(cookieHost.charAt(0) == ".")
+					{
+						cookieHost = cookieHost.substring(1);
+					}
 	
-	                // If the host and cookie host and path and cookie path match
-	                //if((host == cookieHost || host.indexOf("." + cookieHost) != -1) && (path == cookiePath || path.indexOf(cookiePath) == 0))
-	                if((host == cookieHost || host.indexOf("." + cookieHost) != -1) && (path == cookiePath || path.indexOf(cookiePath) == 0)) 
-	                {
-	                    cookies.push(cookie);
-	                }
-	            }
-	        }
-	    }
+					// If the host and cookie host and path and cookie path match
+					//if((host == cookieHost || host.indexOf("." + cookieHost) != -1) && (path == cookiePath || path.indexOf(cookiePath) === 0))
+					if((host == cookieHost || host.indexOf("." + cookieHost) != -1) && (path == cookiePath || path.indexOf(cookiePath) === 0)) 
+					{
+						cookies.push(cookie);
+					}
+				}
+			}
+		}
 	
-	    return cookies;
+		return cookies;
 	},
 	
 	HttpFoxNsResultErrors: 
@@ -3245,20 +3272,12 @@ var utils = {
 		NS_ERROR_UDEC_ILLEGALINPUT: 0x8050000E,
 		NS_ERROR_ILLEGAL_INPUT: 0x8050000E,
 		NS_ERROR_REG_BADTYPE: 0x80510001,
-		NS_ERROR_REG_BADTYPE: 0x80510001,
-		NS_ERROR_REG_NOT_FOUND: 0x80510003,
 		NS_ERROR_REG_NOT_FOUND: 0x80510003,
 		NS_ERROR_REG_NOFILE: 0x80510004,
-		NS_ERROR_REG_NOFILE: 0x80510004,
-		NS_ERROR_REG_BUFFER_TOO_SMALL: 0x80510005,
 		NS_ERROR_REG_BUFFER_TOO_SMALL: 0x80510005,
 		NS_ERROR_REG_NAME_TOO_LONG: 0x80510006,
-		NS_ERROR_REG_NAME_TOO_LONG: 0x80510006,
-		NS_ERROR_REG_NO_PATH: 0x80510007,
 		NS_ERROR_REG_NO_PATH: 0x80510007,
 		NS_ERROR_REG_READ_ONLY: 0x80510008,
-		NS_ERROR_REG_READ_ONLY: 0x80510008,
-		NS_ERROR_REG_BAD_UTF8: 0x80510009,
 		NS_ERROR_REG_BAD_UTF8: 0x80510009,
 		NS_ERROR_FILE_UNRECOGNIZED_PATH: 0x80520001,
 		NS_ERROR_FILE_UNRESOLVABLE_SYMLINK: 0x80520002,
@@ -3459,31 +3478,22 @@ var utils = {
 		NS_ERROR_DOM_FILE_NOT_READABLE_ERR: 0x80650001,
 		NS_ERROR_WSDL_NOT_WSDL_ELEMENT: 0x80780001,
 		NS_ERROR_SCHEMA_NOT_SCHEMA_ELEMENT: 0x80780001,
-		NS_ERROR_SCHEMA_NOT_SCHEMA_ELEMENT: 0x80780001,
 		NS_ERROR_DOWNLOAD_COMPLETE: 0x80780001,
 		NS_ERROR_WSDL_SCHEMA_PROCESSING_ERROR: 0x80780002,
-		NS_ERROR_SCHEMA_UNKNOWN_TARGET_NAMESPACE: 0x80780002,
 		NS_ERROR_SCHEMA_UNKNOWN_TARGET_NAMESPACE: 0x80780002,
 		NS_ERROR_DOWNLOAD_NOT_PARTIAL: 0x80780002,
 		NS_ERROR_WSDL_BINDING_NOT_FOUND: 0x80780003,
 		NS_ERROR_SCHEMA_UNKNOWN_TYPE: 0x80780003,
-		NS_ERROR_SCHEMA_UNKNOWN_TYPE: 0x80780003,
 		NS_ERROR_WSDL_UNKNOWN_SCHEMA_COMPONENT: 0x80780004,
-		NS_ERROR_SCHEMA_UNKNOWN_PREFIX: 0x80780004,
 		NS_ERROR_SCHEMA_UNKNOWN_PREFIX: 0x80780004,
 		NS_ERROR_WSDL_UNKNOWN_WSDL_COMPONENT: 0x80780005,
 		NS_ERROR_SCHEMA_INVALID_STRUCTURE: 0x80780005,
-		NS_ERROR_SCHEMA_INVALID_STRUCTURE: 0x80780005,
 		NS_ERROR_WSDL_LOADING_ERROR: 0x80780006,
-		NS_ERROR_SCHEMA_INVALID_TYPE_USAGE: 0x80780006,
 		NS_ERROR_SCHEMA_INVALID_TYPE_USAGE: 0x80780006,
 		NS_ERROR_WSDL_RECURSIVE_IMPORT: 0x80780007,
 		NS_ERROR_SCHEMA_MISSING_TYPE: 0x80780007,
-		NS_ERROR_SCHEMA_MISSING_TYPE: 0x80780007,
 		NS_ERROR_WSDL_NOT_ENABLED: 0x80780008,
 		NS_ERROR_SCHEMA_FACET_VALUE_ERROR: 0x80780008,
-		NS_ERROR_SCHEMA_FACET_VALUE_ERROR: 0x80780008,
-		NS_ERROR_SCHEMA_LOADING_ERROR: 0x80780009,
 		NS_ERROR_SCHEMA_LOADING_ERROR: 0x80780009,
 		IPC_WAIT_NEXT_MESSAGE: 0x8078000A,
 		NS_ERROR_UNORM_MOREOUTPUT: 0x80780021,
@@ -3493,7 +3503,7 @@ var utils = {
 		NS_ERROR_XFORMS_CALCULATION_EXCEPTION: 0x80780BB9,
 		NS_ERROR_XFORMS_UNION_TYPE: 0x80780BBA
 	}
-}
+};
 
 /***********************************************************
 module definition (xpcom registration)
@@ -3538,14 +3548,14 @@ var HttpFoxServiceModule =
 	It is keyed off of the contract ID. Eg:
 
 	myHelloWorld = Components.classes["@dietrich.ganx4.com/helloworld;1"].
-                          createInstance(Components.interfaces.nsIHelloWorld);
+						createInstance(Components.interfaces.nsIHelloWorld);
 
 	***********************************************************/
 	HttpFoxServiceFactory:
 	{
 		createInstance: function(aOuter, aIID)
 		{
-			if (aOuter != null)
+			if (aOuter !== null)
 				throw Components.results.NS_ERROR_NO_AGGREGATION;
 				
 			return (new HttpFoxService()).QueryInterface(aIID);
