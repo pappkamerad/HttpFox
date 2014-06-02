@@ -48,7 +48,7 @@
 #hf_menu_HttpFox[cui-areatype="menu-panel"], 
 #hf_menu_webDeveloper_HttpFox[cui-areatype="menu-panel"], 
 #hf_toolbarButton_HttpFox[cui-areatype="menu-panel"],
-toolbarpaletteitem[place="palette"] > #hf_toolbarButton_HttpFox {
+toolbarpaletteitem[place="palette"] #hf_toolbarButton_HttpFox {
 	list-style-image: url(chrome://httpfox/skin/globe32.png);
 } 
 

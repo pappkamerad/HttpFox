@@ -6,7 +6,7 @@
 
 		<em:name>HttpFox</em:name>
 		<em:id>{4093c4de-454a-4329-8aff-c6b0b123c386}</em:id>
-		<em:version>0.8.14</em:version>
+		<em:version>0.8.14.5</em:version>
 		<em:description>An HTTP analyzer addon for Firefox</em:description>
 		<em:creator>Martin Theimer</em:creator>
 		<em:homepageURL>http://code.google.com/p/httpfox/</em:homepageURL>
@@ -29,16 +29,16 @@
 			<Description>
 				<em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
 				<em:minVersion>2.0</em:minVersion>
-				<em:maxVersion>2.12a1</em:maxVersion>
+				<em:maxVersion>2.39a1</em:maxVersion>
 			</Description>
 		</em:targetApplication>
 		
 		<em:targetApplication> 
-			<!-- Flock -->
+			<!-- Generic toolkit -->
 			<Description>
-				<em:id>{a463f10c-3994-11da-9945-000d60ca027b}</em:id>
-				<em:minVersion>0.7</em:minVersion>
-				<em:maxVersion>1.*</em:maxVersion>
+				<em:id>toolkit@mozilla.org</em:id>
+				<em:minVersion>1.8.1</em:minVersion>
+				<em:maxVersion>40.*</em:maxVersion>
 			</Description>
 		</em:targetApplication>
 

@@ -96,16 +96,19 @@ HttpFoxController.prototype =
 
 	loadXMLPrettyPrintXSL: function ()
 	{
-		var xslDoc = document.implementation.createDocument("", "", null);
-		xslDoc.async = false;
+		let xhr = new XMLHttpRequest();
+		// default xsl from firefox is chrome://global/content/xml/XMLPrettyPrint.xsl
+		xhr.open("GET", "chrome://httpfox/content/XMLPrettyPrint.xsl");
+		xhr.responseType = "document";
 
-		// default xsl from firefox
-		//xslDoc.load("chrome://global/content/xml/XMLPrettyPrint.xsl");
-		var test = xslDoc.load("chrome://httpfox/content/XMLPrettyPrint.xsl");
-
-		var processor = new XSLTProcessor();
-		processor.importStylesheet(xslDoc);
-		this.XMLPrettyPrintXSLT = processor;
+		let loadListener = function(){
+			var xslDoc = xhr.response;
+			var processor = new XSLTProcessor();
+			processor.importStylesheet(xslDoc);
+			this.XMLPrettyPrintXSLT = processor;
+		}.bind(this);
+		xhr.addEventListener("load", loadListener, false);
+		xhr.send();
 	},
 
 	cmd_hf_showAbout: function ()

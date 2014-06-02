@@ -93,7 +93,7 @@
 
 					<image id="hf_QuickFilterImage" control="hf_QuickFilterBox" />
 					<textbox id="hf_QuickFilterBox" autocomplete="true" 
-						tooltiptext="&overlay.requestlist.toolbox.toolbar.filter.tooltip;" type="timed" timeout="500" command="cmd_hf_quickFilterChanged" />
+						tooltiptext="&overlay.requestlist.toolbox.toolbar.filter.tooltip;" type="search" timeout="500" command="cmd_hf_quickFilterChanged" />
 		
 					<checkbox id="hf_AutoScrollCheckbox" label="&overlay.requestlist.toolbox.toolbar.autoscroll.checkbox;" 
 						checked="true" persist="checked" />
